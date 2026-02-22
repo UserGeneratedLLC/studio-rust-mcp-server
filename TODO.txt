@@ -1,0 +1,132 @@
+[Comms]
+We probably need to upgrade to msgpack so we can support nulls/infs
+
+[OpenCloud APIs MCP]
+Use env to get API KEY
+Start hooking up all known open cloud APIs
+Endpoints:
+* upload_asset
+
+[Reference Paths]
+During a session we can utilize an auxilary instance ref uuid via GetUniqueId(0)
+This string can accompany paths with a format like (its not always a number tmk):
+ReplicatedStorage/SomeInstance~1523
+These are only stable per studio session, so they should be included in metadata responses about instances
+This is helpful for editing instance trees with duplicated children/ambiguous paths
+
+[Instance codec]
+Need to develop codec for transmitting instances
+Use msgpack for transmission
+Duplicate paths handled by naming `{inst.Name}~{inst.GetUniqueId(0)}`
+Grab MaximumADHD's reflection json via github. use in Rust+Plugin. create luau/rust types for it.
+{
+  "Name": "InstanceName",
+  "ClassName": "Part",
+  "UniqueId": "GetUniqueId(0) output, e.g. 1234af",
+  "Properties": {
+    "Text": "Hello",
+    "Shape": {"Enum.PartType": "Block"},
+    "Anchored": true,
+    "Size": {"Vector3": [4, 1, 2]},
+    "Color": {"Color3": [0.5, 0.7, 0.0]},
+    "CFrame": {"CFrame": [[0,5,0], [1,0,0,0,1,0,0,0,1]]},
+    "Material": {"Enum.Material": "SmoothPlastic"},
+    "Attachment0": {"Reference": "Some/Path[~123]"},
+    "Attachment1": null,
+    "Health": 37,
+    "ViewDistance": {"number": "inf"}
+  },
+  "Attributes": {
+    // Same semantics as Properties with what Attributes actually support
+  },
+  "Tags": [ "Tag" ],
+  "Children": {
+    // If any children share a name, ALL of that name get ~ suffix
+    "Handle~a1b2": {
+      // ...
+    },
+    "Handle~f31a": {
+      // ...
+    }
+  }
+}
+
+[Studio Plugin MCP]
+* Any instance which is determined to have an ambiguous path (duplicate parent naming/children naming) is suffixed automatically:
+ - During a session we can utilize an auxilary instance ref uuid via GetUniqueId(0)
+ - This string can accompany paths with a format like (its not always a number tmk):
+ - ReplicatedStorage/SomeInstance~1523
+ - These are only stable per studio session, so they should be included in metadata responses about instances
+ - This is helpful for editing instance trees with duplicated children/ambiguous paths
+* Should utilize msgpack for encoding scheme
+Endpoints:
+* run_code command [DONE]
+ - Runs arbitrary Luau in Studio edit mode, returns print output
+* get_console_output [DONE]
+ - Returns Studio output window contents
+* get_studio_mode [DONE]
+ - Returns one of: start_play, run_server, stop
+* start_stop_play mode [DONE]
+ - mode: start_play | run_server | stop
+* run_script_in_play_mode code [mode] [timeout] [DONE]
+ - Runs in play/server mode, auto-stops, returns structured result
+ - Result: { success, value, error, logs, errors, duration, isTimeout }
+* insert_model query [DONE]
+ - Searches marketplace, inserts into workspace, returns model name
+* get_instance_tree path [depth]
+ - outputs our instance codec scheme noted above
+* set_properties path data
+ - msgpack data so it supports nulls/infs, leaves unreferenced values
+ - supports refs
+ - probably respond with current instance state?
+* get_properties path
+ - msgpack data so it supports nulls/infs, leaves unreferenced values
+* add_tags path tags
+ - probably respond with current instance state?
+* remove_tags path tags
+ - probably respond with current instance state?
+* get_tags path
+* get_attributes path
+* set_attributes path data
+ - msgpack data so it supports nulls/infs, leaves unreferenced values
+ - probably respond with current instance state?
+* delete_instances paths
+* set_parent path parentPath
+ - returns path
+* create_instance path classname
+ - could include optional properties, tags, and attributes
+ - probably respond with current instance state?
+* take_screenshot [path]
+ - Path could be a ScreenGui, a Part, Model - anything. Will intelligently crop.
+ - Encode as PNG over wire
+ - Output to agent as base64
+* clone_instance path targetParent
+ - should send back the resulting path
+* get_selections
+* set_selections paths
+* get_place_info
+ - UniverseID, PlaceId, PlaceName, etc
+* undo [times]
+* redo [times]
+* rename_instance path newName
+ - returns path
+* get_script_source path
+* set_script_source path source
+* search_instances [name] [tag] [classname]
+ - needs more thought, this can be a goldmine of an endpoint of setup right.
+ - inspiration should be grep
+* publish_place [target placeid, defaults to our placeid]
+
+[Cookie APIs MCP]
+Use that one library to automatically fetch the roblox studio cookie
+use that for any other endpoints which opencloud doesnt currently support
+Endpoints:
+
+[Luau Code Execution]
+We can use OpenCloud to perform remote luau code execution
+This can be helpful for uploading assets which OpenCloud doesnt support directly
+or even running code in roblox games in a headless mode.
+
+[CI]
+Setup automated testing of rust code
+Setup automatic building of the plugin
