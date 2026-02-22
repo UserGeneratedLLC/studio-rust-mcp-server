@@ -42,7 +42,7 @@ local function GetFullPath(inst: Instance): string
   local n = #names
   local center = n // 2
   for i = 1, center do
-    names[i], names[n - i - 1] = names[n - i - 1], names[i]
+    names[i], names[n - i + 1] = names[n - i + 1], names[i]
   end
   return table.concat(names, "/")
 end
