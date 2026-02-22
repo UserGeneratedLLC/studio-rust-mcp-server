@@ -1,11 +1,22 @@
 [Comms]
 We probably need to upgrade to msgpack so we can support nulls/infs
 
+[General]
+Endpoints:
+* trim_transparency file
+* resize_image file out-file [mode]
+
 [OpenCloud APIs MCP]
 Use env to get API KEY
+Allow ENV to configure: GroupId, ExperienceId, and maybe PlaceId
 Start hooking up all known open cloud APIs
 Endpoints:
-* upload_asset
+* upload_asset file [name] [assetid for replacing]
+* search_asset
+ - Searches the group for a given asset
+* "place configurations"
+* "experience configurations"
+* "luau code execution"
 
 [Reference Paths]
 During a session we can utilize an auxilary instance ref uuid via GetUniqueId(0)
