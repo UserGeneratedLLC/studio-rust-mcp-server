@@ -84,6 +84,7 @@ impl ServerHandler for RBXStudioServer {
                 name: "Roblox_Studio".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
                 title: Some("Roblox Studio MCP Server".to_string()),
+                description: None,
                 icons: None,
                 website_url: None,
             },

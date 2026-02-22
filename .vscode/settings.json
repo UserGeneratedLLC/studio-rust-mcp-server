@@ -32,8 +32,13 @@
   "luau-lsp.plugin.port": 3669,
 
   "stylua.targetReleaseVersion": "latest",
+  "[lua]": {
+    "editor.defaultFormatter": "JohnnyMorganz.stylua",
+    "editor.formatOnSave": true
+  },
   "[luau]": {
-    "editor.defaultFormatter": "JohnnyMorganz.stylua"
+    "editor.defaultFormatter": "JohnnyMorganz.stylua",
+    "editor.formatOnSave": true
   },
 
   "git.ignoreLimitWarning": true
