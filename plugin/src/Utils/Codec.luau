@@ -2,6 +2,7 @@
 --!optimize 2
 
 local EncodingService = game:GetService("EncodingService")
+local ReflectionService = game:GetService("ReflectionService")
 
 export type EncodedInstance = {
   Name: string,
@@ -13,6 +14,102 @@ export type EncodedInstance = {
   Attributes: { [string]: any }?,
   Tags: { string }?,
   Children: { EncodedInstance }?,
+}
+
+export type ReflectionMemberFilter = {
+  -- The security context to use; can be more expansive than the current script's security
+  Security: SecurityCapabilities?, -- default: SecurityCapabilities.fromCurrent()
+  -- Whether to exclude inherited properties from superclasses
+  ExcludeInherited: boolean?, -- default: false
+  -- Whether to exclude Studio display information about the properties
+  ExcludeDisplay: boolean?, -- default: false
+}
+export type ReflectionType = {
+  -- Engine's internal type name, e.g. "bool", "float", "int", "string",
+  -- "Vector3", "CoordinateFrame", "Color3", "Color3uint8", "BrickColor",
+  -- "Enum", "RefType", "PhysicalProperties", "Faces", "SecurityCapabilities"
+  EngineType: string,
+  -- Luau-facing type name, e.g. "boolean", "number", "string", "Vector3",
+  -- "CFrame", "Color3", "BrickColor", "EnumItem", "Instance".
+  -- Absent for non-scriptable engine types (e.g. Color3uint8, SystemAddress).
+  ScriptType: string?,
+  -- Enum type name when EngineType == "Enum", e.g. "PartType", "Material"
+  EnumType: string?,
+  -- Expected class when EngineType == "RefType", e.g. "BasePart", "Instance"
+  InstanceType: string?,
+}
+export type ReflectedProperty = {
+  -- The name of the property
+  Name: string,
+  -- The superclass from which the property is inherited, or the class name if not inherited
+  Owner: string,
+  -- Whether the property is serialized (able to be saved to disk or sent over the network)
+  Serialized: boolean,
+  -- The type of the property
+  Type: ReflectionType,
+  -- The content type of the property, if applicable
+  ContentType: Enum.AssetType?,
+  -- Studio display information
+  Display: {
+    -- The category under which the property is listed in Studio
+    Category: string,
+    -- A message indicating that the property is deprecated, if applicable
+    DeprecationMessage: string?,
+  }?,
+  -- The security permissions required to access this property
+  Permits: {
+    -- The security context required to read this property
+    Read: SecurityCapabilities?,
+    -- The security context required to read this property while thread-safe
+    ReadParallel: SecurityCapabilities?,
+    -- The security context required to write to this property
+    Write: SecurityCapabilities?,
+    -- The security context required to write to this property while thread-safe
+    WriteParallel: SecurityCapabilities?,
+  },
+}
+
+local SkipProps: { [string]: boolean } = {
+  Parent = true,
+  Name = true,
+  ClassName = true,
+  className = true,
+  Archivable = true,
+  DataCost = true,
+  RobloxLocked = true,
+}
+
+-- stylua: ignore
+local ForceSerialize: { [string]: boolean } = {
+  -- BasePart
+  Size = true, Position = true, Orientation = true, CFrame = true,
+  Color = true, BrickColor = true, Material = true, Transparency = true,
+  Reflectance = true, CanCollide = true, Anchored = true, Shape = true,
+  -- Content/asset IDs
+  MeshId = true, TextureID = true, MeshType = true, SoundId = true,
+  Image = true, Texture = true, Face = true, AnimationId = true,
+  Video = true, Source = true, LinkedSource = true,
+  -- Sky
+  SkyboxBk = true, SkyboxDn = true, SkyboxFt = true,
+  SkyboxLf = true, SkyboxRt = true, SkyboxUp = true,
+  MoonTextureId = true, SunTextureId = true,
+  -- Light / Lighting
+  Brightness = true, Range = true, LightingStyle = true, Technology = true,
+  -- SurfaceAppearance
+  ColorMap = true, MetalnessMap = true, NormalMap = true, RoughnessMap = true,
+  -- Welds / Constraints
+  Part0 = true, Part1 = true, C0 = true, C1 = true,
+  Attachment0 = true, Attachment1 = true,
+  -- References
+  PrimaryPart = true, Adornee = true, Value = true,
+  HumanoidRootPart = true, RootPart = true, SeatPart = true, WalkToPart = true,
+  CameraSubject = true, SoundGroup = true, Controller = true,
+}
+
+local PropertiesFilter: ReflectionMemberFilter = {
+  Security = SecurityCapabilities.fromCurrent(),
+  ExcludeInherited = false,
+  ExcludeDisplay = false,
 }
 
 local function GetDebugId(inst: Instance): string return inst:GetDebugId(0) end
@@ -65,12 +162,6 @@ end
 ]]
 local function FromDistinctPath(path: string): Instance? end
 
-local function GetProperties(inst: Instance): { [string]: any }
-  -- TODO(high): download and cache this:
-  -- https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/refs/heads/roblox/Full-API-Dump.json
-  return {}
-end
-
 local function EncodeNumber(v: number): any
   if not math.isfinite(v) then return { ["number"] = tostring(v) } end
   return v
@@ -83,18 +174,14 @@ end
 local function EncodeString(v: string): any
   if not utf8.len(v) then
     return {
-      ["string"] = buffer.tostring(
-        EncodingService:Base64Encode(buffer.fromstring(v))
-      ),
+      ["string"] = buffer.tostring(EncodingService:Base64Encode(buffer.fromstring(v))),
     }
   end
   return v
 end
 local function DecodeString(v: any): string
   if type(v) == "string" then return v end
-  return buffer.tostring(
-    EncodingService:Base64Decode(buffer.fromstring(v["string"]))
-  )
+  return buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(v["string"])))
 end
 
 local function EncodeNil(_v: nil, nilReference: any): any return nilReference end
@@ -148,9 +235,7 @@ local function DecodeUDim2(v: any): UDim2
   )
 end
 
-local function EncodeVector2int16(v: Vector2int16): any
-  return { ["Vector2int16"] = { v.X, v.Y } }
-end
+local function EncodeVector2int16(v: Vector2int16): any return { ["Vector2int16"] = { v.X, v.Y } } end
 local function DecodeVector2int16(v: any): Vector2int16
   local data = v["Vector2int16"]
   return Vector2int16.new(data[1], data[2])
@@ -179,11 +264,7 @@ local function EncodeVector3(v: Vector3): any
 end
 local function DecodeVector3(v: any): Vector3
   local data = v["Vector3"]
-  return Vector3.new(
-    DecodeNumber(data[1]),
-    DecodeNumber(data[2]),
-    DecodeNumber(data[3])
-  )
+  return Vector3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3]))
 end
 
 local function EncodeColor3(v: Color3): any
@@ -193,11 +274,7 @@ local function EncodeColor3(v: Color3): any
 end
 local function DecodeColor3(v: any): Color3
   local data = v["Color3"]
-  return Color3.new(
-    DecodeNumber(data[1]),
-    DecodeNumber(data[2]),
-    DecodeNumber(data[3])
-  )
+  return Color3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3]))
 end
 
 local function EncodeContent(v: Content): any
@@ -219,16 +296,10 @@ local function EncodeContent(v: Content): any
   end
   return { ["Content"] = data }
 end
-local function DecodeContent(v: any): Content
-  return Content.fromUri(v["Content"])
-end
+local function DecodeContent(v: any): Content return Content.fromUri(v["Content"]) end
 
-local function EncodeBrickColor(v: BrickColor): any
-  return { ["BrickColor"] = v.Name }
-end
-local function DecodeBrickColor(v: any): BrickColor
-  return BrickColor.new(v["BrickColor"])
-end
+local function EncodeBrickColor(v: BrickColor): any return { ["BrickColor"] = v.Name } end
+local function DecodeBrickColor(v: any): BrickColor return BrickColor.new(v["BrickColor"]) end
 
 local function EncodeCFrame(v: CFrame): any
   local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = v:GetComponents()
@@ -291,11 +362,8 @@ local function DecodeNumberSequence(v: any): NumberSequence
   local data = v["NumberSequence"]
   local keypoints = table.create(#data)
   for i, kp in data do
-    keypoints[i] = NumberSequenceKeypoint.new(
-      DecodeNumber(kp[1]),
-      DecodeNumber(kp[2]),
-      DecodeNumber(kp[3])
-    )
+    keypoints[i] =
+      NumberSequenceKeypoint.new(DecodeNumber(kp[1]), DecodeNumber(kp[2]), DecodeNumber(kp[3]))
   end
   return NumberSequence.new(keypoints)
 end
@@ -349,9 +417,7 @@ local function EncodeFont(v: Font): any
   local family = v.Family :: any
   return {
     ["Font"] = {
-      family = if type(family) == "string"
-        then family
-        else family.Uri or tostring(family),
+      family = if type(family) == "string" then family else family.Uri or tostring(family),
       weight = v.Weight.Name,
       style = v.Style.Name,
     },
@@ -388,9 +454,7 @@ local function DecodePhysicalProperties(v: any): PhysicalProperties
   )
 end
 
-local function EncodeAxes(v: Axes): any
-  return { ["Axes"] = { X = v.X, Y = v.Y, Z = v.Z } }
-end
+local function EncodeAxes(v: Axes): any return { ["Axes"] = { X = v.X, Y = v.Y, Z = v.Z } } end
 local function DecodeAxes(v: any): Axes
   local data = v["Axes"]
   local axes = {}
@@ -424,12 +488,8 @@ local function DecodeFaces(v: any): Faces
   return Faces.new(unpack(faces))
 end
 
-local function EncodeDateTime(v: DateTime): any
-  return { ["DateTime"] = v:ToIsoDate() }
-end
-local function DecodeDateTime(v: any): DateTime
-  return assert(DateTime.fromIsoDate(v["DateTime"]))
-end
+local function EncodeDateTime(v: DateTime): any return { ["DateTime"] = v:ToIsoDate() } end
+local function DecodeDateTime(v: any): DateTime return assert(DateTime.fromIsoDate(v["DateTime"])) end
 
 local function EncodeRay(v: Ray): any
   return {
@@ -446,22 +506,16 @@ end
 local function DecodeRay(v: any): Ray
   local data = v["Ray"]
   return Ray.new(
-    Vector3.new(
-      DecodeNumber(data[1]),
-      DecodeNumber(data[2]),
-      DecodeNumber(data[3])
-    ),
-    Vector3.new(
-      DecodeNumber(data[4]),
-      DecodeNumber(data[5]),
-      DecodeNumber(data[6])
-    )
+    Vector3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3])),
+    Vector3.new(DecodeNumber(data[4]), DecodeNumber(data[5]), DecodeNumber(data[6]))
   )
 end
 
-local function EncodeInstanceRef(v: Instance): any
-  return { ["Ref"] = GetDistinctPath(v) }
-end
+-- TODO(high):
+-- we must encode nil's using {["Ref"] = nilReference}.
+-- we need the encoder to call this function when it knows it's an Instance type.
+-- we must past type information into the EncodeProperty function from our class metadata information.
+local function EncodeInstanceRef(v: Instance): any return { ["Ref"] = GetDistinctPath(v) } end
 local function DecodeInstanceRef(v: any): Instance
   local path = v["Ref"]
   local inst = FromDistinctPath(path)
@@ -488,16 +542,8 @@ end
 local function DecodeRegion3(v: any): Region3
   local data = v["Region3"]
   return Region3.new(
-    Vector3.new(
-      DecodeNumber(data[1]),
-      DecodeNumber(data[2]),
-      DecodeNumber(data[3])
-    ),
-    Vector3.new(
-      DecodeNumber(data[4]),
-      DecodeNumber(data[5]),
-      DecodeNumber(data[6])
-    )
+    Vector3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3])),
+    Vector3.new(DecodeNumber(data[4]), DecodeNumber(data[5]), DecodeNumber(data[6]))
   )
 end
 
@@ -556,6 +602,27 @@ local function EncodeProperty(value: any, nilReference: any): any
   local encoder = PropertyEncoders[typeof(value)]
   if not encoder then error(`UnknownType: {typeof(value)}`) end
   return encoder(value, nilReference)
+end
+
+local function EncodeProperties(inst: Instance, nilReference: any): { [string]: any }
+  local reflected: { ReflectedProperty }? =
+    ReflectionService:GetPropertiesOfClass(inst.ClassName, PropertiesFilter) :: any
+  if not reflected then return {} end
+  local result: { [string]: any } = {}
+  for _, prop in reflected do
+    local name = prop.Name
+    if SkipProps[name] then continue end
+    if not prop.Permits.Read then continue end
+    local forced = ForceSerialize[name] == true
+    if not prop.Serialized and not forced then continue end
+    if not forced then
+      if prop.Display and prop.Display.DeprecationMessage then continue end
+      if not prop.Permits.Write then continue end
+    end
+    local ok, value = pcall(function() return (inst :: any)[name] end)
+    if ok then result[name] = EncodeProperty(value, nilReference) end
+  end
+  return result
 end
 
 local PropertyDecoders: { [string]: (any) -> any } = {
@@ -662,11 +729,7 @@ end
 --[[
   depth=0, this child specifically and then shallow view of it's children
 ]]
-local function EncodeInstance(
-  inst: Instance,
-  depth: number,
-  nilReference: any
-): EncodedInstance
+local function EncodeInstance(inst: Instance, depth: number, nilReference: any): EncodedInstance
   local result: EncodedInstance = {
     Name = EscapeName(inst.Name),
     ClassName = inst.ClassName,
@@ -682,10 +745,7 @@ local function EncodeInstance(
     end
     if #children > 0 then result.Children = children end
     -- Properties
-    local properties = {}
-    for key, val in GetProperties(inst) do
-      properties[key] = EncodeProperty(val, nilReference)
-    end
+    local properties = EncodeProperties(inst, nilReference)
     if next(properties) then result.Properties = properties end
     -- Attributes
     local attributes = {}
@@ -702,11 +762,7 @@ local function EncodeInstance(
   return result
 end
 
-local function DecodeInstance(
-  data: EncodedInstance,
-  nilReference: any,
-  parent: Instance?
-): Instance
+local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: Instance?): Instance
   local inst = Instance.new(data.ClassName)
   inst.Name = UnescapeName(data.Name)
   if not data.Shallow then
