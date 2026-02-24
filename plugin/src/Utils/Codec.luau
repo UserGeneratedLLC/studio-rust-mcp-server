@@ -80,15 +80,7 @@ local function EncodeNumber(v: number): any
 end
 local function DecodeNumber(v: any): number
   if type(v) == "number" then return v end
-  if type(v) == "table" then
-    local s = v["number"]
-    if type(s) == "string" then
-      local n = tonumber(s)
-      if n ~= nil then return n end
-      error(`Invalid encoded number: {s}`)
-    end
-  end
-  error(`Expected number, got {typeof(v)}`)
+  return assert(tonumber(v["number"]))
 end
 
 local function EncodeString(v: string): any
@@ -103,21 +95,17 @@ local function EncodeString(v: string): any
 end
 local function DecodeString(v: any): string
   if type(v) == "string" then return v end
-  if type(v) == "table" then
-    local s = v["string"]
-    if type(s) == "string" then
-      return buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(s)))
-    end
-  end
-  error(`Expected string, got {typeof(v)}`)
+  return buffer.tostring(
+    EncodingService:Base64Decode(buffer.fromstring(v["string"]))
+  )
 end
 
 local function EncodeNil(_v: nil, nilReference: any): any return nilReference end
 
 local function EncodeBoolean(v: boolean): any return v end
 local function DecodeBoolean(v: any): boolean
-  if type(v) == "boolean" then return v end
-  error(`Expected boolean, got {typeof(v)}`)
+  assert(type(v) == "boolean")
+  return v
 end
 
 local function EncodeBuffer(v: buffer): any
@@ -128,19 +116,11 @@ local function DecodeBuffer(v: any): buffer
 end
 
 local function EncodeEnumItem(v: EnumItem): any
-  return { ["EnumItem"] = `{v.EnumType}.{v.Name}` }
+  return { ["EnumItem"] = { Type = tostring(v.EnumType), Name = v.Name } }
 end
 local function DecodeEnumItem(v: any): EnumItem
   local data = v["EnumItem"]
-  local dot = string.find(data, ".", 1, true)
-  if not dot then error(`Invalid enum format: {data}`) end
-  local enumTypeName = string.sub(data, 1, dot - 1)
-  local enumValueName = string.sub(data, dot + 1)
-  local enumType = (Enum :: any)[enumTypeName]
-  if not enumType then error(`Unknown enum type: {enumTypeName}`) end
-  local enumItem = (enumType :: any)[enumValueName]
-  if not enumItem then error(`Unknown enum value: {data}`) end
-  return enumItem
+  return (Enum :: any)[data.Type][data.Name]
 end
 
 local function EncodeUDim(v: UDim): any
@@ -440,10 +420,7 @@ local function EncodeDateTime(v: DateTime): any
   return { ["DateTime"] = v:ToIsoDate() }
 end
 local function DecodeDateTime(v: any): DateTime
-  local data = v["DateTime"]
-  local dt = DateTime.fromIsoDate(data)
-  if not dt then error(`Invalid ISO date: {data}`) end
-  return dt
+  return DateTime.fromIsoDate(v["DateTime"])
 end
 
 local function EncodeRay(v: Ray): any
@@ -480,7 +457,7 @@ end
 local function DecodeInstanceRef(v: any): Instance
   local path = v["Ref"]
   local inst = FromDistinctPath(path)
-  if not inst then error(`Could not resolve instance ref: {path}`) end
+  if not inst then error(`UnknownRef: {path}`) end
   return inst
 end
 
@@ -610,10 +587,11 @@ local function DecodeProperty(value: any, nilReference: any): any
   if t == "string" then return value end
   if t == "table" then
     local key = next(value)
-    if key == nil then error("Empty encoded property") end
-    local decoder = PropertyDecoders[key]
-    if not decoder then error(`UnknownType: {key}`) end
-    return decoder(value)
+    if type(key) == "string" then
+      local decoder = PropertyDecoders[key]
+      if not decoder then error(`UnknownType: {key}`) end
+      return decoder(value)
+    end
   end
   error(`UnknownType: {typeof(value)}`)
 end
@@ -664,10 +642,11 @@ local function DecodeAttribute(value: any): any
   if t == "string" then return value end
   if t == "table" then
     local key = next(value)
-    if key == nil then error("Empty encoded attribute") end
-    local decoder = AttributeDecoders[key]
-    if not decoder then error(`UnknownType: {key}`) end
-    return decoder(value)
+    if type(key) == "string" then
+      local decoder = AttributeDecoders[key]
+      if not decoder then error(`UnknownType: {key}`) end
+      return decoder(value)
+    end
   end
   error(`UnknownType: {typeof(value)}`)
 end
