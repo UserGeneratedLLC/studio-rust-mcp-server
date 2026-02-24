@@ -420,7 +420,7 @@ local function EncodeDateTime(v: DateTime): any
   return { ["DateTime"] = v:ToIsoDate() }
 end
 local function DecodeDateTime(v: any): DateTime
-  return DateTime.fromIsoDate(v["DateTime"])
+  return assert(DateTime.fromIsoDate(v["DateTime"]))
 end
 
 local function EncodeRay(v: Ray): any
