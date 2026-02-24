@@ -40,13 +40,9 @@ end
 local function GetDistinctPath(inst: Instance): string
   local names = { GetDistinctName(inst) }
   local pivot: Instance? = inst.Parent
-  if pivot then
-    repeat
-      table.insert(names, EscapeName(pivot.Name))
-      pivot = pivot.Parent
-    until not pivot
-  else
-    table.insert(names, "")
+  while pivot and pivot ~= game do
+    table.insert(names, EscapeName(pivot.Name))
+    pivot = pivot.Parent
   end
   local n = #names
   local center = n // 2
@@ -117,16 +113,10 @@ local PropertyEncoders: { [string]: (any, any) -> any } = {
     }
   end,
   ["Vector2int16"] = function(v: Vector2int16)
-    return { ["Vector2int16"] = { EncodeNumber(v.X), EncodeNumber(v.Y) } }
+    return { ["Vector2int16"] = { v.X, v.Y } }
   end,
   ["Vector3int16"] = function(v: Vector3int16)
-    return {
-      ["Vector3int16"] = {
-        EncodeNumber(v.X),
-        EncodeNumber(v.Y),
-        EncodeNumber(v.Z),
-      },
-    }
+    return { ["Vector3int16"] = { v.X, v.Y, v.Z } }
   end,
   ["Vector2"] = function(v: Vector2)
     return { ["Vector2"] = { EncodeNumber(v.X), EncodeNumber(v.Y) } }
@@ -259,7 +249,7 @@ local PropertyEncoders: { [string]: (any, any) -> any } = {
   ["Instance"] = function(v: Instance) return { ["Ref"] = GetDistinctPath(v) } end,
   ["Region3"] = function(v: Region3)
     local center = v.CFrame.Position
-    local half = v.Size / 2
+    local half = v.Size * 0.5
     local min = center - half
     local max = center + half
     return {
@@ -276,90 +266,12 @@ local PropertyEncoders: { [string]: (any, any) -> any } = {
   ["Region3int16"] = function(v: Region3int16)
     return {
       ["Region3int16"] = {
-        EncodeNumber(v.Min.X),
-        EncodeNumber(v.Min.Y),
-        EncodeNumber(v.Min.Z),
-        EncodeNumber(v.Max.X),
-        EncodeNumber(v.Max.Y),
-        EncodeNumber(v.Max.Z),
-      },
-    }
-  end,
-  ["ColorSequenceKeypoint"] = function(v: ColorSequenceKeypoint)
-    return {
-      ["ColorSequenceKeypoint"] = {
-        EncodeNumber(v.Time),
-        EncodeNumber(v.Value.R),
-        EncodeNumber(v.Value.G),
-        EncodeNumber(v.Value.B),
-      },
-    }
-  end,
-  ["NumberSequenceKeypoint"] = function(v: NumberSequenceKeypoint)
-    return {
-      ["NumberSequenceKeypoint"] = {
-        EncodeNumber(v.Time),
-        EncodeNumber(v.Value),
-        EncodeNumber(v.Envelope),
-      },
-    }
-  end,
-  ["Path2DControlPoint"] = function(v: Path2DControlPoint)
-    local pos = v.Position
-    local lt = v.LeftTangent
-    local rt = v.RightTangent
-    return {
-      ["Path2DControlPoint"] = {
-        EncodeNumber(pos.X.Scale),
-        EncodeNumber(pos.X.Offset),
-        EncodeNumber(pos.Y.Scale),
-        EncodeNumber(pos.Y.Offset),
-        EncodeNumber(lt.X.Scale),
-        EncodeNumber(lt.X.Offset),
-        EncodeNumber(lt.Y.Scale),
-        EncodeNumber(lt.Y.Offset),
-        EncodeNumber(rt.X.Scale),
-        EncodeNumber(rt.X.Offset),
-        EncodeNumber(rt.Y.Scale),
-        EncodeNumber(rt.Y.Offset),
-      },
-    }
-  end,
-  ["RotationCurveKey"] = function(v: RotationCurveKey)
-    local comps = { v.Value:GetComponents() }
-    local cframe = table.create(12)
-    for i = 1, 12 do
-      cframe[i] = EncodeNumber(comps[i])
-    end
-    return {
-      ["RotationCurveKey"] = {
-        time = EncodeNumber(v.Time),
-        value = cframe,
-        interpolation = v.Interpolation.Name,
-        leftTangent = EncodeNumber(v.LeftTangent),
-        rightTangent = EncodeNumber(v.RightTangent),
-      },
-    }
-  end,
-  ["ValueCurveKey"] = function(v: ValueCurveKey)
-    return {
-      ["ValueCurveKey"] = {
-        time = EncodeNumber(v.Time),
-        value = EncodeNumber(v.Value),
-        interpolation = v.Interpolation.Name,
-        leftTangent = EncodeNumber(v.LeftTangent),
-        rightTangent = EncodeNumber(v.RightTangent),
-      },
-    }
-  end,
-  ["FloatCurveKey"] = function(v: FloatCurveKey)
-    return {
-      ["FloatCurveKey"] = {
-        time = EncodeNumber(v.Time),
-        value = EncodeNumber(v.Value),
-        interpolation = v.Interpolation.Name,
-        leftTangent = EncodeNumber(v.LeftTangent),
-        rightTangent = EncodeNumber(v.RightTangent),
+        v.Min.X,
+        v.Min.Y,
+        v.Min.Z,
+        v.Max.X,
+        v.Max.Y,
+        v.Max.Z,
       },
     }
   end,
