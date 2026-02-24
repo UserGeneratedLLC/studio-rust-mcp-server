@@ -1,6 +1,7 @@
 --!strict
 --!optimize 2
 --!native
+
 local EncodingService = game:GetService("EncodingService")
 
 export type EncodedInstance = {
