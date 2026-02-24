@@ -15,9 +15,7 @@ export type EncodedInstance = {
   Children: { EncodedInstance }?,
 }
 
-local function GetDebugId(inst: Instance): string
-  return inst:GetDebugId(0) -- TODO: I notice some people remove the first char
-end
+local function GetDebugId(inst: Instance): string return inst:GetDebugId(0) end
 
 local function UnescapeName(name: string): string
   name = string.gsub(name, "%%2[Ff]", "/")
@@ -53,7 +51,7 @@ local function GetDistinctPath(inst: Instance): string
 end
 
 --[[
-  TODO:
+  TODO(high):
   * split
   * pull out DebugId [if present]
   * un-escape each component
@@ -68,7 +66,7 @@ end
 local function FromDistinctPath(path: string): Instance? end
 
 local function GetProperties(inst: Instance): { [string]: any }
-  -- TODO: download and cache this:
+  -- TODO(high): download and cache this:
   -- https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/refs/heads/roblox/Full-API-Dump.json
   return {}
 end
@@ -702,6 +700,39 @@ local function EncodeInstance(
     result.Shallow = true
   end
   return result
+end
+
+local function DecodeInstance(
+  data: EncodedInstance,
+  nilReference: any,
+  parent: Instance?
+): Instance
+  local inst = Instance.new(data.ClassName)
+  inst.Name = UnescapeName(data.Name)
+  if not data.Shallow then
+    if data.Properties then
+      for key, value in data.Properties do
+        (inst :: any)[key] = DecodeProperty(value, nilReference)
+      end
+    end
+    if data.Attributes then
+      for key, value in data.Attributes do
+        inst:SetAttribute(key, DecodeAttribute(value))
+      end
+    end
+    if data.Children then
+      for _, childData in data.Children do
+        DecodeInstance(childData, nilReference, inst)
+      end
+    end
+    if data.Tags then
+      for _, tag in data.Tags do
+        inst:AddTag(tag)
+      end
+    end
+  end
+  if parent then inst.Parent = parent end
+  return inst
 end
 
 local module = {}
