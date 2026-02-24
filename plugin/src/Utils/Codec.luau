@@ -1,6 +1,5 @@
 --!strict
 --!optimize 2
---!native
 
 local EncodingService = game:GetService("EncodingService")
 
@@ -234,12 +233,23 @@ local function DecodeBrickColor(v: any): BrickColor
 end
 
 local function EncodeCFrame(v: CFrame): any
-  local comps = { v:GetComponents() }
-  local encoded = table.create(12)
-  for i = 1, 12 do
-    encoded[i] = EncodeNumber(comps[i])
-  end
-  return { ["CFrame"] = encoded }
+  local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = v:GetComponents()
+  return {
+    ["CFrame"] = {
+      EncodeNumber(x),
+      EncodeNumber(y),
+      EncodeNumber(z),
+      EncodeNumber(r00),
+      EncodeNumber(r01),
+      EncodeNumber(r02),
+      EncodeNumber(r10),
+      EncodeNumber(r11),
+      EncodeNumber(r12),
+      EncodeNumber(r20),
+      EncodeNumber(r21),
+      EncodeNumber(r22),
+    },
+  }
 end
 local function DecodeCFrame(v: any): CFrame
   local data = v["CFrame"]
