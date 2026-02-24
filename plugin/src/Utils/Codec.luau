@@ -2,17 +2,14 @@
 --!optimize 2
 --!native
 
-export type EnumValue<T> = {}
-export type PropertyValue = any
-export type AttributeValue = any
-
 export type EncodedInstance = {
   Name: string,
   ClassName: string,
   DebugId: string,
   Shallow: boolean?,
-  Properties: { [string]: PropertyValue }?,
-  Attributes: { [string]: AttributeValue }?,
+  -- If Shallow=true, anything below this point will not be populated.
+  Properties: { [string]: any }?,
+  Attributes: { [string]: any }?,
   Tags: { string }?,
   Children: { EncodedInstance }?,
 }
@@ -24,7 +21,7 @@ end
 local function UnescapeName(name: string): string
   name = string.gsub(name, "%%2F", "/")
   name = string.gsub(name, "%%7E", "~")
-  name = string.gsub(name, "%%%%", "%%")
+  name = string.gsub(name, "%%25", "%%")
   return name
 end
 
@@ -41,7 +38,7 @@ end
 
 local function GetDistinctPath(inst: Instance): string
   local names = { GetDistinctName(inst) }
-  local pivot: Instance? = inst
+  local pivot: Instance? = inst.Parent
   while pivot do
     table.insert(names, EscapeName(pivot.Name))
     pivot = pivot.Parent
@@ -65,9 +62,9 @@ local function EncodeNumber(v: number)
   return v
 end
 
-local PropertyEncoders: { [string]: (any) -> PropertyValue } = {
+local PropertyEncoders: { [string]: (any) -> any } = {
   ["nil"] = function(v: nil) return v end,
-  ["string"] = function(v: number) return v end,
+  ["string"] = function(v: string) return v end,
   ["boolean"] = function(v: boolean) return v end,
   ["number"] = EncodeNumber,
   ["EnumItem"] = function(v: EnumItem)
@@ -116,18 +113,19 @@ local PropertyEncoders: { [string]: (any) -> PropertyValue } = {
       ["Content"] = v.Uri,
     } end
     -- TODO: encode other types as base64
+    error("encode other types as base64")
   end,
 }
-local function EncodeProperty(value: any): AttributeValue
+local function EncodeProperty(value: any): any
   local encoder = PropertyEncoders[typeof(value)]
   if not encoder then error(`UnknownType: {typeof(value)}`) end
   return encoder(value)
 end
 
-local AttributeEncoders: { [string]: (any) -> AttributeValue } = {
+local AttributeEncoders: { [string]: (any) -> any } = {
   -- TODO: manually copy known supported attributes from PropertyEncoders, NOTE: there is no nil, and Instance uses the ref instead
 }
-local function EncodeAttribute(value: any): AttributeValue
+local function EncodeAttribute(value: any): any
   local encoder = AttributeEncoders[typeof(value)]
   if not encoder then error(`UnknownType: {typeof(value)}`) end
   return encoder(value)
@@ -146,25 +144,27 @@ local function EncodeInstance(inst: Instance, depth: number): EncodedInstance
     -- Children
     local children = {}
     local childDepth = depth - 1
-    for _, child in ipairs(inst:GetChildren()) do
+    for _, child in inst:GetChildren() do
       table.insert(children, EncodeInstance(child, childDepth))
     end
-    if #children > 0 then result.Children = result end
+    if #children > 0 then result.Children = children end
     -- Properties
     local properties = {}
-    for key, val in pairs(GetProperties(inst)) do
+    for key, val in GetProperties(inst) do
       properties[key] = EncodeProperty(val)
     end
     if next(properties) then result.Properties = properties end
     -- Attributes
     local attributes = {}
-    for key, val in pairs(inst:GetAttributes()) do
+    for key, val in inst:GetAttributes() do
       attributes[key] = EncodeAttribute(val)
     end
     if next(attributes) then result.Attributes = attributes end
     -- Tags
     local tags = inst:GetTags()
     if #tags > 0 then result.Tags = tags end
+  else
+    result.Shallow = true
   end
   return result
 end
