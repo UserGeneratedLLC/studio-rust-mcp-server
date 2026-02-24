@@ -511,13 +511,9 @@ local function DecodeRay(v: any): Ray
   )
 end
 
--- TODO(high):
--- we must encode nil's using {["Ref"] = nilReference}.
--- we need the encoder to call this function when it knows it's an Instance type.
--- we must past type information into the EncodeProperty function from our class metadata information.
-local function EncodeInstanceRef(v: Instance): any return { ["Ref"] = GetDistinctPath(v) } end
+local function EncodeInstanceRef(v: Instance): any return { ["Instance"] = GetDistinctPath(v) } end
 local function DecodeInstanceRef(v: any): Instance
-  local path = v["Ref"]
+  local path = v["Instance"]
   local inst = FromDistinctPath(path)
   if not inst then error(`UnknownRef: {path}`) end
   return inst
@@ -567,7 +563,7 @@ local function DecodeRegion3int16(v: any): Region3int16
   )
 end
 
-local PropertyEncoders: { [string]: (any, any) -> any } = {
+local PropertyEncoders: { [string]: (any) -> any } = {
   ["nil"] = EncodeNil,
   ["string"] = EncodeString,
   ["boolean"] = EncodeBoolean,
@@ -598,12 +594,17 @@ local PropertyEncoders: { [string]: (any, any) -> any } = {
   ["Region3"] = EncodeRegion3,
   ["Region3int16"] = EncodeRegion3int16,
 }
-local function EncodeProperty(value: any, nilReference: any): any
-  local encoder = PropertyEncoders[typeof(value)]
-  if not encoder then error(`UnknownType: {typeof(value)}`) end
-  return encoder(value, nilReference)
+local function EncodeProperty(value: any, nilReference: any, reflectionType: ReflectionType): any
+  local typeName = reflectionType.ScriptType or typeof(value)
+  if value == nil then return {
+    [typeName] = nilReference,
+  } end
+  local encoder = PropertyEncoders[typeName]
+  if not encoder then error(`UnknownType: {typeName}`) end
+  return encoder(value)
 end
 
+-- TODO(low): cache these
 local function EncodeProperties(inst: Instance, nilReference: any): { [string]: any }
   local reflected: { ReflectedProperty }? =
     ReflectionService:GetPropertiesOfClass(inst.ClassName, PropertiesFilter) :: any
@@ -620,7 +621,7 @@ local function EncodeProperties(inst: Instance, nilReference: any): { [string]: 
       if not prop.Permits.Write then continue end
     end
     local ok, value = pcall(function() return (inst :: any)[name] end)
-    if ok then result[name] = EncodeProperty(value, nilReference) end
+    if ok then result[name] = EncodeProperty(value, nilReference, prop.Type) end
   end
   return result
 end
@@ -650,7 +651,7 @@ local PropertyDecoders: { [string]: (any) -> any } = {
   ["Faces"] = DecodeFaces,
   ["DateTime"] = DecodeDateTime,
   ["Ray"] = DecodeRay,
-  ["Ref"] = DecodeInstanceRef,
+  ["Instance"] = DecodeInstanceRef,
   ["Region3"] = DecodeRegion3,
   ["Region3int16"] = DecodeRegion3int16,
 }
@@ -663,6 +664,8 @@ local function DecodeProperty(value: any, nilReference: any): any
   if t == "table" then
     local key = next(value)
     if type(key) == "string" then
+      local inner = value[key]
+      if inner == nilReference then return nil end
       local decoder = PropertyDecoders[key]
       if not decoder then error(`UnknownType: {key}`) end
       return decoder(value)
