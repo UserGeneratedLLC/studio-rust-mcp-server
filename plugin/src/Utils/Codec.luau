@@ -296,7 +296,11 @@ local function EncodeContent(v: Content): any
   end
   return { ["Content"] = data }
 end
-local function DecodeContent(v: any): Content return Content.fromUri(v["Content"]) end
+local function DecodeContent(v: any): Content
+  local data = v["Content"]
+  if type(data) == "string" then return Content.fromUri(data) end
+  error(`Non-reconstructible Content source: {data.source}`)
+end
 
 local function EncodeBrickColor(v: BrickColor): any return { ["BrickColor"] = v.Name } end
 local function DecodeBrickColor(v: any): BrickColor return BrickColor.new(v["BrickColor"]) end
@@ -564,7 +568,6 @@ local function DecodeRegion3int16(v: any): Region3int16
 end
 
 local PropertyEncoders: { [string]: (any) -> any } = {
-  ["nil"] = EncodeNil,
   ["string"] = EncodeString,
   ["boolean"] = EncodeBoolean,
   ["number"] = EncodeNumber,
@@ -595,7 +598,7 @@ local PropertyEncoders: { [string]: (any) -> any } = {
   ["Region3int16"] = EncodeRegion3int16,
 }
 local function EncodeProperty(value: any, nilReference: any, reflectionType: ReflectionType): any
-  local typeName = reflectionType.ScriptType or typeof(value)
+  local typeName = reflectionType.ScriptType :: string
   if value == nil then return {
     [typeName] = nilReference,
   } end
@@ -604,15 +607,22 @@ local function EncodeProperty(value: any, nilReference: any, reflectionType: Ref
   return encoder(value)
 end
 
--- TODO(low): cache these
-local function EncodeProperties(inst: Instance, nilReference: any): { [string]: any }
+local PropertiesCache: { [string]: { ReflectedProperty } } = {}
+
+local function GetCachedProperties(className: string): { ReflectedProperty }
+  local cached = PropertiesCache[className]
+  if cached then return cached end
   local reflected: { ReflectedProperty }? =
-    ReflectionService:GetPropertiesOfClass(inst.ClassName, PropertiesFilter) :: any
-  if not reflected then return {} end
-  local result: { [string]: any } = {}
+    ReflectionService:GetPropertiesOfClass(className, PropertiesFilter) :: any
+  if not reflected then
+    PropertiesCache[className] = {}
+    return PropertiesCache[className]
+  end
+  local filtered = {}
   for _, prop in reflected do
     local name = prop.Name
     if SkipProps[name] then continue end
+    if not prop.Type.ScriptType then continue end
     if not prop.Permits.Read then continue end
     local forced = ForceSerialize[name] == true
     if not prop.Serialized and not forced then continue end
@@ -620,8 +630,18 @@ local function EncodeProperties(inst: Instance, nilReference: any): { [string]: 
       if prop.Display and prop.Display.DeprecationMessage then continue end
       if not prop.Permits.Write then continue end
     end
-    local ok, value = pcall(function() return (inst :: any)[name] end)
-    if ok then result[name] = EncodeProperty(value, nilReference, prop.Type) end
+    table.insert(filtered, prop)
+  end
+  PropertiesCache[className] = filtered
+  return filtered
+end
+
+local function EncodeProperties(inst: Instance, nilReference: any): { [string]: any }
+  local props = GetCachedProperties(inst.ClassName)
+  local result: { [string]: any } = {}
+  for _, prop in props do
+    local ok, value = pcall(function() return (inst :: any)[prop.Name] end)
+    if ok then result[prop.Name] = EncodeProperty(value, nilReference, prop.Type) end
   end
   return result
 end
@@ -655,15 +675,25 @@ local PropertyDecoders: { [string]: (any) -> any } = {
   ["Region3"] = DecodeRegion3,
   ["Region3int16"] = DecodeRegion3int16,
 }
-local function DecodeProperty(value: any, nilReference: any): any
-  if value == nilReference then return nil end
+local function DecodeProperty(value: any, nilReference: any, reflectionType: ReflectionType): any
+  local expected = reflectionType.ScriptType :: string
   local t = type(value)
-  if t == "boolean" then return value end
-  if t == "number" then return value end
-  if t == "string" then return value end
+  if t == "boolean" then
+    assert(expected == "boolean")
+    return value
+  end
+  if t == "number" then
+    assert(expected == "number")
+    return value
+  end
+  if t == "string" then
+    assert(expected == "string")
+    return value
+  end
   if t == "table" then
     local key = next(value)
     if type(key) == "string" then
+      assert(key == expected)
       local inner = value[key]
       if inner == nilReference then return nil end
       local decoder = PropertyDecoders[key]
@@ -674,7 +704,7 @@ local function DecodeProperty(value: any, nilReference: any): any
   error(`UnknownType: {typeof(value)}`)
 end
 
-local AttributeEncoders: { [string]: (any, any) -> any } = {
+local AttributeEncoders: { [string]: (any) -> any } = {
   ["string"] = EncodeString,
   ["boolean"] = EncodeBoolean,
   ["number"] = EncodeNumber,
@@ -691,10 +721,10 @@ local AttributeEncoders: { [string]: (any, any) -> any } = {
   ["Rect"] = EncodeRect,
   ["Font"] = EncodeFont,
 }
-local function EncodeAttribute(value: any, nilReference: any): any
+local function EncodeAttribute(value: any): any
   local encoder = AttributeEncoders[typeof(value)]
   if not encoder then error(`UnknownType: {typeof(value)}`) end
-  return encoder(value, nilReference)
+  return encoder(value)
 end
 
 local AttributeDecoders: { [string]: (any) -> any } = {
@@ -753,7 +783,7 @@ local function EncodeInstance(inst: Instance, depth: number, nilReference: any):
     -- Attributes
     local attributes = {}
     for key, val in inst:GetAttributes() do
-      attributes[key] = EncodeAttribute(val, nilReference)
+      attributes[key] = EncodeAttribute(val)
     end
     if next(attributes) then result.Attributes = attributes end
     -- Tags
@@ -765,13 +795,20 @@ local function EncodeInstance(inst: Instance, depth: number, nilReference: any):
   return result
 end
 
+-- TODO(medium): fix MeshPart creation & do not create Services somehow..?
 local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: Instance?): Instance
   local inst = Instance.new(data.ClassName)
   inst.Name = UnescapeName(data.Name)
   if not data.Shallow then
     if data.Properties then
-      for key, value in data.Properties do
-        (inst :: any)[key] = DecodeProperty(value, nilReference)
+      local instAny = inst :: any
+      local props = GetCachedProperties(data.ClassName)
+      for _, prop in props do
+        local encoded = data.Properties[prop.Name]
+        if encoded ~= nil then
+          local decoded = DecodeProperty(encoded, nilReference, prop.Type)
+          instAny[prop.Name] = decoded
+        end
       end
     end
     if data.Attributes then
