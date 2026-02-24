@@ -19,7 +19,7 @@ Endpoints:
 * "luau code execution"
 
 [Reference Paths]
-During a session we can utilize an auxilary instance ref uuid via GetUniqueId(0)
+During a session we can utilize an auxilary instance ref uuid via GetDebugId(0)
 This string can accompany paths with a format like (its not always a number tmk):
 ReplicatedStorage/SomeInstance~1523
 These are only stable per studio session, so they should be included in metadata responses about instances
@@ -28,12 +28,12 @@ This is helpful for editing instance trees with duplicated children/ambiguous pa
 [Instance codec]
 Need to develop codec for transmitting instances
 Use msgpack for transmission
-Duplicate paths handled by naming `{inst.Name}~{inst.GetUniqueId(0)}`
+Duplicate paths handled by naming `{inst.Name}~{inst.GetDebugId(0)}`
 Grab MaximumADHD's reflection json via github. use in Rust+Plugin. create luau/rust types for it.
 {
   "Name": "InstanceName",
   "ClassName": "Part",
-  "UniqueId": "GetUniqueId(0) output, e.g. 1234af",
+  "UniqueId": "GetDebugId(0) output, e.g. 1234af",
   "Properties": {
     "Text": "Hello",
     "Shape": {"Enum.PartType": "Block"},
@@ -64,7 +64,7 @@ Grab MaximumADHD's reflection json via github. use in Rust+Plugin. create luau/r
 
 [Studio Plugin MCP]
 * Any instance which is determined to have an ambiguous path (duplicate parent naming/children naming) is suffixed automatically:
- - During a session we can utilize an auxilary instance ref uuid via GetUniqueId(0)
+ - During a session we can utilize an auxilary instance ref uuid via GetDebugId(0)
  - This string can accompany paths with a format like (its not always a number tmk):
  - ReplicatedStorage/SomeInstance~1523
  - These are only stable per studio session, so they should be included in metadata responses about instances

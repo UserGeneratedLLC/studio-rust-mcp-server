@@ -10,34 +10,41 @@ export type EncodedInstance = {
   Name: string,
   ClassName: string,
   DebugId: string,
+  Shallow: boolean?,
   Properties: { [string]: PropertyValue }?,
   Attributes: { [string]: AttributeValue }?,
   Tags: { string }?,
-  Children: ({ [string]: EncodedInstance } | { string })?,
+  Children: { EncodedInstance }?,
 }
 
 local function GetDebugId(inst: Instance): string
   return inst:GetDebugId(0) -- TODO: I notice some people remove the first char
 end
 
-local function GetFullName(inst: Instance): string
-  local name = inst.Name
+local function UnescapeName(name: string): string
+  name = string.gsub(name, "%%2F", "/")
+  name = string.gsub(name, "%%7E", "~")
+  name = string.gsub(name, "%%%%", "%%")
+  return name
+end
+
+local function EscapeName(name: string): string
   name = string.gsub(name, "%%", "%%25")
   name = string.gsub(name, "~", "%%7E")
   name = string.gsub(name, "/", "%%2F")
-  return `{name}~{GetDebugId(inst)}`
+  return name
 end
 
-local function GetFullPath(inst: Instance): string
-  local names = {}
-  local pivot = inst
-  while true do
-    table.insert(names, GetFullName(pivot))
-    local parent = pivot.Parent
-    if not parent then
-      break
-    end
-    pivot = parent
+local function GetDistinctName(inst: Instance): string
+  return `{EscapeName(inst.Name)}~{GetDebugId(inst)}`
+end
+
+local function GetDistinctPath(inst: Instance): string
+  local names = { GetDistinctName(inst) }
+  local pivot: Instance? = inst
+  while pivot do
+    table.insert(names, EscapeName(pivot.Name))
+    pivot = pivot.Parent
   end
   local n = #names
   local center = n // 2
@@ -54,22 +61,14 @@ local function GetProperties(inst: Instance): { [string]: any }
 end
 
 local function EncodeNumber(v: number)
-  if not math.isfinite(v) then
-    return { ["number"] = tostring(v) }
-  end
+  if not math.isfinite(v) then return { ["number"] = tostring(v) } end
   return v
 end
 
 local PropertyEncoders: { [string]: (any) -> PropertyValue } = {
-  ["nil"] = function(v: nil)
-    return v
-  end,
-  ["string"] = function(v: number)
-    return v
-  end,
-  ["boolean"] = function(v: boolean)
-    return v
-  end,
+  ["nil"] = function(v: nil) return v end,
+  ["string"] = function(v: number) return v end,
+  ["boolean"] = function(v: boolean) return v end,
   ["number"] = EncodeNumber,
   ["EnumItem"] = function(v: EnumItem)
     return { [`Enum.{v.EnumType}`] = v.Name }
@@ -113,19 +112,15 @@ local PropertyEncoders: { [string]: (any) -> PropertyValue } = {
     }
   end,
   ["Content"] = function(v: Content)
-    if v.Uri then
-      return {
-        ["Content"] = v.Uri,
-      }
-    end
+    if v.Uri then return {
+      ["Content"] = v.Uri,
+    } end
     -- TODO: encode other types as base64
   end,
 }
 local function EncodeProperty(value: any): AttributeValue
   local encoder = PropertyEncoders[typeof(value)]
-  if not encoder then
-    error(`UnknownType: {typeof(value)}`)
-  end
+  if not encoder then error(`UnknownType: {typeof(value)}`) end
   return encoder(value)
 end
 
@@ -134,50 +129,44 @@ local AttributeEncoders: { [string]: (any) -> AttributeValue } = {
 }
 local function EncodeAttribute(value: any): AttributeValue
   local encoder = AttributeEncoders[typeof(value)]
-  if not encoder then
-    error(`UnknownType: {typeof(value)}`)
-  end
+  if not encoder then error(`UnknownType: {typeof(value)}`) end
   return encoder(value)
 end
 
+--[[
+  depth=0, this child specifically and then shallow view of it's children
+]]
 local function EncodeInstance(inst: Instance, depth: number): EncodedInstance
-  -- Properties
-  local properties = {}
-  for key, val in pairs(GetProperties(inst)) do
-    properties[key] = EncodeProperty(val)
-  end
-  -- Attributes
-  local attributes = {}
-  for key, val in pairs(inst:GetAttributes()) do
-    attributes[key] = EncodeAttribute(val)
-  end
-  -- Tags
-  local tags = inst:GetTags()
-  -- Children
-  local children: { [string]: EncodedInstance } | { string }
-  if depth > 0 then
-    local childrenTable = {}
-    local childDepth = depth - 1
-    for _, child in ipairs(inst:GetChildren()) do
-      childrenTable[GetFullName(child)] = EncodeInstance(child, childDepth)
-    end
-    children = childrenTable
-  else
-    local childrenList = {}
-    for _, child in ipairs(inst:GetChildren()) do
-      table.insert(childrenList, GetFullName(child))
-    end
-    children = childrenList
-  end
-  return {
-    Name = inst.Name,
+  local result: EncodedInstance = {
+    Name = EscapeName(inst.Name),
     ClassName = inst.ClassName,
     DebugId = GetDebugId(inst),
-    Properties = if next(properties) then properties else nil,
-    Attributes = if next(attributes) then attributes else nil,
-    Tags = if next(tags) then tags else nil,
-    Children = if next(children) then children else nil,
   }
+  if depth >= 0 then
+    -- Children
+    local children = {}
+    local childDepth = depth - 1
+    for _, child in ipairs(inst:GetChildren()) do
+      table.insert(children, EncodeInstance(child, childDepth))
+    end
+    if #children > 0 then result.Children = result end
+    -- Properties
+    local properties = {}
+    for key, val in pairs(GetProperties(inst)) do
+      properties[key] = EncodeProperty(val)
+    end
+    if next(properties) then result.Properties = properties end
+    -- Attributes
+    local attributes = {}
+    for key, val in pairs(inst:GetAttributes()) do
+      attributes[key] = EncodeAttribute(val)
+    end
+    if next(attributes) then result.Attributes = attributes end
+    -- Tags
+    local tags = inst:GetTags()
+    if #tags > 0 then result.Tags = tags end
+  end
+  return result
 end
 
 local module = {}
