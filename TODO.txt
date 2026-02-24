@@ -123,6 +123,8 @@ Endpoints:
  - returns path
 * get_script_source path
 * set_script_source path source
+* search_script_source filter [includes] [excludes]
+ - model after grep
 * search_instances [name] [tag] [classname]
  - needs more thought, this can be a goldmine of an endpoint of setup right.
  - inspiration should be grep
