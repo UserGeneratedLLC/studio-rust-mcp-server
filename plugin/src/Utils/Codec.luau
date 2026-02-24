@@ -184,8 +184,6 @@ local function DecodeString(v: any): string
   return buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(v["string"])))
 end
 
-local function EncodeNil(_v: nil, nilReference: any): any return nilReference end
-
 local function EncodeBoolean(v: boolean): any return v end
 local function DecodeBoolean(v: any): boolean
   assert(type(v) == "boolean")
@@ -277,6 +275,7 @@ local function DecodeColor3(v: any): Color3
   return Color3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3]))
 end
 
+-- TODO(medium): DecodeContent silently produces garbage for non-URI Content
 local function EncodeContent(v: Content): any
   local data: any
   local sourceType = v.SourceType
