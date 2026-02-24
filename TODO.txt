@@ -115,8 +115,10 @@ Endpoints:
  - should send back the resulting path
 * get_selections
 * set_selections paths
+* get_performance_stats
+ - FPS, instance count, etc...
 * get_place_info
- - UniverseID, PlaceId, PlaceName, etc
+ - UniverseID, PlaceId, PlaceName, time info, etc...
 * undo [times]
 * redo [times]
 * rename_instance path newName

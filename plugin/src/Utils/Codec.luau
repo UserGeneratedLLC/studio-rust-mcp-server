@@ -1,6 +1,7 @@
 --!strict
 --!optimize 2
 --!native
+local EncodingService = game:GetService("EncodingService")
 
 export type EncodedInstance = {
   Name: string,
@@ -19,8 +20,8 @@ local function GetDebugId(inst: Instance): string
 end
 
 local function UnescapeName(name: string): string
-  name = string.gsub(name, "%%2F", "/")
-  name = string.gsub(name, "%%7E", "~")
+  name = string.gsub(name, "%%2[Ff]", "/")
+  name = string.gsub(name, "%%7[Ee]", "~")
   name = string.gsub(name, "%%25", "%%")
   return name
 end
@@ -39,9 +40,13 @@ end
 local function GetDistinctPath(inst: Instance): string
   local names = { GetDistinctName(inst) }
   local pivot: Instance? = inst.Parent
-  while pivot do
-    table.insert(names, EscapeName(pivot.Name))
-    pivot = pivot.Parent
+  if pivot then
+    repeat
+      table.insert(names, EscapeName(pivot.Name))
+      pivot = pivot.Parent
+    until not pivot
+  else
+    table.insert(names, "")
   end
   local n = #names
   local center = n // 2
@@ -50,6 +55,20 @@ local function GetDistinctPath(inst: Instance): string
   end
   return table.concat(names, "/")
 end
+
+--[[
+  * split
+  * pull out DebugId [if present]
+  * un-escape each component
+  * start de-referencing one-by-one
+  * root starts with game:FindService(name)
+  * when we de-reference, check if there are duplicate named children and add that to search space
+  * if we do not have a DebugId and there is a duplicately named children, warn & return nil
+  * once we know the search space, start looking for the correct child given our DebugId
+  * we could do a single-shot attempt at finding the child (fast-path) and check if it matches the DebugId, then actually build search space
+  * NOTE: we really have to maintain a DebugId map of all instances, and then just do a table check & make sure path is still the same.
+]]
+local function FromDistinctPath(path: string): Instance? end
 
 local function GetProperties(inst: Instance): { [string]: any }
   -- TODO: download and cache this:
@@ -62,13 +81,25 @@ local function EncodeNumber(v: number): any
   return v
 end
 
-local NilReference = newproxy()
+local function EncodeString(v: string): any
+  if not utf8.len(v) then
+    return {
+      ["string"] = buffer.tostring(
+        EncodingService:Base64Encode(buffer.fromstring(v))
+      ),
+    }
+  end
+  return v
+end
 
-local PropertyEncoders: { [string]: (any) -> any } = {
-  ["nil"] = function(v: nil) return NilReference end,
-  ["string"] = function(v: string) return v end,
+local PropertyEncoders: { [string]: (any, any) -> any } = {
+  ["nil"] = function(v: nil, nilReference: any) return nilReference end,
+  ["string"] = EncodeString,
   ["boolean"] = function(v: boolean) return v end,
   ["number"] = EncodeNumber,
+  ["buffer"] = function(v: buffer)
+    return { ["buffer"] = buffer.tostring(EncodingService:Base64Encode(v)) }
+  end,
   ["EnumItem"] = function(v: EnumItem)
     return { [`Enum.{v.EnumType}`] = v.Name }
   end,
@@ -114,14 +145,18 @@ local PropertyEncoders: { [string]: (any) -> any } = {
     local data: any
     local sourceType = v.SourceType
     if sourceType == Enum.ContentSourceType.Uri then
-      data = { Uri = v.Uri }
+      data = v.Uri
     elseif sourceType == Enum.ContentSourceType.Object then
       -- TODO(low): encode the EditableImage/Mesh/Capture/VideoContext etc.
-      data = { Object = assert(v.Object).ClassName }
+      if v.Object then
+        data = v.Object.ClassName
+      else
+        data = "Object"
+      end
     elseif sourceType == Enum.ContentSourceType.Opaque then
-      data = { Opaque = true }
+      data = "Opaque"
     else
-      data = {}
+      data = sourceType.Name
     end
     return { ["Content"] = data }
   end,
@@ -208,9 +243,7 @@ local PropertyEncoders: { [string]: (any) -> any } = {
       },
     }
   end,
-  ["DateTime"] = function(v: DateTime)
-    return { ["DateTime"] = v.UnixTimestampMillis }
-  end,
+  ["DateTime"] = function(v: DateTime) return { ["DateTime"] = v:ToIsoDate() } end,
   ["Ray"] = function(v: Ray)
     return {
       ["Ray"] = {
@@ -224,26 +257,150 @@ local PropertyEncoders: { [string]: (any) -> any } = {
     }
   end,
   ["Instance"] = function(v: Instance) return { ["Ref"] = GetDistinctPath(v) } end,
+  ["Region3"] = function(v: Region3)
+    local center = v.CFrame.Position
+    local half = v.Size / 2
+    local min = center - half
+    local max = center + half
+    return {
+      ["Region3"] = {
+        EncodeNumber(min.X),
+        EncodeNumber(min.Y),
+        EncodeNumber(min.Z),
+        EncodeNumber(max.X),
+        EncodeNumber(max.Y),
+        EncodeNumber(max.Z),
+      },
+    }
+  end,
+  ["Region3int16"] = function(v: Region3int16)
+    return {
+      ["Region3int16"] = {
+        EncodeNumber(v.Min.X),
+        EncodeNumber(v.Min.Y),
+        EncodeNumber(v.Min.Z),
+        EncodeNumber(v.Max.X),
+        EncodeNumber(v.Max.Y),
+        EncodeNumber(v.Max.Z),
+      },
+    }
+  end,
+  ["ColorSequenceKeypoint"] = function(v: ColorSequenceKeypoint)
+    return {
+      ["ColorSequenceKeypoint"] = {
+        EncodeNumber(v.Time),
+        EncodeNumber(v.Value.R),
+        EncodeNumber(v.Value.G),
+        EncodeNumber(v.Value.B),
+      },
+    }
+  end,
+  ["NumberSequenceKeypoint"] = function(v: NumberSequenceKeypoint)
+    return {
+      ["NumberSequenceKeypoint"] = {
+        EncodeNumber(v.Time),
+        EncodeNumber(v.Value),
+        EncodeNumber(v.Envelope),
+      },
+    }
+  end,
+  ["Path2DControlPoint"] = function(v: Path2DControlPoint)
+    local pos = v.Position
+    local lt = v.LeftTangent
+    local rt = v.RightTangent
+    return {
+      ["Path2DControlPoint"] = {
+        EncodeNumber(pos.X.Scale),
+        EncodeNumber(pos.X.Offset),
+        EncodeNumber(pos.Y.Scale),
+        EncodeNumber(pos.Y.Offset),
+        EncodeNumber(lt.X.Scale),
+        EncodeNumber(lt.X.Offset),
+        EncodeNumber(lt.Y.Scale),
+        EncodeNumber(lt.Y.Offset),
+        EncodeNumber(rt.X.Scale),
+        EncodeNumber(rt.X.Offset),
+        EncodeNumber(rt.Y.Scale),
+        EncodeNumber(rt.Y.Offset),
+      },
+    }
+  end,
+  ["RotationCurveKey"] = function(v: RotationCurveKey)
+    local comps = { v.Value:GetComponents() }
+    local cframe = table.create(12)
+    for i = 1, 12 do
+      cframe[i] = EncodeNumber(comps[i])
+    end
+    return {
+      ["RotationCurveKey"] = {
+        time = EncodeNumber(v.Time),
+        value = cframe,
+        interpolation = v.Interpolation.Name,
+        leftTangent = EncodeNumber(v.LeftTangent),
+        rightTangent = EncodeNumber(v.RightTangent),
+      },
+    }
+  end,
+  ["ValueCurveKey"] = function(v: ValueCurveKey)
+    return {
+      ["ValueCurveKey"] = {
+        time = EncodeNumber(v.Time),
+        value = EncodeNumber(v.Value),
+        interpolation = v.Interpolation.Name,
+        leftTangent = EncodeNumber(v.LeftTangent),
+        rightTangent = EncodeNumber(v.RightTangent),
+      },
+    }
+  end,
+  ["FloatCurveKey"] = function(v: FloatCurveKey)
+    return {
+      ["FloatCurveKey"] = {
+        time = EncodeNumber(v.Time),
+        value = EncodeNumber(v.Value),
+        interpolation = v.Interpolation.Name,
+        leftTangent = EncodeNumber(v.LeftTangent),
+        rightTangent = EncodeNumber(v.RightTangent),
+      },
+    }
+  end,
 }
-local function EncodeProperty(value: any): any
+local function EncodeProperty(value: any, nilReference: any): any
   local encoder = PropertyEncoders[typeof(value)]
   if not encoder then error(`UnknownType: {typeof(value)}`) end
-  return encoder(value)
+  return encoder(value, nilReference)
 end
 
-local AttributeEncoders: { [string]: (any) -> any } = {
-  -- TODO: manually copy known supported attributes from PropertyEncoders, NOTE: there is no nil, and Instance uses the ref instead
+local AttributeEncoders: { [string]: (any, any) -> any } = {
+  ["string"] = PropertyEncoders["string"],
+  ["boolean"] = PropertyEncoders["boolean"],
+  ["number"] = PropertyEncoders["number"],
+  ["UDim"] = PropertyEncoders["UDim"],
+  ["UDim2"] = PropertyEncoders["UDim2"],
+  ["Vector2"] = PropertyEncoders["Vector2"],
+  ["Vector3"] = PropertyEncoders["Vector3"],
+  ["Color3"] = PropertyEncoders["Color3"],
+  ["BrickColor"] = PropertyEncoders["BrickColor"],
+  ["CFrame"] = PropertyEncoders["CFrame"],
+  ["NumberRange"] = PropertyEncoders["NumberRange"],
+  ["NumberSequence"] = PropertyEncoders["NumberSequence"],
+  ["ColorSequence"] = PropertyEncoders["ColorSequence"],
+  ["Rect"] = PropertyEncoders["Rect"],
+  ["Font"] = PropertyEncoders["Font"],
 }
-local function EncodeAttribute(value: any): any
+local function EncodeAttribute(value: any, nilReference: any): any
   local encoder = AttributeEncoders[typeof(value)]
   if not encoder then error(`UnknownType: {typeof(value)}`) end
-  return encoder(value)
+  return encoder(value, nilReference)
 end
 
 --[[
   depth=0, this child specifically and then shallow view of it's children
 ]]
-local function EncodeInstance(inst: Instance, depth: number): EncodedInstance
+local function EncodeInstance(
+  inst: Instance,
+  depth: number,
+  nilReference: any
+): EncodedInstance
   local result: EncodedInstance = {
     Name = EscapeName(inst.Name),
     ClassName = inst.ClassName,
@@ -254,19 +411,19 @@ local function EncodeInstance(inst: Instance, depth: number): EncodedInstance
     local children = {}
     local childDepth = depth - 1
     for _, child in inst:GetChildren() do
-      table.insert(children, EncodeInstance(child, childDepth))
+      table.insert(children, EncodeInstance(child, childDepth, nilReference))
     end
     if #children > 0 then result.Children = children end
     -- Properties
     local properties = {}
     for key, val in GetProperties(inst) do
-      properties[key] = EncodeProperty(val)
+      properties[key] = EncodeProperty(val, nilReference)
     end
     if next(properties) then result.Properties = properties end
     -- Attributes
     local attributes = {}
     for key, val in inst:GetAttributes() do
-      attributes[key] = EncodeAttribute(val)
+      attributes[key] = EncodeAttribute(val, nilReference)
     end
     if next(attributes) then result.Attributes = attributes end
     -- Tags
