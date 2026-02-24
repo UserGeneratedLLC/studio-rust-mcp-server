@@ -805,8 +805,7 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
       for _, prop in props do
         local encoded = data.Properties[prop.Name]
         if encoded ~= nil then
-          local decoded = DecodeProperty(encoded, nilReference, prop.Type)
-          instAny[prop.Name] = decoded
+          instAny[prop.Name] = DecodeProperty(encoded, nilReference, prop.Type)
         end
       end
     end
