@@ -57,13 +57,15 @@ local function GetProperties(inst: Instance): { [string]: any }
   return {}
 end
 
-local function EncodeNumber(v: number)
+local function EncodeNumber(v: number): any
   if not math.isfinite(v) then return { ["number"] = tostring(v) } end
   return v
 end
 
+local NilReference = newproxy()
+
 local PropertyEncoders: { [string]: (any) -> any } = {
-  ["nil"] = function(v: nil) return v end,
+  ["nil"] = function(v: nil) return NilReference end,
   ["string"] = function(v: string) return v end,
   ["boolean"] = function(v: boolean) return v end,
   ["number"] = EncodeNumber,
@@ -109,12 +111,119 @@ local PropertyEncoders: { [string]: (any) -> any } = {
     }
   end,
   ["Content"] = function(v: Content)
-    if v.Uri then return {
-      ["Content"] = v.Uri,
-    } end
-    -- TODO: encode other types as base64
-    error("encode other types as base64")
+    local data: any
+    local sourceType = v.SourceType
+    if sourceType == Enum.ContentSourceType.Uri then
+      data = { Uri = v.Uri }
+    elseif sourceType == Enum.ContentSourceType.Object then
+      -- TODO(low): encode the EditableImage/Mesh/Capture/VideoContext etc.
+      data = { Object = assert(v.Object).ClassName }
+    elseif sourceType == Enum.ContentSourceType.Opaque then
+      data = { Opaque = true }
+    else
+      data = {}
+    end
+    return { ["Content"] = data }
   end,
+  ["BrickColor"] = function(v: BrickColor) return { ["BrickColor"] = v.Name } end,
+  ["CFrame"] = function(v: CFrame)
+    local comps = { v:GetComponents() }
+    local encoded = table.create(12)
+    for i = 1, 12 do
+      encoded[i] = EncodeNumber(comps[i])
+    end
+    return { ["CFrame"] = encoded }
+  end,
+  ["NumberRange"] = function(v: NumberRange)
+    return { ["NumberRange"] = { EncodeNumber(v.Min), EncodeNumber(v.Max) } }
+  end,
+  ["NumberSequence"] = function(v: NumberSequence)
+    local keypoints = {}
+    for _, kp in v.Keypoints do
+      table.insert(keypoints, {
+        EncodeNumber(kp.Time),
+        EncodeNumber(kp.Value),
+        EncodeNumber(kp.Envelope),
+      })
+    end
+    return { ["NumberSequence"] = keypoints }
+  end,
+  ["ColorSequence"] = function(v: ColorSequence)
+    local keypoints = {}
+    for _, kp in v.Keypoints do
+      table.insert(keypoints, {
+        EncodeNumber(kp.Time),
+        EncodeNumber(kp.Value.R),
+        EncodeNumber(kp.Value.G),
+        EncodeNumber(kp.Value.B),
+      })
+    end
+    return { ["ColorSequence"] = keypoints }
+  end,
+  ["Rect"] = function(v: Rect)
+    return {
+      ["Rect"] = {
+        EncodeNumber(v.Min.X),
+        EncodeNumber(v.Min.Y),
+        EncodeNumber(v.Max.X),
+        EncodeNumber(v.Max.Y),
+      },
+    }
+  end,
+  ["Font"] = function(v: Font)
+    local family = v.Family :: any
+    return {
+      ["Font"] = {
+        family = if type(family) == "string"
+          then family
+          else family.Uri or tostring(family),
+        weight = v.Weight.Name,
+        style = v.Style.Name,
+      },
+    }
+  end,
+  ["PhysicalProperties"] = function(v: PhysicalProperties)
+    return {
+      ["PhysicalProperties"] = {
+        EncodeNumber(v.Density),
+        EncodeNumber(v.Friction),
+        EncodeNumber(v.Elasticity),
+        EncodeNumber(v.FrictionWeight),
+        EncodeNumber(v.ElasticityWeight),
+      },
+    }
+  end,
+  ["Axes"] = function(v: Axes)
+    return { ["Axes"] = { X = v.X, Y = v.Y, Z = v.Z } }
+  end,
+  ["Faces"] = function(v: Faces)
+    return {
+      ["Faces"] = {
+        Top = v.Top,
+        Bottom = v.Bottom,
+        Left = v.Left,
+        Right = v.Right,
+        Front = v.Front,
+        Back = v.Back,
+      },
+    }
+  end,
+  ["DateTime"] = function(v: DateTime)
+    return { ["DateTime"] = v.UnixTimestampMillis }
+  end,
+  ["Ray"] = function(v: Ray)
+    return {
+      ["Ray"] = {
+        EncodeNumber(v.Origin.X),
+        EncodeNumber(v.Origin.Y),
+        EncodeNumber(v.Origin.Z),
+        EncodeNumber(v.Direction.X),
+        EncodeNumber(v.Direction.Y),
+        EncodeNumber(v.Direction.Z),
+      },
+    }
+  end,
+  ["Instance"] = function(v: Instance) return { ["Ref"] = GetDistinctPath(v) } end,
 }
 local function EncodeProperty(value: any): any
   local encoder = PropertyEncoders[typeof(value)]
