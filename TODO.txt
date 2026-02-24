@@ -144,4 +144,5 @@ or even running code in roblox games in a headless mode.
 
 [CI]
 Setup automated testing of rust code
+Setup automated TestEZ for the Lua code
 Setup automatic building of the plugin
