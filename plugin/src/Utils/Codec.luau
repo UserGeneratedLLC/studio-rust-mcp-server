@@ -1,6 +1,8 @@
 --!strict
 --!optimize 2
 
+-- TODO(high): decoding pipeline needs to have simple and minimally descriptive error calls to give AI agent context as to why their inputted data was invalid. avoid assert because that is slow unless you have fully static strings being used
+
 local EncodingService = game:GetService("EncodingService")
 local ReflectionService = game:GetService("ReflectionService")
 
@@ -79,12 +81,16 @@ local SkipProps: { [string]: boolean } = {
   RobloxLocked = true,
 }
 
+-- TODO(medium): make this hierarchical
 -- stylua: ignore
-local ForceSerialize: { [string]: boolean } = {
+local SerializeOverride: { [string]: boolean } = {
   -- BasePart
-  Size = true, Position = true, Orientation = true, CFrame = true,
-  Color = true, BrickColor = true, Material = true, Transparency = true,
+  Size = true, CFrame = true,
+  Color = true, Material = true, Transparency = true,
   Reflectance = true, CanCollide = true, Anchored = true, Shape = true,
+  BrickColor = false, Orientation = false, Position = false,
+  BackSurface = false, BottomSurface = false, FrontSurface = false,
+  LeftSurface = false, RightSurface = false, TopSurface = false,
   -- Content/asset IDs
   MeshId = true, TextureID = true, MeshType = true, SoundId = true,
   Image = true, Texture = true, Face = true, AnimationId = true,
@@ -162,26 +168,14 @@ end
 ]]
 local function FromDistinctPath(path: string): Instance? end
 
-local function EncodeNumber(v: number): any
-  if not math.isfinite(v) then return { ["number"] = tostring(v) } end
-  return v
-end
-local function DecodeNumber(v: any): number
-  if type(v) == "number" then return v end
-  return assert(tonumber(v["number"]))
-end
+local function EncodeNumber(v: number): any return tostring(v) end
+local function DecodeNumber(v: any): number return assert(tonumber(v)) end
 
-local function EncodeString(v: string): any
-  if not utf8.len(v) then
-    return {
-      ["string"] = buffer.tostring(EncodingService:Base64Encode(buffer.fromstring(v))),
-    }
-  end
-  return v
+local function EncodeString(v: any): string
+  return buffer.tostring(EncodingService:Base64Encode(buffer.fromstring(v)))
 end
 local function DecodeString(v: any): string
-  if type(v) == "string" then return v end
-  return buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(v["string"])))
+  return buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(v)))
 end
 
 local function EncodeBoolean(v: boolean): any return v end
@@ -190,89 +184,54 @@ local function DecodeBoolean(v: any): boolean
   return v
 end
 
-local function EncodeBuffer(v: buffer): any
-  return { ["buffer"] = buffer.tostring(EncodingService:Base64Encode(v)) }
-end
+local function EncodeBuffer(v: buffer): any return buffer.tostring(EncodingService:Base64Encode(v)) end
 local function DecodeBuffer(v: any): buffer
-  return EncodingService:Base64Decode(buffer.fromstring(v["buffer"]))
+  return EncodingService:Base64Decode(buffer.fromstring(v))
 end
 
 local function EncodeEnumItem(v: EnumItem): any
-  return { ["EnumItem"] = { Type = tostring(v.EnumType), Name = v.Name } }
+  return { Type = tostring(v.EnumType), Name = v.Name }
 end
-local function DecodeEnumItem(v: any): EnumItem
-  local data = v["EnumItem"]
-  return (Enum :: any)[data.Type][data.Name]
-end
+local function DecodeEnumItem(v: any): EnumItem return (Enum :: any)[v.Type][v.Name] end
 
-local function EncodeUDim(v: UDim): any
-  return { ["UDim"] = { EncodeNumber(v.Scale), EncodeNumber(v.Offset) } }
-end
-local function DecodeUDim(v: any): UDim
-  local data = v["UDim"]
-  return UDim.new(DecodeNumber(data[1]), DecodeNumber(data[2]))
-end
+local function EncodeUDim(v: UDim): any return { EncodeNumber(v.Scale), EncodeNumber(v.Offset) } end
+local function DecodeUDim(v: any): UDim return UDim.new(DecodeNumber(v[1]), DecodeNumber(v[2])) end
 
 local function EncodeUDim2(v: UDim2): any
   return {
-    ["UDim2"] = {
-      EncodeNumber(v.X.Scale),
-      EncodeNumber(v.X.Offset),
-      EncodeNumber(v.Y.Scale),
-      EncodeNumber(v.Y.Offset),
-    },
+    EncodeNumber(v.X.Scale),
+    EncodeNumber(v.X.Offset),
+    EncodeNumber(v.Y.Scale),
+    EncodeNumber(v.Y.Offset),
   }
 end
 local function DecodeUDim2(v: any): UDim2
-  local data = v["UDim2"]
-  return UDim2.new(
-    DecodeNumber(data[1]),
-    DecodeNumber(data[2]),
-    DecodeNumber(data[3]),
-    DecodeNumber(data[4])
-  )
+  return UDim2.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]), DecodeNumber(v[4]))
 end
 
-local function EncodeVector2int16(v: Vector2int16): any return { ["Vector2int16"] = { v.X, v.Y } } end
-local function DecodeVector2int16(v: any): Vector2int16
-  local data = v["Vector2int16"]
-  return Vector2int16.new(data[1], data[2])
-end
+local function EncodeVector2int16(v: Vector2int16): any return { v.X, v.Y } end
+local function DecodeVector2int16(v: any): Vector2int16 return Vector2int16.new(v[1], v[2]) end
 
-local function EncodeVector3int16(v: Vector3int16): any
-  return { ["Vector3int16"] = { v.X, v.Y, v.Z } }
-end
-local function DecodeVector3int16(v: any): Vector3int16
-  local data = v["Vector3int16"]
-  return Vector3int16.new(data[1], data[2], data[3])
-end
+local function EncodeVector3int16(v: Vector3int16): any return { v.X, v.Y, v.Z } end
+local function DecodeVector3int16(v: any): Vector3int16 return Vector3int16.new(v[1], v[2], v[3]) end
 
-local function EncodeVector2(v: Vector2): any
-  return { ["Vector2"] = { EncodeNumber(v.X), EncodeNumber(v.Y) } }
-end
+local function EncodeVector2(v: Vector2): any return { EncodeNumber(v.X), EncodeNumber(v.Y) } end
 local function DecodeVector2(v: any): Vector2
-  local data = v["Vector2"]
-  return Vector2.new(DecodeNumber(data[1]), DecodeNumber(data[2]))
+  return Vector2.new(DecodeNumber(v[1]), DecodeNumber(v[2]))
 end
 
 local function EncodeVector3(v: Vector3): any
-  return {
-    ["Vector3"] = { EncodeNumber(v.X), EncodeNumber(v.Y), EncodeNumber(v.Z) },
-  }
+  return { EncodeNumber(v.X), EncodeNumber(v.Y), EncodeNumber(v.Z) }
 end
 local function DecodeVector3(v: any): Vector3
-  local data = v["Vector3"]
-  return Vector3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3]))
+  return Vector3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]))
 end
 
 local function EncodeColor3(v: Color3): any
-  return {
-    ["Color3"] = { EncodeNumber(v.R), EncodeNumber(v.G), EncodeNumber(v.B) },
-  }
+  return { EncodeNumber(v.R), EncodeNumber(v.G), EncodeNumber(v.B) }
 end
 local function DecodeColor3(v: any): Color3
-  local data = v["Color3"]
-  return Color3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3]))
+  return Color3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]))
 end
 
 -- TODO(medium): DecodeContent silently produces garbage for non-URI Content
@@ -293,60 +252,55 @@ local function EncodeContent(v: Content): any
   else
     data = sourceType.Name
   end
-  return { ["Content"] = data }
+  return data
 end
 local function DecodeContent(v: any): Content
-  local data = v["Content"]
-  if type(data) == "string" then return Content.fromUri(data) end
-  error(`Non-reconstructible Content source: {data.source}`)
+  if type(v) == "string" then return Content.fromUri(v) end
+  error(`UnsupportedContent {v.source}`)
 end
 
-local function EncodeBrickColor(v: BrickColor): any return { ["BrickColor"] = v.Name } end
-local function DecodeBrickColor(v: any): BrickColor return BrickColor.new(v["BrickColor"]) end
+local function EncodeBrickColor(v: BrickColor): any return v.Name end
+local function DecodeBrickColor(v: any): BrickColor return BrickColor.new(v) end
 
 local function EncodeCFrame(v: CFrame): any
   local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = v:GetComponents()
   return {
-    ["CFrame"] = {
-      EncodeNumber(x),
-      EncodeNumber(y),
-      EncodeNumber(z),
-      EncodeNumber(r00),
-      EncodeNumber(r01),
-      EncodeNumber(r02),
-      EncodeNumber(r10),
-      EncodeNumber(r11),
-      EncodeNumber(r12),
-      EncodeNumber(r20),
-      EncodeNumber(r21),
-      EncodeNumber(r22),
-    },
+    EncodeNumber(x),
+    EncodeNumber(y),
+    EncodeNumber(z),
+    EncodeNumber(r00),
+    EncodeNumber(r01),
+    EncodeNumber(r02),
+    EncodeNumber(r10),
+    EncodeNumber(r11),
+    EncodeNumber(r12),
+    EncodeNumber(r20),
+    EncodeNumber(r21),
+    EncodeNumber(r22),
   }
 end
 local function DecodeCFrame(v: any): CFrame
-  local data = v["CFrame"]
   return CFrame.new(
-    DecodeNumber(data[1]),
-    DecodeNumber(data[2]),
-    DecodeNumber(data[3]),
-    DecodeNumber(data[4]),
-    DecodeNumber(data[5]),
-    DecodeNumber(data[6]),
-    DecodeNumber(data[7]),
-    DecodeNumber(data[8]),
-    DecodeNumber(data[9]),
-    DecodeNumber(data[10]),
-    DecodeNumber(data[11]),
-    DecodeNumber(data[12])
+    DecodeNumber(v[1]),
+    DecodeNumber(v[2]),
+    DecodeNumber(v[3]),
+    DecodeNumber(v[4]),
+    DecodeNumber(v[5]),
+    DecodeNumber(v[6]),
+    DecodeNumber(v[7]),
+    DecodeNumber(v[8]),
+    DecodeNumber(v[9]),
+    DecodeNumber(v[10]),
+    DecodeNumber(v[11]),
+    DecodeNumber(v[12])
   )
 end
 
 local function EncodeNumberRange(v: NumberRange): any
-  return { ["NumberRange"] = { EncodeNumber(v.Min), EncodeNumber(v.Max) } }
+  return { EncodeNumber(v.Min), EncodeNumber(v.Max) }
 end
 local function DecodeNumberRange(v: any): NumberRange
-  local data = v["NumberRange"]
-  return NumberRange.new(DecodeNumber(data[1]), DecodeNumber(data[2]))
+  return NumberRange.new(DecodeNumber(v[1]), DecodeNumber(v[2]))
 end
 
 local function EncodeNumberSequence(v: NumberSequence): any
@@ -359,12 +313,11 @@ local function EncodeNumberSequence(v: NumberSequence): any
       EncodeNumber(kp.Envelope),
     }
   end
-  return { ["NumberSequence"] = keypoints }
+  return keypoints
 end
 local function DecodeNumberSequence(v: any): NumberSequence
-  local data = v["NumberSequence"]
-  local keypoints = table.create(#data)
-  for i, kp in data do
+  local keypoints = table.create(#v)
+  for i, kp in v do
     keypoints[i] =
       NumberSequenceKeypoint.new(DecodeNumber(kp[1]), DecodeNumber(kp[2]), DecodeNumber(kp[3]))
   end
@@ -382,12 +335,11 @@ local function EncodeColorSequence(v: ColorSequence): any
       EncodeNumber(kp.Value.B),
     }
   end
-  return { ["ColorSequence"] = keypoints }
+  return keypoints
 end
 local function DecodeColorSequence(v: any): ColorSequence
-  local data = v["ColorSequence"]
-  local keypoints = table.create(#data)
-  for i, kp in data do
+  local keypoints = table.create(#v)
+  for i, kp in v do
     keypoints[i] = ColorSequenceKeypoint.new(
       DecodeNumber(kp[1]),
       Color3.new(DecodeNumber(kp[2]), DecodeNumber(kp[3]), DecodeNumber(kp[4]))
@@ -398,127 +350,101 @@ end
 
 local function EncodeRect(v: Rect): any
   return {
-    ["Rect"] = {
-      EncodeNumber(v.Min.X),
-      EncodeNumber(v.Min.Y),
-      EncodeNumber(v.Max.X),
-      EncodeNumber(v.Max.Y),
-    },
+    EncodeNumber(v.Min.X),
+    EncodeNumber(v.Min.Y),
+    EncodeNumber(v.Max.X),
+    EncodeNumber(v.Max.Y),
   }
 end
 local function DecodeRect(v: any): Rect
-  local data = v["Rect"]
-  return Rect.new(
-    DecodeNumber(data[1]),
-    DecodeNumber(data[2]),
-    DecodeNumber(data[3]),
-    DecodeNumber(data[4])
-  )
+  return Rect.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]), DecodeNumber(v[4]))
 end
 
 local function EncodeFont(v: Font): any
   local family = v.Family :: any
   return {
-    ["Font"] = {
-      family = if type(family) == "string" then family else family.Uri or tostring(family),
-      weight = v.Weight.Name,
-      style = v.Style.Name,
-    },
+    family = if type(family) == "string" then family else family.Uri or tostring(family),
+    weight = v.Weight.Name,
+    style = v.Style.Name,
   }
 end
 local function DecodeFont(v: any): Font
-  local data = v["Font"]
-  return Font.new(
-    data.family,
-    (Enum.FontWeight :: any)[data.weight],
-    (Enum.FontStyle :: any)[data.style]
-  )
+  return Font.new(v.family, (Enum.FontWeight :: any)[v.weight], (Enum.FontStyle :: any)[v.style])
 end
 
 local function EncodePhysicalProperties(v: PhysicalProperties): any
   return {
-    ["PhysicalProperties"] = {
-      EncodeNumber(v.Density),
-      EncodeNumber(v.Friction),
-      EncodeNumber(v.Elasticity),
-      EncodeNumber(v.FrictionWeight),
-      EncodeNumber(v.ElasticityWeight),
-    },
+    EncodeNumber(v.Density),
+    EncodeNumber(v.Friction),
+    EncodeNumber(v.Elasticity),
+    EncodeNumber(v.FrictionWeight),
+    EncodeNumber(v.ElasticityWeight),
   }
 end
 local function DecodePhysicalProperties(v: any): PhysicalProperties
-  local data = v["PhysicalProperties"]
   return PhysicalProperties.new(
-    DecodeNumber(data[1]),
-    DecodeNumber(data[2]),
-    DecodeNumber(data[3]),
-    DecodeNumber(data[4]),
-    DecodeNumber(data[5])
+    DecodeNumber(v[1]),
+    DecodeNumber(v[2]),
+    DecodeNumber(v[3]),
+    DecodeNumber(v[4]),
+    DecodeNumber(v[5])
   )
 end
 
-local function EncodeAxes(v: Axes): any return { ["Axes"] = { X = v.X, Y = v.Y, Z = v.Z } } end
+local function EncodeAxes(v: Axes): any return { X = v.X, Y = v.Y, Z = v.Z } end
 local function DecodeAxes(v: any): Axes
-  local data = v["Axes"]
   local axes = {}
-  if data.X then table.insert(axes, Enum.Axis.X) end
-  if data.Y then table.insert(axes, Enum.Axis.Y) end
-  if data.Z then table.insert(axes, Enum.Axis.Z) end
+  if v.X then table.insert(axes, Enum.Axis.X) end
+  if v.Y then table.insert(axes, Enum.Axis.Y) end
+  if v.Z then table.insert(axes, Enum.Axis.Z) end
   return Axes.new(unpack(axes))
 end
 
 local function EncodeFaces(v: Faces): any
   return {
-    ["Faces"] = {
-      Top = v.Top,
-      Bottom = v.Bottom,
-      Left = v.Left,
-      Right = v.Right,
-      Front = v.Front,
-      Back = v.Back,
-    },
+    Top = v.Top,
+    Bottom = v.Bottom,
+    Left = v.Left,
+    Right = v.Right,
+    Front = v.Front,
+    Back = v.Back,
   }
 end
 local function DecodeFaces(v: any): Faces
-  local data = v["Faces"]
   local faces = {}
-  if data.Top then table.insert(faces, Enum.NormalId.Top) end
-  if data.Bottom then table.insert(faces, Enum.NormalId.Bottom) end
-  if data.Left then table.insert(faces, Enum.NormalId.Left) end
-  if data.Right then table.insert(faces, Enum.NormalId.Right) end
-  if data.Front then table.insert(faces, Enum.NormalId.Front) end
-  if data.Back then table.insert(faces, Enum.NormalId.Back) end
+  if v.Top then table.insert(faces, Enum.NormalId.Top) end
+  if v.Bottom then table.insert(faces, Enum.NormalId.Bottom) end
+  if v.Left then table.insert(faces, Enum.NormalId.Left) end
+  if v.Right then table.insert(faces, Enum.NormalId.Right) end
+  if v.Front then table.insert(faces, Enum.NormalId.Front) end
+  if v.Back then table.insert(faces, Enum.NormalId.Back) end
   return Faces.new(unpack(faces))
 end
 
-local function EncodeDateTime(v: DateTime): any return { ["DateTime"] = v:ToIsoDate() } end
-local function DecodeDateTime(v: any): DateTime return assert(DateTime.fromIsoDate(v["DateTime"])) end
+local function EncodeDateTime(v: DateTime): any return v:ToIsoDate() end
+local function DecodeDateTime(v: any): DateTime return assert(DateTime.fromIsoDate(v)) end
 
 local function EncodeRay(v: Ray): any
   return {
-    ["Ray"] = {
-      EncodeNumber(v.Origin.X),
-      EncodeNumber(v.Origin.Y),
-      EncodeNumber(v.Origin.Z),
-      EncodeNumber(v.Direction.X),
-      EncodeNumber(v.Direction.Y),
-      EncodeNumber(v.Direction.Z),
-    },
+    EncodeNumber(v.Origin.X),
+    EncodeNumber(v.Origin.Y),
+    EncodeNumber(v.Origin.Z),
+    EncodeNumber(v.Direction.X),
+    EncodeNumber(v.Direction.Y),
+    EncodeNumber(v.Direction.Z),
   }
 end
 local function DecodeRay(v: any): Ray
-  local data = v["Ray"]
   return Ray.new(
-    Vector3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3])),
-    Vector3.new(DecodeNumber(data[4]), DecodeNumber(data[5]), DecodeNumber(data[6]))
+    Vector3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3])),
+    Vector3.new(DecodeNumber(v[4]), DecodeNumber(v[5]), DecodeNumber(v[6]))
   )
 end
 
-local function EncodeInstanceRef(v: Instance): any return { ["Instance"] = GetDistinctPath(v) } end
+local function EncodeInstanceRef(v: Instance): any return GetDistinctPath(v) end
 local function DecodeInstanceRef(v: any): Instance
-  local path = v["Instance"]
-  local inst = FromDistinctPath(path)
-  if not inst then error(`UnknownRef: {path}`) end
+  local inst = FromDistinctPath(v)
+  if not inst then error(`UnknownRef {v}`) end
   return inst
 end
 
@@ -528,48 +454,39 @@ local function EncodeRegion3(v: Region3): any
   local min = center - half
   local max = center + half
   return {
-    ["Region3"] = {
-      EncodeNumber(min.X),
-      EncodeNumber(min.Y),
-      EncodeNumber(min.Z),
-      EncodeNumber(max.X),
-      EncodeNumber(max.Y),
-      EncodeNumber(max.Z),
-    },
+    EncodeNumber(min.X),
+    EncodeNumber(min.Y),
+    EncodeNumber(min.Z),
+    EncodeNumber(max.X),
+    EncodeNumber(max.Y),
+    EncodeNumber(max.Z),
   }
 end
 local function DecodeRegion3(v: any): Region3
-  local data = v["Region3"]
   return Region3.new(
-    Vector3.new(DecodeNumber(data[1]), DecodeNumber(data[2]), DecodeNumber(data[3])),
-    Vector3.new(DecodeNumber(data[4]), DecodeNumber(data[5]), DecodeNumber(data[6]))
+    Vector3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3])),
+    Vector3.new(DecodeNumber(v[4]), DecodeNumber(v[5]), DecodeNumber(v[6]))
   )
 end
 
 local function EncodeRegion3int16(v: Region3int16): any
   return {
-    ["Region3int16"] = {
-      v.Min.X,
-      v.Min.Y,
-      v.Min.Z,
-      v.Max.X,
-      v.Max.Y,
-      v.Max.Z,
-    },
+    v.Min.X,
+    v.Min.Y,
+    v.Min.Z,
+    v.Max.X,
+    v.Max.Y,
+    v.Max.Z,
   }
 end
 local function DecodeRegion3int16(v: any): Region3int16
-  local data = v["Region3int16"]
-  return Region3int16.new(
-    Vector3int16.new(data[1], data[2], data[3]),
-    Vector3int16.new(data[4], data[5], data[6])
-  )
+  return Region3int16.new(Vector3int16.new(v[1], v[2], v[3]), Vector3int16.new(v[4], v[5], v[6]))
 end
 
 local PropertyEncoders: { [string]: (any) -> any } = {
   ["string"] = EncodeString,
-  ["boolean"] = EncodeBoolean,
   ["number"] = EncodeNumber,
+  ["boolean"] = EncodeBoolean,
   ["buffer"] = EncodeBuffer,
   ["EnumItem"] = EncodeEnumItem,
   ["UDim"] = EncodeUDim,
@@ -597,13 +514,22 @@ local PropertyEncoders: { [string]: (any) -> any } = {
   ["Region3int16"] = EncodeRegion3int16,
 }
 local function EncodeProperty(value: any, nilReference: any, reflectionType: ReflectionType): any
-  local typeName = reflectionType.ScriptType :: string
+  local t = reflectionType.ScriptType :: string
   if value == nil then return {
-    [typeName] = nilReference,
+    [t] = nilReference,
   } end
-  local encoder = PropertyEncoders[typeName]
-  if not encoder then error(`UnknownType: {typeName}`) end
-  return encoder(value)
+  if t == "string" then
+    if utf8.len(value) then return value end
+  elseif t == "number" then
+    if math.isfinite(value) then return value end
+  elseif t == "boolean" then
+    return value
+  end
+  local encoder = PropertyEncoders[t]
+  if not encoder then error(`UnknownType {t}`) end
+  return {
+    [t] = encoder(value),
+  }
 end
 
 local PropertiesCache: { [string]: { ReflectedProperty } } = {}
@@ -622,10 +548,13 @@ local function GetCachedProperties(className: string): { ReflectedProperty }
     local name = prop.Name
     if SkipProps[name] then continue end
     if not prop.Type.ScriptType then continue end
+    if not PropertyEncoders[prop.Type.ScriptType] then continue end
     if not prop.Permits.Read then continue end
-    local forced = ForceSerialize[name] == true
-    if not prop.Serialized and not forced then continue end
-    if not forced then
+    local override = SerializeOverride[name]
+    if override ~= nil then
+      if not override then continue end
+    else
+      if not prop.Serialized then continue end
       if prop.Display and prop.Display.DeprecationMessage then continue end
       if not prop.Permits.Write then continue end
     end
@@ -639,8 +568,8 @@ local function EncodeProperties(inst: Instance, nilReference: any): { [string]: 
   local props = GetCachedProperties(inst.ClassName)
   local result: { [string]: any } = {}
   for _, prop in props do
-    local ok, value = pcall(function() return (inst :: any)[prop.Name] end)
-    if ok then result[prop.Name] = EncodeProperty(value, nilReference, prop.Type) end
+    local success, value = pcall(function() return (inst :: any)[prop.Name] end)
+    if success then result[prop.Name] = EncodeProperty(value, nilReference, prop.Type) end
   end
   return result
 end
@@ -648,6 +577,7 @@ end
 local PropertyDecoders: { [string]: (any) -> any } = {
   ["number"] = DecodeNumber,
   ["string"] = DecodeString,
+  ["boolean"] = DecodeBoolean,
   ["buffer"] = DecodeBuffer,
   ["EnumItem"] = DecodeEnumItem,
   ["UDim"] = DecodeUDim,
@@ -676,37 +606,24 @@ local PropertyDecoders: { [string]: (any) -> any } = {
 }
 local function DecodeProperty(value: any, nilReference: any, reflectionType: ReflectionType): any
   local expected = reflectionType.ScriptType :: string
-  local t = type(value)
-  if t == "boolean" then
-    assert(expected == "boolean")
-    return value
-  end
-  if t == "number" then
-    assert(expected == "number")
-    return value
-  end
-  if t == "string" then
-    assert(expected == "string")
-    return value
-  end
-  if t == "table" then
-    local key = next(value)
-    if type(key) == "string" then
-      assert(key == expected)
-      local inner = value[key]
+  if value == nilReference then return nil end
+  local t = typeof(value)
+  if t == "boolean" or t == "number" or t == "string" then
+    if t == expected then return value end
+  elseif t == "table" then
+    local inner = value[expected]
+    if inner ~= nil then
       if inner == nilReference then return nil end
-      local decoder = PropertyDecoders[key]
-      if not decoder then error(`UnknownType: {key}`) end
-      return decoder(value)
+      value = inner
     end
   end
-  error(`UnknownType: {typeof(value)}`)
+  return PropertyDecoders[expected](value)
 end
 
 local AttributeEncoders: { [string]: (any) -> any } = {
   ["string"] = EncodeString,
-  ["boolean"] = EncodeBoolean,
   ["number"] = EncodeNumber,
+  ["boolean"] = EncodeBoolean,
   ["UDim"] = EncodeUDim,
   ["UDim2"] = EncodeUDim2,
   ["Vector2"] = EncodeVector2,
@@ -721,14 +638,23 @@ local AttributeEncoders: { [string]: (any) -> any } = {
   ["Font"] = EncodeFont,
 }
 local function EncodeAttribute(value: any): any
-  local encoder = AttributeEncoders[typeof(value)]
-  if not encoder then error(`UnknownType: {typeof(value)}`) end
-  return encoder(value)
+  local t = typeof(value)
+  if t == "string" then
+    if utf8.len(value) then return value end
+  elseif t == "number" then
+    if math.isfinite(value) then return value end
+  elseif t == "boolean" then
+    return value
+  end
+  return {
+    [t] = AttributeEncoders[t](value),
+  }
 end
 
 local AttributeDecoders: { [string]: (any) -> any } = {
-  ["number"] = DecodeNumber,
   ["string"] = DecodeString,
+  ["number"] = DecodeNumber,
+  ["boolean"] = DecodeBoolean,
   ["UDim"] = DecodeUDim,
   ["UDim2"] = DecodeUDim2,
   ["Vector2"] = DecodeVector2,
@@ -743,25 +669,27 @@ local AttributeDecoders: { [string]: (any) -> any } = {
   ["Font"] = DecodeFont,
 }
 local function DecodeAttribute(value: any): any
-  local t = type(value)
-  if t == "boolean" then return value end
-  if t == "number" then return value end
-  if t == "string" then return value end
+  local t = typeof(value)
+  if t == "boolean" or t == "number" or t == "string" then return value end
   if t == "table" then
     local key = next(value)
     if type(key) == "string" then
       local decoder = AttributeDecoders[key]
-      if not decoder then error(`UnknownType: {key}`) end
-      return decoder(value)
+      if not decoder then error(`UnknownType {key}`) end
+      return decoder(value[key])
     end
   end
-  error(`UnknownType: {typeof(value)}`)
+  error(`UnknownType {t}`)
 end
 
 --[[
   depth=0, this child specifically and then shallow view of it's children
 ]]
 local function EncodeInstance(inst: Instance, depth: number, nilReference: any): EncodedInstance
+  assert(typeof(inst) == "Instance", "InvalidInstance")
+  assert(math.isfinite(depth) and math.floor(depth) == depth, "InvalidDepth")
+  assert(nilReference ~= nil, "InvalidNilReference")
+
   local result: EncodedInstance = {
     Name = EscapeName(inst.Name),
     ClassName = inst.ClassName,
@@ -795,7 +723,12 @@ local function EncodeInstance(inst: Instance, depth: number, nilReference: any):
 end
 
 -- TODO(medium): fix MeshPart creation & do not create Services somehow..?
+-- TODO(medium): in-place encoding + service detection if parent==game + write defaults?
 local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: Instance?): Instance
+  assert(type(data) == "table", "InvalidData")
+  assert(nilReference ~= nil, "InvalidNilReference")
+  assert(parent == nil or typeof(parent) == "Instance", "InvalidParent")
+
   local inst = Instance.new(data.ClassName)
   inst.Name = UnescapeName(data.Name)
   if not data.Shallow then
@@ -803,20 +736,26 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
       local instAny = inst :: any
       local props = GetCachedProperties(data.ClassName)
       for _, prop in props do
-        local encoded = data.Properties[prop.Name]
+        local key = prop.Name
+        local encoded = data.Properties[key]
         if encoded ~= nil then
-          instAny[prop.Name] = DecodeProperty(encoded, nilReference, prop.Type)
+          local success, result = pcall(DecodeProperty, encoded, nilReference, prop.Type)
+          if not success then error(`MalformedProperty {key}: {result}`) end
+          instAny[key] = result
         end
       end
     end
     if data.Attributes then
       for key, value in data.Attributes do
-        inst:SetAttribute(key, DecodeAttribute(value))
+        local success, result = pcall(DecodeAttribute, value)
+        if not success then error(`MalformedAttribute {key}: {result}`) end
+        inst:SetAttribute(key, result)
       end
     end
     if data.Children then
-      for _, childData in data.Children do
-        DecodeInstance(childData, nilReference, inst)
+      for i, childData in data.Children do
+        local success, result = pcall(DecodeInstance, childData, nilReference, inst)
+        if not success then error(`MalformedChild {i}: {result}`) end
       end
     end
     if data.Tags then
@@ -829,6 +768,8 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
   return inst
 end
 
-local module = {}
+local module = {
+  EncodeInstance = EncodeInstance,
+}
 
 return table.freeze(module)

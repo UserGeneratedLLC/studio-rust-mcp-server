@@ -145,4 +145,12 @@ or even running code in roblox games in a headless mode.
 [CI]
 Setup automated testing of rust code
 Setup automated TestEZ for the Lua code
+Setup automated selene checking for the lua code
 Setup automatic building of the plugin
+
+[websocket]
+Swap to websockets for lower latency, perform tasks async so it can have like 10+ queries going at the same time
+
+[merging]
+we need to do a cursor style code merging/accept UI in roblox studio when we do this
+this would eliminate needing cursor at all, and you would just be using Claude desktop app + roblox studio.
