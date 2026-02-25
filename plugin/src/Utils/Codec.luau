@@ -762,12 +762,12 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
 
   inst.Name = UnescapeName(data.Name)
   if not data.Shallow then
-    if data.Properties then
+    if properties then
       local instAny = inst :: any
       local props = GetCachedProperties(data.ClassName)
       for _, prop in props do
         local key = prop.Name
-        local encoded = data.Properties[key]
+        local encoded = properties[key]
         if encoded ~= nil then
           local success, result =
             pcall(DecodeProperty, encoded, nilReference, assert(prop.Type.ScriptType))
