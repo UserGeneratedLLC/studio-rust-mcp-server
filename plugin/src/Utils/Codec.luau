@@ -80,16 +80,17 @@ local SkipProps: { [string]: boolean } = {
   RobloxLocked = true,
 }
 
--- TODO(medium): make this hierarchical
+-- TODO(high): make this hierarchical
 -- stylua: ignore
 local SerializeOverride: { [string]: boolean } = {
   -- BasePart
   Size = true, CFrame = true,
   Color = true, Material = true, Transparency = true,
   Reflectance = true, CanCollide = true, Anchored = true, Shape = true,
-  BrickColor = false, Orientation = false, Position = false,
-  BackSurface = false, BottomSurface = false, FrontSurface = false,
-  LeftSurface = false, RightSurface = false, TopSurface = false,
+  -- TODO(high): we cannot support hiding these until we make this hierarchical...
+  -- BrickColor = false, Orientation = false, Position = false,
+  -- BackSurface = false, BottomSurface = false, FrontSurface = false,
+  -- LeftSurface = false, RightSurface = false, TopSurface = false,
   -- Content/asset IDs
   MeshId = true, TextureID = true, MeshType = true, SoundId = true,
   Image = true, Texture = true, Face = true, AnimationId = true,
@@ -511,22 +512,21 @@ local PropertyEncoders: { [string]: (any) -> any } = {
   ["Region3"] = EncodeRegion3,
   ["Region3int16"] = EncodeRegion3int16,
 }
-local function EncodeProperty(value: any, nilReference: any, reflectionType: ReflectionType): any
-  local t = reflectionType.ScriptType :: string
+local function EncodeProperty(value: any, nilReference: any, scriptType: string): any
   if value == nil then return {
-    [t] = nilReference,
+    [scriptType] = nilReference,
   } end
-  if t == "string" then
+  if scriptType == "string" then
     if utf8.len(value) then return value end
-  elseif t == "number" then
+  elseif scriptType == "number" then
     if math.isfinite(value) then return value end
-  elseif t == "boolean" then
+  elseif scriptType == "boolean" then
     return value
   end
-  local encoder = PropertyEncoders[t]
-  if not encoder then error(`UnknownType {t}`) end
+  local encoder = PropertyEncoders[scriptType]
+  if not encoder then error(`UnknownType {scriptType}`) end
   return {
-    [t] = encoder(value),
+    [scriptType] = encoder(value),
   }
 end
 
@@ -567,7 +567,9 @@ local function EncodeProperties(inst: Instance, nilReference: any): { [string]: 
   local result: { [string]: any } = {}
   for _, prop in props do
     local success, value = pcall(function() return (inst :: any)[prop.Name] end)
-    if success then result[prop.Name] = EncodeProperty(value, nilReference, prop.Type) end
+    if success then
+      result[prop.Name] = EncodeProperty(value, nilReference, assert(prop.Type.ScriptType))
+    end
   end
   return result
 end
