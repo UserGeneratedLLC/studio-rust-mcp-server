@@ -1,9 +1,8 @@
 --!strict
 --!optimize 2
 
--- TODO(high): decoding pipeline needs to have simple and minimally descriptive error calls to give AI agent context as to why their inputted data was invalid. avoid assert because that is slow unless you have fully static strings being used
-
 local EncodingService = game:GetService("EncodingService")
+local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
 
 export type EncodedInstance = {
@@ -234,14 +233,16 @@ local function DecodeColor3(v: any): Color3
   return Color3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]))
 end
 
--- TODO(medium): DecodeContent silently produces garbage for non-URI Content
+-- TODO(low): EncodeContent silently produces garbage for non-URI Content
+--  encode the EditableImage/Mesh/Capture/VideoContext etc.
 local function EncodeContent(v: Content): any
   local data: any
   local sourceType = v.SourceType
   if sourceType == Enum.ContentSourceType.Uri then
     data = v.Uri
+  elseif sourceType == Enum.ContentSourceType.None then
+    data = ""
   elseif sourceType == Enum.ContentSourceType.Object then
-    -- TODO(low): encode the EditableImage/Mesh/Capture/VideoContext etc.
     if v.Object then
       data = v.Object.ClassName
     else
@@ -250,14 +251,11 @@ local function EncodeContent(v: Content): any
   elseif sourceType == Enum.ContentSourceType.Opaque then
     data = "Opaque"
   else
-    data = sourceType.Name
+    error(`UnsupportedContent {sourceType}`)
   end
   return data
 end
-local function DecodeContent(v: any): Content
-  if type(v) == "string" then return Content.fromUri(v) end
-  error(`UnsupportedContent {v.source}`)
-end
+local function DecodeContent(v: string): Content return Content.fromUri(v) end
 
 local function EncodeBrickColor(v: BrickColor): any return v.Name end
 local function DecodeBrickColor(v: any): BrickColor return BrickColor.new(v) end
@@ -604,20 +602,19 @@ local PropertyDecoders: { [string]: (any) -> any } = {
   ["Region3"] = DecodeRegion3,
   ["Region3int16"] = DecodeRegion3int16,
 }
-local function DecodeProperty(value: any, nilReference: any, reflectionType: ReflectionType): any
-  local expected = reflectionType.ScriptType :: string
+local function DecodeProperty(value: any, nilReference: any, scriptType: string): any
   if value == nilReference then return nil end
   local t = typeof(value)
   if t == "boolean" or t == "number" or t == "string" then
-    if t == expected then return value end
+    if t == scriptType then return value end
   elseif t == "table" then
-    local inner = value[expected]
+    local inner = value[scriptType]
     if inner ~= nil then
       if inner == nilReference then return nil end
       value = inner
     end
   end
-  return PropertyDecoders[expected](value)
+  return PropertyDecoders[scriptType](value)
 end
 
 local AttributeEncoders: { [string]: (any) -> any } = {
@@ -722,14 +719,47 @@ local function EncodeInstance(inst: Instance, depth: number, nilReference: any):
   return result
 end
 
--- TODO(medium): fix MeshPart creation & do not create Services somehow..?
--- TODO(medium): in-place encoding + service detection if parent==game + write defaults?
+-- TODO(low): handle CSG parts
 local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: Instance?): Instance
   assert(type(data) == "table", "InvalidData")
   assert(nilReference ~= nil, "InvalidNilReference")
   assert(parent == nil or typeof(parent) == "Instance", "InvalidParent")
 
-  local inst = Instance.new(data.ClassName)
+  assert(type(data.ClassName) == "string", "MalformedClassName")
+  assert(type(data.Name) == "string", "MalformedName")
+  assert(type(data.DebugId) == "string", "MalformedDebugId") -- unused
+  assert(data.Shallow == nil or data.Shallow == true, "MalformedShallow")
+  assert(data.Properties == nil or type(data.Properties) == "table", "MalformedProperties")
+  assert(data.Attributes == nil or type(data.Attributes) == "table", "MalformedAttributes")
+  assert(data.Tags == nil or type(data.Tags) == "table", "MalformedTags")
+  assert(data.Children == nil or type(data.Children) == "table", "MalformedChildren")
+
+  local properties = data.Properties
+
+  local inst: Instance
+  if data.ClassName ~= "MeshPart" then
+    inst = Instance.new(data.ClassName)
+  else
+    local meshId = ""
+    local collisionFidelity = Enum.CollisionFidelity.Default
+    local renderFidelity = Enum.RenderFidelity.Automatic
+    if properties then
+      properties = table.clone(properties)
+      local function decodeProperty<T>(key: string, scriptType: string, defaultValue: T): T
+        local encoded = properties[key]
+        if encoded == nil then return defaultValue end
+        properties[key] = nil
+        local success, result = pcall(DecodeProperty, encoded, nilReference, scriptType)
+        if not success then error(`MalformedProperty {key}: {result}`) end
+        return result
+      end
+      meshId = decodeProperty("MeshId", "string", meshId)
+      collisionFidelity = decodeProperty("CollisionFidelity", "EnumItem", collisionFidelity)
+      renderFidelity = decodeProperty("RenderFidelity", "EnumItem", renderFidelity)
+    end
+    inst = InsertService:CreateMeshPartAsync(meshId, collisionFidelity, renderFidelity)
+  end
+
   inst.Name = UnescapeName(data.Name)
   if not data.Shallow then
     if data.Properties then
@@ -739,7 +769,8 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
         local key = prop.Name
         local encoded = data.Properties[key]
         if encoded ~= nil then
-          local success, result = pcall(DecodeProperty, encoded, nilReference, prop.Type)
+          local success, result =
+            pcall(DecodeProperty, encoded, nilReference, assert(prop.Type.ScriptType))
           if not success then error(`MalformedProperty {key}: {result}`) end
           instAny[key] = result
         end
@@ -767,6 +798,8 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
   if parent then inst.Parent = parent end
   return inst
 end
+
+-- TODO(medium): UpdateInstance: service detection if parent==game, overwrite with defaults optionally
 
 local module = {
   EncodeInstance = EncodeInstance,
