@@ -69,7 +69,7 @@ end
 
 
 task.spawn(function()
-	wait(]] .. timeoutStr .. [[)
+	task.wait(]] .. timeoutStr .. [[)
 	isTimeout = true
 	endTest()
 end)
@@ -133,7 +133,7 @@ local function handleRunScriptInPlayMode(runScriptInPlayModeArgs: Types.RunScrip
   end
 
   StartStopPlay({ mode = "stop" })
-  wait(0.2)
+  task.wait(0.2)
 
   return runScriptInPlayMode(runScriptInPlayModeArgs)
 end

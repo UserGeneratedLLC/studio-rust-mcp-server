@@ -38,7 +38,7 @@ Record-Result "Selene" $selene
 Write-Step 4 "Rust Linting (Clippy) - Auto-fix"
 cargo clippy -j $Threads --fix --allow-dirty --allow-staged 2>&1 | Out-Null
 Write-Host "Verifying..." -ForegroundColor Yellow
-cargo clippy -j $Threads --all-targets --all-features 2>&1
+cargo clippy -j $Threads --all-targets --all-features -- -D warnings 2>&1
 $clippy = $LASTEXITCODE
 Record-Result "Clippy" $clippy
 

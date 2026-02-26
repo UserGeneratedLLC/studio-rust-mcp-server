@@ -345,8 +345,12 @@ pub async fn dud_proxy_loop(state: PackedState, exit: Receiver<()>) {
                 let res = res
                     .json::<RunCommandResponse>()
                     .await
-                    .map(|r| r.response)
-                    .map_err(Into::into);
+                    .map_err(Into::into)
+                    .and_then(|r| if r.success {
+                        Ok(r.response)
+                    } else {
+                        Err(Report::from(eyre!(r.response)))
+                    });
                 tx.send(res).unwrap();
             } else {
                 tracing::error!("Failed to proxy: {res:?}");
