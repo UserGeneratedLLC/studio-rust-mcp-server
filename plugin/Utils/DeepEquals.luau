@@ -77,7 +77,7 @@ local function DeepEquals<T>(left: T, right: T, seen_: { [any]: { [any]: boolean
   end
 
   -- Ensure the right table does not have extra keys.
-  for k, v in next, right do
+  for k, _v in next, right do
     local ov = rawget(left, k)
     if ov == nil then
       return false

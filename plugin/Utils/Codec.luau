@@ -1,9 +1,9 @@
 --!strict
 --!optimize 2
 
-local EncodingService = game:GetService("EncodingService")
 local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
+local _EncodingService = game:GetService("EncodingService")
 
 local Paths = require(script.Parent.Paths)
 
@@ -125,7 +125,7 @@ local function EncodeNumber(v: number): any
   return v
 end
 local function DecodeNumber(v: any): number
-  assert(type(v) == "number")
+  assert(type(v) == "number", "expected number")
   return v
 end
 
@@ -133,7 +133,7 @@ local function EncodeString(v: string): string
   return v
 end
 local function DecodeString(v: any): string
-  assert(type(v) == "string")
+  assert(type(v) == "string", "expected string")
   return v
 end
 
@@ -632,7 +632,6 @@ local function EncodeAttribute(value: any): any
   if t == "string" or t == "number" or t == "boolean" then
     return value
   end
-  -- TODO(high): can we just disambiguiate for these
   return {
     [t] = AttributeEncoders[t](value),
   }
@@ -660,7 +659,6 @@ local function DecodeAttribute(value: any): any
   if t == "boolean" or t == "number" or t == "string" then
     return value
   end
-  -- TODO(high): can we just disambiguiate for these
   if t == "table" then
     local key = next(value)
     if type(key) == "string" then
