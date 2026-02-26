@@ -1,9 +1,6 @@
 --!strict
 --!optimize 2
 
--- TODO(low): cleanup the error messages in here
--- TODO(medium): add assertions for each decoder function as needed, try to rely on the roblox api's we are calling to error instead for performance
-
 local EncodingService = game:GetService("EncodingService")
 local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
