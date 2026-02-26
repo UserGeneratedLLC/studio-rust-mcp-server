@@ -1,6 +1,7 @@
 local Main = script:FindFirstAncestor("MCPStudioPlugin")
 local ConsoleOutput = require(Main.Utils.ConsoleOutput)
 local GlobalVariables = require(Main.Utils.GlobalVariables)
+local StartStopPlay = require(Main.Tools.StartStopPlay)
 local Types = require(Main.Types)
 
 local HttpService = game:GetService("HttpService")
@@ -10,8 +11,8 @@ local StudioTestService = game:GetService("StudioTestService")
 local TEST_SCRIPT_NAME = "AssistantTestScript"
 
 local function buildTestRunnerSource(userCode: string, timeout: number): string
-	local timeoutStr = tostring(timeout)
-	return [[
+  local timeoutStr = tostring(timeout)
+  return [[
 local StudioTestService = game:GetService("StudioTestService")
 local LogService = game:GetService("LogService")
 local RunService = game:GetService("RunService")
@@ -83,64 +84,58 @@ endTest()
 end
 
 local function removeTestScript()
-	local testScript = ServerScriptService:FindFirstChild(TEST_SCRIPT_NAME)
-	if testScript then
-		testScript:Destroy()
-	end
+  local testScript = ServerScriptService:FindFirstChild(TEST_SCRIPT_NAME)
+  if testScript then testScript:Destroy() end
 end
 
 local function injectTestScript(args: Types.RunScriptInPlayModeArgs)
-	removeTestScript()
+  removeTestScript()
 
-	local source = buildTestRunnerSource(args.code, args.timeout or 1_000_000)
-	local testScript = Instance.new("Script")
-	testScript.Name = TEST_SCRIPT_NAME
-	testScript.Parent = ServerScriptService
-	testScript.Source = source
+  local source = buildTestRunnerSource(args.code, args.timeout or 1_000_000)
+  local testScript = Instance.new("Script")
+  testScript.Name = TEST_SCRIPT_NAME
+  testScript.Parent = ServerScriptService
+  testScript.Source = source
 end
 
 local function runScriptInPlayMode(args: Types.RunScriptInPlayModeArgs): string?
-	injectTestScript(args)
+  injectTestScript(args)
 
-	ConsoleOutput.outputMessage = ""
-	local success, result = pcall(function()
-		if args.mode == "start_play" then
-			GlobalVariables.studioMode = "start_play"
-			return StudioTestService:ExecutePlayModeAsync({})
-		else
-			GlobalVariables.studioMode = "run_server"
-			return StudioTestService:ExecuteRunModeAsync({})
-		end
-	end)
+  ConsoleOutput.outputMessage = ""
+  local success, result = pcall(function()
+    if args.mode == "start_play" then
+      GlobalVariables.studioMode = "start_play"
+      return StudioTestService:ExecutePlayModeAsync({})
+    else
+      GlobalVariables.studioMode = "run_server"
+      return StudioTestService:ExecuteRunModeAsync({})
+    end
+  end)
 
-	GlobalVariables.studioMode = "stop"
-	removeTestScript()
+  GlobalVariables.studioMode = "stop"
+  removeTestScript()
 
-	if not success then
-		return "Failed to run script in play mode: " .. result
-	end
+  if not success then error("Failed to run script in play mode: " .. result) end
 
-	local resultStr = HttpService:JSONEncode(result)
-	return resultStr
+  local resultStr = HttpService:JSONEncode(result)
+  return resultStr
 end
 
-local function handleRunScriptInPlayMode(args: Types.ToolArgs): string?
-	if not args["RunScriptInPlayMode"] then
-		return nil
-	end
+local function handleRunScriptInPlayMode(runScriptInPlayModeArgs: Types.RunScriptInPlayModeArgs): string?
+  if type(runScriptInPlayModeArgs.code) ~= "string" or runScriptInPlayModeArgs.code == "" then
+    error("Missing code in RunScriptInPlayMode")
+  end
 
-	local runScriptInPlayModeArgs: Types.RunScriptInPlayModeArgs = args["RunScriptInPlayMode"]
-	if type(runScriptInPlayModeArgs.code) ~= "string" or runScriptInPlayModeArgs.code == "" then
-		error("Missing code in RunScriptInPlayMode")
-	end
+  if runScriptInPlayModeArgs.timeout ~= nil then
+    if type(runScriptInPlayModeArgs.timeout) ~= "number" or runScriptInPlayModeArgs.timeout < 0 then
+      error("Timeout must be a number greater than 0 in RunScriptInPlayMode")
+    end
+  end
 
-	if runScriptInPlayModeArgs.timeout ~= nil then
-		if type(runScriptInPlayModeArgs.timeout) ~= "number" or runScriptInPlayModeArgs.timeout < 0 then
-			error("Timeout must be a number greater than 0 in RunScriptInPlayMode")
-		end
-	end
+  StartStopPlay({ mode = "stop" })
+  wait(0.2)
 
-	return runScriptInPlayMode(runScriptInPlayModeArgs)
+  return runScriptInPlayMode(runScriptInPlayModeArgs)
 end
 
 return handleRunScriptInPlayMode :: Types.ToolFunction

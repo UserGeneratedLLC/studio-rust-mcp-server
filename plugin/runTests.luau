@@ -1,5 +1,5 @@
 return function(TestEZ)
-	local MCPPlugin = script.Parent
+  local MCPPlugin = script.Parent
 
-	TestEZ.TestBootstrap:run({ MCPPlugin })
+  TestEZ.TestBootstrap:run({ MCPPlugin })
 end

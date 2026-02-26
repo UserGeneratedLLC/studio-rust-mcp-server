@@ -10,7 +10,7 @@ fn main() {
             color: cli::ColorChoice::Always,
         },
         subcommand: cli::Subcommand::Build(cli::BuildCommand {
-            project: std::path::PathBuf::from("plugin"),
+            project: std::path::PathBuf::from("plugin.project.json"),
             output: Some(dest_path),
             plugin: None,
             watch: false,
