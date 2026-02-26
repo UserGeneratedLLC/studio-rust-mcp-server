@@ -23,6 +23,17 @@ local function EscapeName(name: string): string
   return name
 end
 
+local function ReverseArray(arr: { any }, n: number)
+  local center = n // 2
+  for i = 1, center do
+    arr[i], arr[n - i + 1] = arr[n - i + 1], arr[i]
+  end
+end
+
+local function FindChildren(parent: Instance, name: string): { Instance }
+  return parent:QueryDescendants(string.format("> [Name = %q]", name))
+end
+
 local function GetDistinctName(inst: Instance): string
   return `{EscapeName(inst.Name)}~{GetDebugId(inst)}`
 end
@@ -108,7 +119,12 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
   assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
   local relativeTo: Instance = _relativeTo or game
 
-  if inst == relativeTo then return if relativeTo == game then "@game" else "@self" end
+  if inst == relativeTo then
+    if relativeTo == game then
+      return "@game"
+    end
+    return "@self"
+  end
 
   -- inst's ancestor chain [inst, parent, grandparent, ..., root] with O(1) lookup
   local instChain: { Instance } = {}
@@ -137,50 +153,56 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
 
   -- No common ancestor: bare path (orphaned or disjoint trees)
   if not commonIdx then
-    local names = table.create(chainLen)
+    local result = table.create(chainLen)
     for i = 1, chainLen do
-      names[i] = EscapeName(instChain[i].Name)
+      result[i] = EscapeName(instChain[chainLen - i + 1].Name)
     end
-    local n = chainLen
-    local center = n // 2
-    for i = 1, center do
-      names[i], names[n - i + 1] = names[n - i + 1], names[i]
+    if IsAmbiguous(inst, relativeTo) then
+      result[chainLen] = `{result[chainLen]}~{GetDebugId(inst)}`
     end
-    if IsAmbiguous(inst, relativeTo) then names[n] = `{names[n]}~{GetDebugId(inst)}` end
-    return table.concat(names, "/")
+    return table.concat(result, "/")
   end
 
-  -- Segments from common ancestor down to inst (collected child-to-root, then reversed)
+  -- Build single result array: prefix segments + name segments
   local segCount = commonIdx - 1
-  local names = table.create(segCount)
-  for i = 1, segCount do
-    names[i] = EscapeName(instChain[i].Name)
-  end
-  local center = segCount // 2
-  for i = 1, center do
-    names[i], names[segCount - i + 1] = names[segCount - i + 1], names[i]
-  end
-
-  if segCount > 0 and IsAmbiguous(inst, relativeTo) then
-    names[segCount] = `{names[segCount]}~{GetDebugId(inst)}`
-  end
-
-  local segDown: string? = if segCount > 0 then table.concat(names, "/") else nil
-
+  local prefixCount: number
   if levelsUp == 0 then
-    if relativeTo == game then return if segDown then `@game/{segDown}` else "@game" end
-    return if segDown then `@self/{segDown}` else "@self"
+    prefixCount = 1
+  elseif levelsUp == 1 then
+    prefixCount = 1
+  else
+    prefixCount = levelsUp - 1
   end
 
-  if levelsUp == 1 then return if segDown then `./{segDown}` else "." end
+  local totalSegs = prefixCount + segCount
+  local result = table.create(totalSegs)
 
-  -- levelsUp >= 2: (levelsUp-1) ".." segments
-  local prefixParts = table.create(levelsUp - 1)
-  for i = 1, levelsUp - 1 do
-    prefixParts[i] = ".."
+  -- Fill prefix
+  if levelsUp == 0 then
+    if relativeTo == game then
+      result[1] = "@game"
+    else
+      result[1] = "@self"
+    end
+  elseif levelsUp == 1 then
+    result[1] = "."
+  else
+    for i = 1, prefixCount do
+      result[i] = ".."
+    end
   end
-  local prefix = table.concat(prefixParts, "/")
-  return if segDown then `{prefix}/{segDown}` else prefix
+
+  -- Fill name segments (iterate instChain backwards = root-to-child order)
+  for i = 1, segCount do
+    result[prefixCount + i] = EscapeName(instChain[segCount - i + 1].Name)
+  end
+
+  -- Append debugId to last segment if ambiguous
+  if segCount > 0 and IsAmbiguous(inst, relativeTo) then
+    result[totalSegs] = `{result[totalSegs]}~{GetDebugId(inst)}`
+  end
+
+  return table.concat(result, "/")
 end
 
 local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
@@ -193,7 +215,10 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   local cleanPath = path
   do
     local lastSlash = string.find(path, "/[^/]*$")
-    local searchFrom = if lastSlash then lastSlash + 1 else 1
+    local searchFrom = 1
+    if lastSlash then
+      searchFrom = lastSlash + 1
+    end
     local tildePos = string.find(path, "~", searchFrom, true)
     if tildePos then
       debugId = string.sub(path, tildePos + 1)
@@ -201,10 +226,19 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
     end
   end
 
-  -- DebugId fast path: O(1) lookup + canonical validation
+  -- Build candidate ancestor set for debugId disambiguation
+  local candidateAncestors: { [Instance]: true }?
   if debugId then
-    local inst = DebugIdMap[debugId]
-    if inst and GetRelativePath(inst, relativeTo) == path then return inst end
+    local candidate = DebugIdMap[debugId]
+    if candidate then
+      local ancestors: { [Instance]: true } = {}
+      local pivot: Instance? = candidate
+      while pivot do
+        ancestors[pivot] = true
+        pivot = pivot.Parent
+      end
+      candidateAncestors = ancestors
+    end
   end
 
   -- Exact matches (no traversal needed)
@@ -212,33 +246,54 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   if cleanPath == "@self" then return relativeTo end
 
   -- Determine start instance and remaining path
-  local start: Instance?
+  local current: Instance?
   local rest: string
   if string.sub(cleanPath, 1, 6) == "@game/" then
-    start = game
+    current = game
     rest = string.sub(cleanPath, 7)
   elseif string.sub(cleanPath, 1, 6) == "@self/" then
-    start = relativeTo
+    current = relativeTo
     rest = string.sub(cleanPath, 7)
   elseif string.byte(cleanPath, 1) == 0x2E then
-    start = relativeTo.Parent
+    current = relativeTo.Parent
     rest = cleanPath
   else
-    start = if relativeTo == game then game else relativeTo.Parent
+    if relativeTo == game then
+      current = game
+    else
+      current = relativeTo.Parent
+    end
     rest = cleanPath
   end
 
-  if not start or rest == "" then return nil end
+  if not current or rest == "" then return nil end
 
-  -- Segment-by-segment traversal (1:1 with require-by-string resolution)
+  -- Walk segments step by step with proper ambiguity handling
   local segments = string.split(rest, "/")
-  local current: Instance? = start
   for _, seg in segments do
     if not current then return nil end
     if seg == ".." then
       current = current.Parent
     elseif seg ~= "." and seg ~= "" then
-      current = current:FindFirstChild(UnescapeName(seg))
+      local results = FindChildren(current, UnescapeName(seg))
+      if #results == 0 then
+        return nil
+      elseif #results == 1 then
+        current = results[1]
+      elseif candidateAncestors then
+        local found: Instance?
+        for _, inst in results do
+          if candidateAncestors[inst] then
+            found = inst
+            break
+          end
+        end
+        if not found then return nil end
+        current = found
+      else
+        warn(`FromRelativePath Ambiguous: {#results}`)
+        return nil
+      end
     end
   end
 
@@ -262,6 +317,8 @@ return table.freeze({
   GetDistinctPath = GetDistinctPath,
   FromDistinctPath = FromDistinctPath,
   IsAmbiguous = IsAmbiguous,
+  ReverseArray = ReverseArray,
+  FindChildren = FindChildren,
   GetRelativePath = GetRelativePath,
   FromRelativePath = FromRelativePath,
 })

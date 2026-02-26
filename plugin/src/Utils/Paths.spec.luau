@@ -6,7 +6,7 @@ return function()
   local alpha, beta, gamma, delta
   local epsilon, zeta
   local dotName, atName, slashName, tildeName, pctName, allSpecial
-  local ambigParent, twin1, twin2
+  local ambigParent, twin1, twin2, twin1Leaf, twin1Leaf2, twin2Leaf
   local deep1, deep2, deep3, deep4
   local orphan, orphanChild
   local basePath
@@ -35,6 +35,9 @@ return function()
     ambigParent = Instance.new("Folder"); ambigParent.Name = "AmbigParent"; ambigParent.Parent = root
     twin1 = Instance.new("Folder"); twin1.Name = "Twin"; twin1.Parent = ambigParent
     twin2 = Instance.new("Folder"); twin2.Name = "Twin"; twin2.Parent = ambigParent
+    twin1Leaf = Instance.new("Folder"); twin1Leaf.Name = "Leaf"; twin1Leaf.Parent = twin1
+    twin1Leaf2 = Instance.new("Folder"); twin1Leaf2.Name = "Leaf"; twin1Leaf2.Parent = twin1
+    twin2Leaf = Instance.new("Folder"); twin2Leaf.Name = "Leaf"; twin2Leaf.Parent = twin2
 
     deep1 = Instance.new("Folder"); deep1.Name = "Deep1"; deep1.Parent = root
     deep2 = Instance.new("Folder"); deep2.Name = "Deep2"; deep2.Parent = deep1
@@ -363,31 +366,14 @@ return function()
 
     describe("ambiguity and DebugId", function()
       it("should not add debugId for unambiguous @game path", function()
-        local path = Paths.GetRelativePath(alpha)
-        expect(string.find(path, "~")).to.equal(nil)
+        expect(string.find(Paths.GetRelativePath(alpha), "~")).to.equal(nil)
+        expect(string.find(Paths.GetRelativePath(gamma), "~")).to.equal(nil)
+        expect(string.find(Paths.GetRelativePath(deep4), "~")).to.equal(nil)
       end)
 
-      it("should add debugId for ambiguous siblings", function()
-        local path1 = Paths.GetRelativePath(twin1)
-        local path2 = Paths.GetRelativePath(twin2)
-        expect(string.find(path1, "~")).to.be.ok()
-        expect(string.find(path2, "~")).to.be.ok()
-      end)
-
-      it("should produce distinct paths for ambiguous twins", function()
-        local path1 = Paths.GetRelativePath(twin1)
-        local path2 = Paths.GetRelativePath(twin2)
-        expect(path1).never.to.equal(path2)
-      end)
-
-      it("should place debugId only on last segment", function()
-        local path = Paths.GetRelativePath(twin1)
-        local lastSlash = string.find(path, "/[^/]*$")
-        assert(lastSlash, "expected path with /")
-        local lastSeg = string.sub(path, lastSlash + 1)
-        local prefix = string.sub(path, 1, lastSlash - 1)
-        expect(string.find(lastSeg, "~")).to.be.ok()
-        expect(string.find(prefix, "~")).to.equal(nil)
+      it("should not add debugId for unambiguous @self path", function()
+        expect(string.find(Paths.GetRelativePath(beta, alpha), "~")).to.equal(nil)
+        expect(string.find(Paths.GetRelativePath(gamma, alpha), "~")).to.equal(nil)
       end)
 
       it("should not add debugId to @self with no segments", function()
@@ -398,9 +384,74 @@ return function()
         expect(string.find(Paths.GetRelativePath(game), "~")).to.equal(nil)
       end)
 
+      it("should not add debugId to bare . or .. paths (no name segments)", function()
+        expect(string.find(Paths.GetRelativePath(alpha, beta), "~")).to.equal(nil)
+        expect(string.find(Paths.GetRelativePath(alpha, gamma), "~")).to.equal(nil)
+        expect(string.find(Paths.GetRelativePath(root, gamma), "~")).to.equal(nil)
+      end)
+
+      it("should add debugId for ambiguous @game path", function()
+        expect(string.find(Paths.GetRelativePath(twin1), "~")).to.be.ok()
+        expect(string.find(Paths.GetRelativePath(twin2), "~")).to.be.ok()
+      end)
+
+      it("should add debugId for ambiguous @self path", function()
+        expect(string.find(Paths.GetRelativePath(twin1, ambigParent), "~")).to.be.ok()
+        expect(string.find(Paths.GetRelativePath(twin2, ambigParent), "~")).to.be.ok()
+      end)
+
+      it("should add debugId for leaf under ambiguous parent", function()
+        expect(string.find(Paths.GetRelativePath(twin1Leaf), "~")).to.be.ok()
+        expect(string.find(Paths.GetRelativePath(twin2Leaf), "~")).to.be.ok()
+      end)
+
+      it("should add debugId for multi-level ambiguous leaf", function()
+        expect(string.find(Paths.GetRelativePath(twin1Leaf2), "~")).to.be.ok()
+      end)
+
+      it("should produce distinct paths for ambiguous twins", function()
+        local path1 = Paths.GetRelativePath(twin1)
+        local path2 = Paths.GetRelativePath(twin2)
+        expect(path1).never.to.equal(path2)
+      end)
+
+      it("should produce distinct paths for leaves under different twins", function()
+        local path1 = Paths.GetRelativePath(twin1Leaf)
+        local path2 = Paths.GetRelativePath(twin2Leaf)
+        expect(path1).never.to.equal(path2)
+      end)
+
+      it("should produce distinct paths for leaves under same twin", function()
+        local path1 = Paths.GetRelativePath(twin1Leaf)
+        local path2 = Paths.GetRelativePath(twin1Leaf2)
+        expect(path1).never.to.equal(path2)
+      end)
+
+      it("should place debugId only on last segment", function()
+        local path = Paths.GetRelativePath(twin1Leaf)
+        local lastSlash = string.find(path, "/[^/]*$")
+        assert(lastSlash, "expected path with /")
+        local lastSeg = string.sub(path, lastSlash + 1)
+        local prefix = string.sub(path, 1, lastSlash - 1)
+        expect(string.find(lastSeg, "~")).to.be.ok()
+        expect(string.find(prefix, "~")).to.equal(nil)
+      end)
+
       it("should always add debugId for orphaned instances", function()
         expect(string.find(Paths.GetRelativePath(orphan), "~")).to.be.ok()
         expect(string.find(Paths.GetRelativePath(orphanChild), "~")).to.be.ok()
+      end)
+
+      it("should add debugId for orphaned ambiguous instances", function()
+        local orphanParent = Instance.new("Folder"); orphanParent.Name = "OrphanParent"
+        local oa = Instance.new("Folder"); oa.Name = "Same"; oa.Parent = orphanParent
+        local ob = Instance.new("Folder"); ob.Name = "Same"; ob.Parent = orphanParent
+        local pathA = Paths.GetRelativePath(oa)
+        local pathB = Paths.GetRelativePath(ob)
+        expect(string.find(pathA, "~")).to.be.ok()
+        expect(string.find(pathB, "~")).to.be.ok()
+        expect(pathA).never.to.equal(pathB)
+        orphanParent:Destroy()
       end)
     end)
   end)
@@ -601,7 +652,7 @@ return function()
     end)
 
     describe("DebugId handling", function()
-      it("should resolve ambiguous path with debugId via fast path", function()
+      it("should resolve ambiguous path with debugId", function()
         local path = Paths.GetRelativePath(twin1)
         expect(Paths.FromRelativePath(path)).to.equal(twin1)
       end)
@@ -626,7 +677,7 @@ return function()
         expect(Paths.FromRelativePath(path, beta)).to.equal(delta)
       end)
 
-      it("should validate debugId on traversal fallback", function()
+      it("should validate debugId after traversal", function()
         expect(Paths.FromRelativePath(basePath .. "/Alpha~" .. id(beta))).to.equal(nil)
       end)
 
@@ -639,6 +690,153 @@ return function()
         expect(Paths.FromRelativePath(p2, alpha)).to.equal(child2)
         child:Destroy()
         child2:Destroy()
+      end)
+    end)
+
+    describe("ambiguity handling", function()
+      -- Last segment ambiguity
+      it("should return nil for ambiguous last segment without debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin")).to.equal(nil)
+      end)
+
+      it("should resolve ambiguous last segment with correct debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~" .. id(twin1))).to.equal(twin1)
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~" .. id(twin2))).to.equal(twin2)
+      end)
+
+      it("should return nil for ambiguous last segment with bogus debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~BOGUS")).to.equal(nil)
+      end)
+
+      it("should return nil for ambiguous last segment with wrong valid debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~" .. id(alpha))).to.equal(nil)
+      end)
+
+      -- Intermediate ambiguity (one level)
+      it("should return nil for ambiguous intermediate without debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf")).to.equal(nil)
+      end)
+
+      it("should resolve through ambiguous intermediate with debugId on leaf", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf~" .. id(twin1Leaf))).to.equal(twin1Leaf)
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf~" .. id(twin2Leaf))).to.equal(twin2Leaf)
+      end)
+
+      -- Multi-level ambiguity (ambiguous Twin + ambiguous Leaf under twin1)
+      it("should resolve multi-level ambiguity with debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf~" .. id(twin1Leaf))).to.equal(twin1Leaf)
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf~" .. id(twin1Leaf2))).to.equal(twin1Leaf2)
+      end)
+
+      it("should distinguish leaves under same ambiguous twin", function()
+        local p1 = Paths.GetRelativePath(twin1Leaf)
+        local p2 = Paths.GetRelativePath(twin1Leaf2)
+        expect(Paths.FromRelativePath(p1)).to.equal(twin1Leaf)
+        expect(Paths.FromRelativePath(p2)).to.equal(twin1Leaf2)
+      end)
+
+      -- Non-canonical paths through ambiguity
+      it("should resolve non-canonical @game path through ambiguous segment", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha/../AmbigParent/Twin~" .. id(twin2))).to.equal(twin2)
+      end)
+
+      it("should resolve non-canonical @game path through ambiguous intermediate", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha/../AmbigParent/Twin/Leaf~" .. id(twin1Leaf))).to.equal(twin1Leaf)
+      end)
+
+      -- @self paths through ambiguity
+      it("should return nil for @self path into ambiguous children without debugId", function()
+        expect(Paths.FromRelativePath("@self/Twin", ambigParent)).to.equal(nil)
+      end)
+
+      it("should resolve @self path into ambiguous children with debugId", function()
+        expect(Paths.FromRelativePath("@self/Twin~" .. id(twin1), ambigParent)).to.equal(twin1)
+        expect(Paths.FromRelativePath("@self/Twin~" .. id(twin2), ambigParent)).to.equal(twin2)
+      end)
+
+      it("should return nil for @self path through ambiguous to leaf without debugId", function()
+        expect(Paths.FromRelativePath("@self/Twin/Leaf", ambigParent)).to.equal(nil)
+      end)
+
+      it("should resolve @self path through ambiguous intermediate with debugId", function()
+        expect(Paths.FromRelativePath("@self/Twin/Leaf~" .. id(twin2Leaf), ambigParent)).to.equal(twin2Leaf)
+      end)
+
+      -- ./ paths through ambiguity
+      it("should return nil for ./ path into ambiguous without debugId", function()
+        expect(Paths.FromRelativePath("./Twin", twin1)).to.equal(nil)
+      end)
+
+      it("should resolve ./ path into ambiguous with debugId", function()
+        expect(Paths.FromRelativePath("./Twin~" .. id(twin2), twin1)).to.equal(twin2)
+      end)
+
+      -- ../ paths through ambiguity
+      it("should return nil for ../ path into ambiguous without debugId", function()
+        expect(Paths.FromRelativePath("../Twin", twin1Leaf)).to.equal(nil)
+      end)
+
+      it("should resolve ../ path into ambiguous with debugId", function()
+        expect(Paths.FromRelativePath("../Twin~" .. id(twin2), twin1Leaf)).to.equal(twin2)
+      end)
+
+      -- Unique paths still resolve without debugId
+      it("should resolve unique sibling path through AmbigParent without debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent")).to.equal(ambigParent)
+      end)
+
+      it("should resolve unique @self path without debugId", function()
+        expect(Paths.FromRelativePath("@self/Beta", alpha)).to.equal(beta)
+      end)
+
+      -- Round-trips through all ambiguous instances
+      it("should round-trip all ambiguous instances from game", function()
+        for _, inst in { twin1, twin2, twin1Leaf, twin1Leaf2, twin2Leaf } do
+          local path = Paths.GetRelativePath(inst)
+          local resolved = Paths.FromRelativePath(path)
+          if resolved ~= inst then
+            error(`Failed round-trip for {inst:GetFullName()}: path={path}`)
+          end
+        end
+      end)
+
+      it("should round-trip ambiguous instances with @self relativeTo", function()
+        for _, inst in { twin1, twin2 } do
+          local path = Paths.GetRelativePath(inst, ambigParent)
+          local resolved = Paths.FromRelativePath(path, ambigParent)
+          if resolved ~= inst then
+            error(`Failed round-trip for {inst:GetFullName()} relative to AmbigParent: path={path}`)
+          end
+        end
+      end)
+
+      -- Orphaned ambiguous instances
+      it("should return nil for orphaned ambiguous instances (not in DebugIdMap)", function()
+        local orphanP = Instance.new("Folder"); orphanP.Name = "OP"
+        local oa = Instance.new("Folder"); oa.Name = "Same"; oa.Parent = orphanP
+        local ob = Instance.new("Folder"); ob.Name = "Same"; ob.Parent = orphanP
+        local pathA = Paths.GetRelativePath(oa)
+        local pathB = Paths.GetRelativePath(ob)
+        expect(string.find(pathA, "~")).to.be.ok()
+        expect(string.find(pathB, "~")).to.be.ok()
+        expect(Paths.FromRelativePath(pathA)).to.equal(nil)
+        expect(Paths.FromRelativePath(pathB)).to.equal(nil)
+        orphanP:Destroy()
+      end)
+
+      -- Instances moved out of DataModel become unresolvable
+      it("should return nil after ambiguous instance is removed from DataModel", function()
+        local tempParent = Instance.new("Folder"); tempParent.Name = "TempAmbig"; tempParent.Parent = root
+        local ta = Instance.new("Folder"); ta.Name = "Dup"; ta.Parent = tempParent
+        local tb = Instance.new("Folder"); tb.Name = "Dup"; tb.Parent = tempParent
+        local pathA = Paths.GetRelativePath(ta)
+        local pathB = Paths.GetRelativePath(tb)
+        expect(Paths.FromRelativePath(pathA)).to.equal(ta)
+        expect(Paths.FromRelativePath(pathB)).to.equal(tb)
+        tempParent.Parent = nil
+        expect(Paths.FromRelativePath(pathA)).to.equal(nil)
+        expect(Paths.FromRelativePath(pathB)).to.equal(nil)
+        tempParent:Destroy()
       end)
     end)
 
@@ -810,7 +1008,7 @@ return function()
         alpha, beta, gamma, delta, epsilon, zeta, root,
         deep1, deep2, deep3, deep4,
         dotName, atName, slashName, tildeName, pctName, allSpecial,
-        ambigParent, twin1, twin2,
+        ambigParent, twin1, twin2, twin1Leaf, twin1Leaf2, twin2Leaf,
       }
       for _, inst in instances do
         local path = Paths.GetRelativePath(inst)
