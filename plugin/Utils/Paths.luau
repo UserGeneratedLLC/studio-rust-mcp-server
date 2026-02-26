@@ -3,8 +3,28 @@
 
 local DebugIdMap: { [string]: Instance } = {}
 
-local function GetDebugId(inst: Instance): string
-  return inst:GetDebugId(0)
+local GetDebugId: (inst: Instance) -> string
+do
+  local ok, _ = pcall(game.GetDebugId, game, 0)
+  if ok then
+    GetDebugId = function(inst: Instance): string
+      return inst:GetDebugId(0)
+    end
+  else
+    -- We are ok with this leaking, as it should only be used in CI workflows
+    local counter = 0
+    local cache: { [Instance]: string } = {}
+    GetDebugId = function(inst: Instance): string
+      local cached = cache[inst]
+      if cached then
+        return cached
+      end
+      counter += 1
+      local id = `X{counter}`
+      cache[inst] = id
+      return id
+    end
+  end
 end
 
 local function UnescapeName(name: string): string

@@ -11,7 +11,7 @@ node_modules/
 sourcemap.json
 
 .env
-TestPlace.rbxl
 *.rbxm
+*.rbxl
 Packages/
 DevPackages/
