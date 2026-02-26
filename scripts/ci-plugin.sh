@@ -30,12 +30,7 @@ selene plugin
 selene_exit=$?
 record "Selene" $selene_exit
 
-step 3 "Install Dev Dependencies (Wally)"
-wally install
-wally_exit=$?
-record "Wally Install" $wally_exit
-
-step 4 "Run Roblox Plugin Tests"
+step 3 "Run Roblox Plugin Tests"
 rojo build test-place.project.json -o TestPlace.rbxl
 if [ $? -eq 0 ]; then
     run-in-roblox --script run-tests.server.luau --place TestPlace.rbxl
@@ -58,9 +53,6 @@ echo "  - Stylua: $(pass_or_fail $stylua_exit)"
 echo ""
 echo "Linting:"
 echo "  - Selene: $(pass_or_fail $selene_exit)"
-echo ""
-echo "Dependencies:"
-echo "  - Wally: $(pass_or_fail $wally_exit)"
 echo ""
 echo "Tests:"
 echo "  - Plugin: $(pass_or_fail $plugin_tests)"

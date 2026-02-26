@@ -638,7 +638,7 @@ return function()
       end)
 
       it("should resolve ../Uncle", function()
-        expect(Paths.FromRelativePath("../Delta", beta)).to.equal(delta)
+        expect(Paths.FromRelativePath("../Epsilon", beta)).to.equal(epsilon)
       end)
 
       it("should resolve ../.. to great-grandparent", function()

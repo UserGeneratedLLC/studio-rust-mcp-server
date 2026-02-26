@@ -30,12 +30,7 @@ selene plugin
 selene_exit=$?
 record "Selene" $selene_exit
 
-step 3 "Install Dev Dependencies (Wally)"
-wally install
-wally_exit=$?
-record "Wally Install" $wally_exit
-
-step 4 "Run Roblox Plugin Tests (Open Cloud)"
+step 3 "Run Roblox Plugin Tests (Open Cloud)"
 if [ -f .env ]; then
     set -a
     source .env
@@ -67,9 +62,6 @@ echo "  - Stylua: $(pass_or_fail $stylua_exit)"
 echo ""
 echo "Linting:"
 echo "  - Selene: $(pass_or_fail $selene_exit)"
-echo ""
-echo "Dependencies:"
-echo "  - Wally: $(pass_or_fail $wally_exit)"
 echo ""
 echo "Tests:"
 echo "  - Plugin (Cloud): $(pass_or_fail $plugin_tests)"
