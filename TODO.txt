@@ -116,7 +116,7 @@ Endpoints:
 * get_performance_stats
  - FPS, instance count, etc...
 * get_place_info
- - UniverseID, PlaceId, PlaceName, time info, etc...
+ - UniverseID, PlaceId, PlaceName, time info, StudioService, etc...
 * undo [times]
 * redo [times]
 * rename_instance paths newName
@@ -147,6 +147,12 @@ Endpoints:
 * set_clipboard
 * ability to copy/paste from other studio instances
  - we could accomplish this with SerializationService .rbxm's
+ - i'm not sure this would retain references to things like SoundGroup, etc.
+* enabling/disabling physics model view
+ - in general we should expose a ton of those studio settings
+* statistics
+ - instance count, performance, etc
+* access to profiler?
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie
@@ -187,3 +193,6 @@ We will want to support CSG in some way
 
 [Multi-studio support]
 How are we going to accomplish this?
+
+[linter errors]
+how in the world are we going to do linter errors? those are needed context.

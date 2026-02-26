@@ -393,9 +393,11 @@ local function DecodeRay(v: any): Ray
   )
 end
 
-local function EncodeInstanceRef(v: Instance): any return Paths.GetDistinctPath(v) end
-local function DecodeInstanceRef(v: any): Instance
-  local inst = Paths.FromDistinctPath(v)
+local function EncodeInstanceRef(v: Instance, relativeTo: Instance?): any
+  return Paths.GetRelativePath(v, relativeTo)
+end
+local function DecodeInstanceRef(v: any, relativeTo: Instance?): Instance
+  local inst = Paths.FromRelativePath(v, relativeTo)
   if not inst then error(`UnknownRef {v}`) end
   return inst
 end
@@ -435,7 +437,7 @@ local function DecodeRegion3int16(v: any): Region3int16
   return Region3int16.new(Vector3int16.new(v[1], v[2], v[3]), Vector3int16.new(v[4], v[5], v[6]))
 end
 
-local PropertyEncoders: { [string]: (any) -> any } = {
+local PropertyEncoders: { [string]: (any, Instance?) -> any } = {
   ["string"] = EncodeString,
   ["number"] = EncodeNumber,
   ["boolean"] = EncodeBoolean,
@@ -465,7 +467,12 @@ local PropertyEncoders: { [string]: (any) -> any } = {
   ["Region3"] = EncodeRegion3,
   ["Region3int16"] = EncodeRegion3int16,
 }
-local function EncodeProperty(value: any, nilReference: any, scriptType: string): any
+local function EncodeProperty(
+  value: any,
+  nilReference: any,
+  scriptType: string,
+  relativeTo: Instance?
+): any
   if value == nil then return {
     [scriptType] = nilReference,
   } end
@@ -479,7 +486,7 @@ local function EncodeProperty(value: any, nilReference: any, scriptType: string)
   local encoder = PropertyEncoders[scriptType]
   if not encoder then error(`UnknownType {scriptType}`) end
   return {
-    [scriptType] = encoder(value),
+    [scriptType] = encoder(value, relativeTo),
   }
 end
 
@@ -515,19 +522,24 @@ local function GetCachedProperties(className: string): { ReflectedProperty }
   return filtered
 end
 
-local function EncodeProperties(inst: Instance, nilReference: any): { [string]: any }
+local function EncodeProperties(
+  inst: Instance,
+  nilReference: any,
+  relativeTo: Instance
+): { [string]: any }
   local props = GetCachedProperties(inst.ClassName)
   local result: { [string]: any } = {}
   for _, prop in props do
     local success, value = pcall(function() return (inst :: any)[prop.Name] end)
     if success then
-      result[prop.Name] = EncodeProperty(value, nilReference, assert(prop.Type.ScriptType))
+      result[prop.Name] =
+        EncodeProperty(value, nilReference, assert(prop.Type.ScriptType), relativeTo)
     end
   end
   return result
 end
 
-local PropertyDecoders: { [string]: (any) -> any } = {
+local PropertyDecoders: { [string]: (any, Instance?) -> any } = {
   ["number"] = DecodeNumber,
   ["string"] = DecodeString,
   ["boolean"] = DecodeBoolean,
@@ -557,7 +569,12 @@ local PropertyDecoders: { [string]: (any) -> any } = {
   ["Region3"] = DecodeRegion3,
   ["Region3int16"] = DecodeRegion3int16,
 }
-local function DecodeProperty(value: any, nilReference: any, scriptType: string): any
+local function DecodeProperty(
+  value: any,
+  nilReference: any,
+  scriptType: string,
+  relativeTo: Instance?
+): any
   if value == nilReference then return nil end
   local t = typeof(value)
   if t == "boolean" or t == "number" or t == "string" then
@@ -569,7 +586,7 @@ local function DecodeProperty(value: any, nilReference: any, scriptType: string)
       value = inner
     end
   end
-  return PropertyDecoders[scriptType](value)
+  return PropertyDecoders[scriptType](value, relativeTo)
 end
 
 local AttributeEncoders: { [string]: (any) -> any } = {
@@ -641,13 +658,13 @@ local function EncodeInstance(
   inst: Instance,
   depth: number,
   nilReference: any,
-  relativeTo: Instance?
+  _relativeTo: Instance?
 ): EncodedInstance
   assert(typeof(inst) == "Instance", "InvalidInstance")
   assert(math.isfinite(depth) and math.floor(depth) == depth, "InvalidDepth")
   assert(nilReference ~= nil, "InvalidNilReference")
-  assert(relativeTo == nil or typeof(relativeTo) == "Instance")
-  local relativeTo = relativeTo or game
+  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
+  local relativeTo = _relativeTo or game
 
   local result: EncodedInstance = {
     Name = Paths.EscapeName(inst.Name),
@@ -660,11 +677,11 @@ local function EncodeInstance(
     local children = table.create(#rawChildren)
     local childDepth = depth - 1
     for i, child in rawChildren do
-      children[i] = EncodeInstance(child, childDepth, nilReference)
+      children[i] = EncodeInstance(child, childDepth, nilReference, inst)
     end
     if #children > 0 then result.Children = children end
     -- Properties
-    local properties = EncodeProperties(inst, nilReference)
+    local properties = EncodeProperties(inst, nilReference, relativeTo)
     if next(properties) then result.Properties = properties end
     -- Attributes
     local attributes = {}
@@ -711,7 +728,7 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
         local encoded = properties[key]
         if encoded == nil then return defaultValue end
         properties[key] = nil
-        local success, result = pcall(DecodeProperty, encoded, nilReference, scriptType)
+        local success, result = pcall(DecodeProperty, encoded, nilReference, scriptType, parent)
         if not success then error(`MalformedProperty {key}: {result}`) end
         return result
       end
@@ -732,7 +749,7 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
         local encoded = properties[key]
         if encoded ~= nil then
           local success, result =
-            pcall(DecodeProperty, encoded, nilReference, assert(prop.Type.ScriptType))
+            pcall(DecodeProperty, encoded, nilReference, assert(prop.Type.ScriptType), parent)
           if not success then error(`MalformedProperty {key}: {result}`) end
           instAny[key] = result
         end
