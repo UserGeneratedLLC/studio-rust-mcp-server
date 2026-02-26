@@ -2,11 +2,11 @@ local Main = script:FindFirstAncestor("MCPStudioPlugin")
 local Types = require(Main.Types)
 
 export type GlobalVariables = {
-	studioMode: Types.StartStopPlayMode,
+  studioMode: Types.StartStopPlayMode,
 }
 
 local GlobalVariables = {
-	studioMode = "stop",
+  studioMode = "stop",
 }
 
 return GlobalVariables
