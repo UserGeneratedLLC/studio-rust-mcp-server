@@ -14,4 +14,4 @@ sourcemap.json
 TestPlace.rbxl
 *.rbxm
 Packages/
-wally.lock
+DevPackages/

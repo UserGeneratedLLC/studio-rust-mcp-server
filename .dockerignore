@@ -8,6 +8,7 @@ target/
 *.rbxlx
 *.rbxm
 TestPlace.rbxl
+DevPackages/
 Packages/
 node_modules/
 docs/

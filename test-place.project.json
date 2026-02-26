@@ -7,7 +7,7 @@
         "$path": "plugin"
       },
       "Packages": {
-        "$path": "Packages"
+        "$path": "DevPackages"
       }
     },
     "ServerScriptService": {
