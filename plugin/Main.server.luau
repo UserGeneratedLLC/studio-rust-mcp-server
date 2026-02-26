@@ -34,26 +34,22 @@ local function log(...)
 end
 
 local function toolCallHandler(args: Types.ToolArgs): string
-	local toolName = next(args)
-	if not toolName then
-		error("No tool name found in request")
-	end
+  local toolName = next(args)
+  if not toolName then error("No tool name found in request") end
 
-	local toolArgs = args[toolName]
-	if not toolArgs or type(toolArgs) ~= "table" then
-		error("Invalid tool args found for tool name: " .. toolName)
-	end
+  local toolArgs = args[toolName]
+  if not toolArgs or type(toolArgs) ~= "table" then
+    error("Invalid tool args found for tool name: " .. toolName)
+  end
 
-	local recording = ChangeHistoryService:TryBeginRecording("StudioMCP")
-	local success, response = pcall(ToolDispatcher.dispatchTool, toolName, toolArgs)
-	if recording then
-		ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
-	end
+  local recording = ChangeHistoryService:TryBeginRecording("StudioMCP")
+  local success, response = pcall(ToolDispatcher.dispatchTool, toolName, toolArgs)
+  if recording then
+    ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+  end
 
-	if success then
-		return response or ""
-	end
-	error("Error handling request: " .. tostring(response))
+  if success then return response or "" end
+  error("Error handling request: " .. tostring(response))
 end
 
 local function connectWebSocket()
@@ -109,8 +105,8 @@ toggleButton.ClickableWhenViewportHidden = true
 local currentClient: MockWebSocketService.MockWebSocketClient?
 
 if not plugin:GetSetting(PLUGIN_DISABLED_SETTING_KEY) then
-	currentClient = connectWebSocket()
-	print("The MCP Studio plugin is ready for prompts.")
+  currentClient = connectWebSocket()
+  print("The MCP Studio plugin is ready for prompts.")
 end
 
 toggleButton:SetActive(currentClient ~= nil)
