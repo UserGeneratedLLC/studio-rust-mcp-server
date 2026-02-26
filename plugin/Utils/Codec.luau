@@ -451,11 +451,7 @@ local function EncodeInstanceRef(v: Instance, relativeTo: Instance?): any
   return Paths.GetRelativePath(v, relativeTo)
 end
 local function DecodeInstanceRef(v: any, relativeTo: Instance?): Instance
-  local inst = Paths.FromRelativePath(v, relativeTo)
-  if not inst then
-    error(`UnknownRef {v}`)
-  end
-  return inst
+  return Paths.FromRelativePath(v, relativeTo)
 end
 
 local function EncodeRegion3(v: Region3): any
@@ -811,6 +807,8 @@ local function EncodeInstance(
   return result
 end
 
+-- TODO(high): Refs found in this instance which refer to other things in this instance will not validate. we need to defer refer's being added at the very end at the parent level
+-- TODO(medium): any errors during the decoding will result in hanging references and memory leaks.
 -- TODO(low): handle CSG parts
 local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: Instance?): Instance
   assert(type(data) == "table", "InvalidData")

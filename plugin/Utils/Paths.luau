@@ -181,11 +181,11 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
     pivot = relativeTo.Parent
     while pivot do
       levelsUp += 1
-      commonIdx = instSet[pivot :: Instance]
+      commonIdx = instSet[pivot]
       if commonIdx then
         break
       end
-      pivot = (pivot :: Instance).Parent
+      pivot = pivot.Parent
     end
   end
 
@@ -241,13 +241,76 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
   return table.concat(result, "/")
 end
 
-local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
+local function ResolveByDebugId(
+  debugId: string,
+  root: Instance,
+  segments: { string },
+  startIdx: number
+): Instance?
+  local candidate = DebugIdMap[debugId]
+  if not candidate or GetDebugId(candidate) ~= debugId then
+    return nil
+  end
+
+  local start: Instance = root
+  local normalSegs: { string } = {}
+  local normalLen = 0
+  for i = startIdx, #segments do
+    local seg = segments[i]
+    if seg == ".." then
+      if normalLen > 0 then
+        normalLen -= 1
+      else
+        local parent = start.Parent
+        if not parent then
+          return nil
+        end
+        start = parent
+      end
+    elseif seg ~= "." and seg ~= "" then
+      normalLen += 1
+      normalSegs[normalLen] = seg
+    end
+  end
+
+  local chain: { Instance } = {}
+  local chainLen = 0
+  local pivot: Instance? = candidate
+  while pivot do
+    chainLen += 1
+    chain[chainLen] = pivot
+    pivot = pivot.Parent
+  end
+
+  local chainIdx = 0
+  for i = 1, chainLen do
+    if chain[i] == start then
+      chainIdx = i
+      break
+    end
+  end
+
+  if chainIdx > 0 then
+    for i = 1, normalLen do
+      chainIdx -= 1
+      if chainIdx < 1 or chain[chainIdx].Name ~= UnescapeName(normalSegs[i]) then
+        return nil
+      end
+    end
+    if chainIdx == 1 then
+      return candidate
+    end
+  end
+  return nil
+end
+
+local function FromRelativePath(path: string, _relativeTo: Instance?): Instance
   assert(type(path) == "string", "expected string")
   assert(_relativeTo == nil or typeof(_relativeTo) == "Instance", "expected Instance or nil")
   local relativeTo: Instance = _relativeTo or game
 
   if path == "" then
-    return nil
+    error(`FromRelativePath: empty path`)
   end
 
   -- Extract debugId from last segment (last ~ after last /)
@@ -263,16 +326,6 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
     if tildePos then
       debugId = string.sub(path, tildePos + 1)
       cleanPath = string.sub(path, 1, tildePos - 1)
-    end
-  end
-
-  -- Build candidate ancestor set for debugId disambiguation
-  if debugId then
-    local candidate = DebugIdMap[debugId]
-    if candidate and GetDebugId(candidate) == debugId then
-      error("nyi")
-      -- TODO(high): we now have a literal path of the instance. we can literally walk it like we do below without having to do expensive calls to FindChildren
-      -- crappy solution: just regenerate the path and compare, ignoring DebugId the at the ends. if it matches, return the instance. otherwise, fall through.
     end
   end
 
@@ -299,13 +352,20 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   end
 
   if not current then
-    return nil
+    error(`FromRelativePath: no parent to resolve relative path '{path}'`)
+  end
+
+  if debugId then
+    local resolved = ResolveByDebugId(debugId, current, segments, startIdx)
+    if resolved then
+      return resolved
+    end
   end
 
   -- Walk segments step by step (matches Luau navigateThroughPath)
   for i = startIdx, #segments do
     if not current then
-      return nil
+      error(`FromRelativePath: path goes above root '{path}'`)
     end
     local seg = segments[i]
     if seg == ".." then
@@ -313,21 +373,22 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
     elseif seg ~= "." and seg ~= "" then
       local results = FindChildren(current, UnescapeName(seg))
       if #results == 0 then
-        return nil
+        error(`FromRelativePath: '{UnescapeName(seg)}' not found in '{path}'`)
       elseif #results == 1 then
         current = results[1]
       else
-        warn(`FromRelativePath Ambiguous: {#results}`)
-        return nil
+        error(
+          `FromRelativePath: ambiguous, {#results} matches for '{UnescapeName(seg)}' in '{path}'`
+        )
       end
     end
   end
 
   if not current then
-    return nil
+    error(`FromRelativePath: path goes above root '{path}'`)
   end
   if debugId and GetDebugId(current) ~= debugId then
-    return nil
+    error(`FromRelativePath: debugId mismatch for '{path}'`)
   end
   return current
 end
