@@ -5,7 +5,7 @@ local EncodingService = game:GetService("EncodingService")
 local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
 
-local Paths = require("Paths")
+local Paths = require(script.Parent.Paths)
 
 export type EncodedInstance = {
   Name: string,
@@ -684,8 +684,7 @@ local function EncodeInstance(
   _relativeTo: Instance?
 ): EncodedInstance
   assert(typeof(inst) == "Instance", "InvalidInstance")
-  -- selene: allow(incorrect_standard_library_use)
-  assert(math.isfinite(depth) and math.floor(depth) == depth, "InvalidDepth")
+  assert(depth == depth and math.floor(depth) == depth, "InvalidDepth")
   assert(nilReference ~= nil, "InvalidNilReference")
   assert(_relativeTo == nil or typeof(_relativeTo) == "Instance", "expected Instance or nil")
   local relativeTo = _relativeTo or game
