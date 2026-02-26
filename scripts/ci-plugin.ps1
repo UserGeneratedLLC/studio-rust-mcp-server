@@ -28,7 +28,12 @@ selene plugin
 $selene = $LASTEXITCODE
 Record-Result "Selene" $selene
 
-Write-Step 3 "Run Roblox Plugin Tests"
+Write-Step 3 "Install Dev Dependencies (Wally)"
+wally install
+$wally = $LASTEXITCODE
+Record-Result "Wally Install" $wally
+
+Write-Step 4 "Run Roblox Plugin Tests"
 rojo build test-place.project.json -o TestPlace.rbxl
 if ($LASTEXITCODE -eq 0) {
     run-in-roblox --script run-tests.server.luau --place TestPlace.rbxl
@@ -49,6 +54,9 @@ Write-Host "  - Stylua: $(if ($stylua -eq 0) {'PASS'} else {'FAIL'})"
 Write-Host ""
 Write-Host "Linting:"
 Write-Host "  - Selene: $(if ($selene -eq 0) {'PASS'} else {'FAIL'})"
+Write-Host ""
+Write-Host "Dependencies:"
+Write-Host "  - Wally: $(if ($wally -eq 0) {'PASS'} else {'FAIL'})"
 Write-Host ""
 Write-Host "Tests:"
 Write-Host "  - Plugin: $(if ($pluginTests -eq 0) {'PASS'} else {'FAIL'})"

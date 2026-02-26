@@ -28,7 +28,12 @@ selene plugin
 $selene = $LASTEXITCODE
 Record-Result "Selene" $selene
 
-Write-Step 3 "Run Roblox Plugin Tests (Open Cloud)"
+Write-Step 3 "Install Dev Dependencies (Wally)"
+wally install
+$wally = $LASTEXITCODE
+Record-Result "Wally Install" $wally
+
+Write-Step 4 "Run Roblox Plugin Tests (Open Cloud)"
 Get-Content .env | ForEach-Object {
     if ($_ -match '^([^#][^=]*)=(.*)$') {
         [Environment]::SetEnvironmentVariable($Matches[1], $Matches[2], "Process")
@@ -58,6 +63,9 @@ Write-Host "  - Stylua: $(if ($stylua -eq 0) {'PASS'} else {'FAIL'})"
 Write-Host ""
 Write-Host "Linting:"
 Write-Host "  - Selene: $(if ($selene -eq 0) {'PASS'} else {'FAIL'})"
+Write-Host ""
+Write-Host "Dependencies:"
+Write-Host "  - Wally: $(if ($wally -eq 0) {'PASS'} else {'FAIL'})"
 Write-Host ""
 Write-Host "Tests:"
 Write-Host "  - Plugin (Cloud): $(if ($pluginTests -eq 0) {'PASS'} else {'FAIL'})"
