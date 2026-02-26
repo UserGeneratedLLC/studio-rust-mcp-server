@@ -23,6 +23,34 @@ tags:
 deprecation_message: ''
 properties: []
 methods:
+  - name: BadgeService:AwardBadge
+    summary: |
+      Award a badge to a player given the ID of each.
+    description: ''
+    code_samples: []
+    parameters:
+      - name: userId
+        type: int64
+        default:
+        summary: |
+          The `Class.Player.UserId` of the user the badge is to be awarded to.
+      - name: badgeId
+        type: int64
+        default:
+        summary: |
+          The ID of the badge to be awarded.
+    returns:
+      - type: boolean
+        summary: |
+          Boolean of `true` if the badge was awarded successfully.
+    tags:
+      - Yields
+      - Deprecated
+    deprecation_message: ''
+    security: None
+    thread_safety: Unsafe
+    capabilities:
+      - AssetManagement
   - name: BadgeService:AwardBadgeAsync
     summary: |
       Award a badge to a player given the ID of each.
@@ -64,34 +92,6 @@ methods:
           Boolean of `true` if the badge was awarded successfully.
     tags:
       - Yields
-    deprecation_message: ''
-    security: None
-    thread_safety: Unsafe
-    capabilities:
-      - AssetManagement
-  - name: BadgeService:AwardBadge
-    summary: |
-      Award a badge to a player given the ID of each.
-    description: ''
-    code_samples: []
-    parameters:
-      - name: userId
-        type: int64
-        default:
-        summary: |
-          The `Class.Player.UserId` of the user the badge is to be awarded to.
-      - name: badgeId
-        type: int64
-        default:
-        summary: |
-          The ID of the badge to be awarded.
-    returns:
-      - type: boolean
-        summary: |
-          Boolean of `true` if the badge was awarded successfully.
-    tags:
-      - Yields
-      - Deprecated
     deprecation_message: ''
     security: None
     thread_safety: Unsafe

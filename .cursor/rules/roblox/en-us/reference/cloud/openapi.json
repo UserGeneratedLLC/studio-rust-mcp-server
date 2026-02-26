@@ -13406,6 +13406,15 @@
             "url": "https://assetdelivery.roblox.com"
           }
         ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v2_alias__alias_"
         }
@@ -13632,6 +13641,15 @@
             "url": "https://assetdelivery.roblox.com"
           }
         ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v2_asset"
         }
@@ -13791,6 +13809,15 @@
         "servers": [
           {
             "url": "https://assetdelivery.roblox.com"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
           }
         ],
         "externalDocs": {
@@ -13963,6 +13990,15 @@
             "url": "https://assetdelivery.roblox.com"
           }
         ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v2_assetId__assetId__version__versionNumber_"
         }
@@ -14108,6 +14144,15 @@
             "url": "https://assetdelivery.roblox.com"
           }
         ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v2_marAssetHash__marAssetHash__marCheckSum__marCheckSum_"
         }
@@ -14129,6 +14174,14 @@
           {
             "in": "header",
             "name": "Accept",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Roblox-Browser-Asset-Request",
             "required": true,
             "schema": {
               "type": "string"
@@ -14182,6 +14235,15 @@
         "servers": [
           {
             "url": "https://assetdelivery.roblox.com"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
           }
         ],
         "externalDocs": {
@@ -14329,6 +14391,15 @@
         "servers": [
           {
             "url": "https://assetdelivery.roblox.com"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
           }
         ],
         "externalDocs": {
@@ -14559,6 +14630,15 @@
             "url": "https://assetdelivery.roblox.com"
           }
         ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v1_asset"
         },
@@ -14727,6 +14807,15 @@
         "servers": [
           {
             "url": "https://assetdelivery.roblox.com"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
           }
         ],
         "externalDocs": {
@@ -14909,6 +14998,15 @@
             "url": "https://assetdelivery.roblox.com"
           }
         ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v1_assetId__assetId__version__versionNumber_"
         },
@@ -15070,6 +15168,15 @@
             "url": "https://assetdelivery.roblox.com"
           }
         ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v1_marAssetHash__marAssetHash__marCheckSum__marCheckSum_"
         },
@@ -15078,435 +15185,6 @@
             "url": "https://assetdelivery.roblox.com/v2/marAssetHash/{marAssetHash}/marCheckSum/{marCheckSum}",
             "httpMethod": "GET",
             "documentationUrl": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v2_marAssetHash__marAssetHash__marCheckSum__marCheckSum_"
-          }
-        ]
-      }
-    },
-    "/v1/openCloud/assetId/{assetId}": {
-      "get": {
-        "tags": ["Assets"],
-        "summary": "Retrieves an asset by its ID with OpenCloud auth.",
-        "description": "Returns an object containing a `location` property which is a temporary CDN URL for the asset content. All asset types are supported.\r\nYou should request that URL with the `Accept-Encoding: gzip` header and decompress the result if the response is gzipped. If you are using cURL, the `--compressed` flag will automate these steps for you.\r\nThis endpoint is expected to be called with API key authentication through `apis.roblox.com/asset-delivery-api/v1/assetId/{assetId}`.\r\nWhile you are able to make requests to this endpoint with Cookie authentication via `assetdelivery.roblox.com/v1/openCloud/assetId/{assetId}`, we highly discourage use this way.\r\nExpect unannounced removal of this second route in the future.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assetId",
-            "description": "The ID of the asset to retrieve.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept-Encoding",
-            "description": "The Accept-Encoding header value specifying compression formats (e.g., \"gzip, deflate\"). Defaults to \"gzip, deflate\" if not provided.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-Place-Id",
-            "description": "The Roblox-Place-Id header value identifying the place making the request.",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetType",
-            "description": "The AssetType header value specifying the expected asset type.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept",
-            "description": "The Accept header value specifying the preferred response content type.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetFormat",
-            "description": "The AssetFormat header value specifying the desired asset format. Overridden by robloxAssetFormat if both are provided.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-AssetFormat",
-            "description": "The Roblox-AssetFormat header value specifying the preferred Roblox-specific asset format. Takes precedence over assetFormat.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "skipSigningScripts",
-            "description": "Whether to skip script signing for the returned asset. Used for script assets that don't require signing.",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "in": "query",
-            "name": "clientInsert",
-            "description": "Set to 1 to indicate this is a client insert request.",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "scriptinsert",
-            "description": "Set to 1 to indicate this is a script insert request.",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "modulePlaceId",
-            "description": "The place ID of the module making the request.",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "serverplaceid",
-            "description": "The server place ID making the request.",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "expectedAssetType",
-            "description": "The expected asset type as a fallback when assetType header is not provided.",
-            "schema": {
-              "type": "string",
-              "default": ""
-            }
-          },
-          {
-            "in": "query",
-            "name": "doNotFallbackToBaselineRepresentation",
-            "description": "Whether to prevent fallback to baseline representation when specific content representations are not available.",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "in": "query",
-            "name": "contentRepresentationPriorityList",
-            "description": "Base64URL-encoded JSON string specifying the priority list of desired content representations (format, version, fidelity).",
-            "schema": {
-              "type": "string",
-              "default": ""
-            }
-          },
-          {
-            "in": "query",
-            "name": "accessContext",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "0: Authorization has been denied for this request."
-          }
-        },
-        "servers": [
-          {
-            "url": "https://assetdelivery.roblox.com"
-          }
-        ],
-        "externalDocs": {
-          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v1_openCloud_assetId__assetId_"
-        }
-      }
-    },
-    "/v1/openCloud/assetId/{assetId}/version/{versionNumber}": {
-      "get": {
-        "tags": ["Assets"],
-        "summary": "Retrieves an asset by its ID and version number with OpenCloud auth.",
-        "description": "Refer to the assetId endpoint for details on usage.\r\nThis endpoint is expected to be called with API key authentication through `apis.roblox.com/asset-delivery-api/v1/assetId/{assetId}/version/{versionNumber}`.\r\nWhile you are able to make requests to this endpoint with Cookie authentication via `assetdelivery.roblox.com/v1/openCloud/assetId/{assetId}/version/{versionNumber}`, we highly discourage use this way.\r\nExpect unannounced removal of this second route in the future.",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assetId",
-            "description": "The ID of the asset to retrieve.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "path",
-            "name": "versionNumber",
-            "description": "The version number of the asset to retrieve.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept-Encoding",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-Place-Id",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetType",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetFormat",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-AssetFormat",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "skipSigningScripts",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "in": "query",
-            "name": "clientInsert",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "scriptinsert",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "modulePlaceId",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "serverplaceid",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "expectedAssetType",
-            "schema": {
-              "type": "string",
-              "default": ""
-            }
-          },
-          {
-            "in": "query",
-            "name": "doNotFallbackToBaselineRepresentation",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "in": "query",
-            "name": "contentRepresentationPriorityList",
-            "schema": {
-              "type": "string",
-              "default": ""
-            }
-          },
-          {
-            "in": "query",
-            "name": "accessContext",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "0: Authorization has been denied for this request."
-          }
-        },
-        "servers": [
-          {
-            "url": "https://assetdelivery.roblox.com"
-          }
-        ],
-        "externalDocs": {
-          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v1_openCloud_assetId__assetId__version__versionNumber_"
-        }
-      }
-    },
-    "/v1/assets/batch": {
-      "post": {
-        "tags": ["Assets"],
-        "parameters": [
-          {
-            "in": "header",
-            "name": "Roblox-Place-Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.BatchAssetRequestItem"
-                }
-              }
-            },
-            "text/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.BatchAssetRequestItem"
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "servers": [
-          {
-            "url": "https://assetdelivery.roblox.com"
-          }
-        ],
-        "externalDocs": {
-          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_post_v1_assets_batch"
-        },
-        "x-roblox-recommended-alternatives": [
-          {
-            "url": "https://assetdelivery.roblox.com/v2/assets/batch",
-            "httpMethod": "POST",
-            "documentationUrl": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_post_v2_assets_batch"
           }
         ]
       }
@@ -15897,6 +15575,106 @@
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#get_asset_delivery_api_v1_assetId__assetId__version__versionNumber_"
         }
+      }
+    },
+    "/v1/assets/batch": {
+      "post": {
+        "tags": ["Assets"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Roblox-Place-Id",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Roblox-Browser-Asset-Request",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Roblox.Web.Assets.BatchAssetRequestItem"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Roblox.Web.Assets.BatchAssetRequestItem"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "servers": [
+          {
+            "url": "https://assetdelivery.roblox.com"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_post_v1_assets_batch"
+        },
+        "x-roblox-recommended-alternatives": [
+          {
+            "url": "https://assetdelivery.roblox.com/v2/assets/batch",
+            "httpMethod": "POST",
+            "documentationUrl": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_post_v2_assets_batch"
+          }
+        ]
       }
     },
     "/v3/logout": {
@@ -19218,6 +18996,7 @@
     },
     "/v1/passkey/finish-ar-preauth-registration": {
       "post": {
+        "tags": ["Accounts"],
         "summary": "Finishes account recovery pre-auth passkey registration by validating the recovery session,\r\ndeactivating the user's password, and completing passkey registration.",
         "requestBody": {
           "content": {
@@ -19271,7 +19050,10 @@
           {
             "url": "https://auth.roblox.com"
           }
-        ]
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/accounts#auth_post_v1_passkey_finish_ar_preauth_registration"
+        }
       }
     },
     "/v1/passkey/finish-preauth-registration": {
@@ -53770,6 +53552,22 @@
           }
         ],
         "x-roblox-stability": "BETA",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "thumbnail:read",
+            "targetResourceSpecifier": ""
+          }
+        ],
         "x-roblox-engine-usability": {
           "apiKeyWithHttpService": false
         },
@@ -53777,6 +53575,12 @@
           {},
           {
             "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["thumbnail:read"]
           }
         ],
         "externalDocs": {
@@ -54805,6 +54609,22 @@
           }
         ],
         "x-roblox-stability": "BETA",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 500
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 500
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "thumbnail:read",
+            "targetResourceSpecifier": ""
+          }
+        ],
         "x-roblox-engine-usability": {
           "apiKeyWithHttpService": false
         },
@@ -54812,6 +54632,12 @@
           {},
           {
             "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["thumbnail:read"]
           }
         ],
         "externalDocs": {
@@ -55060,6 +54886,22 @@
           }
         ],
         "x-roblox-stability": "BETA",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "thumbnail:read",
+            "targetResourceSpecifier": ""
+          }
+        ],
         "x-roblox-engine-usability": {
           "apiKeyWithHttpService": false
         },
@@ -55067,6 +54909,12 @@
           {},
           {
             "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["thumbnail:read"]
           }
         ],
         "externalDocs": {
@@ -60475,429 +60323,6 @@
         }
       }
     },
-    "/toolbox-service/v2/assets:search": {
-      "get": {
-        "tags": ["Assets", "Creator Store"],
-        "summary": "Search Creator Store Assets",
-        "description": "Search Creator Store for assets.",
-        "parameters": [
-          {
-            "name": "searchCategoryType",
-            "in": "query",
-            "description": "The asset type to search within.",
-            "required": true,
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/SearchCategoryType"
-                }
-              ],
-              "description": "This represents a \"subset\" of Toolbox.Service.CategoryType options and represent the full set\r\nof \"categories\" (or asset types) that can be searched upon from the toolbox search API.",
-              "x-enumNames": [
-                "Audio",
-                "Model",
-                "Decal",
-                "Plugin",
-                "MeshPart",
-                "Video",
-                "FontFamily"
-              ],
-              "x-enum-varnames": [
-                "Audio",
-                "Model",
-                "Decal",
-                "Plugin",
-                "MeshPart",
-                "Video",
-                "FontFamily"
-              ]
-            }
-          },
-          {
-            "name": "query",
-            "in": "query",
-            "description": "The search terms used to filter the results.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "modelSubTypes",
-            "in": "query",
-            "description": "When searching for models, the subtypes associated with the search results.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/ModelSubType"
-              },
-              "nullable": true
-            }
-          },
-          {
-            "name": "excludedModelSubTypes",
-            "in": "query",
-            "description": "When searching for models, the subtypes not associated with the search results.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/ModelSubType"
-              },
-              "nullable": true
-            }
-          },
-          {
-            "name": "creator",
-            "in": "query",
-            "description": "Deprecated: Please refer to the 'userId' and 'groupId' properties instead. The creator type and ID. E.g. \"user/123\" or \"group/456\"",
-            "schema": {
-              "pattern": "^(user|group)/\\d+$",
-              "type": "string"
-            }
-          },
-          {
-            "name": "userId",
-            "in": "query",
-            "description": "The User ID of the creator. Only one of 'userId' and 'groupId' can be present in a query.",
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "format": "int64",
-              "nullable": true
-            }
-          },
-          {
-            "name": "groupId",
-            "in": "query",
-            "description": "The Group ID of the creator. Only one of 'userId' and 'groupId' can be present in a query.",
-            "schema": {
-              "minimum": 1,
-              "type": "integer",
-              "format": "int64",
-              "nullable": true
-            }
-          },
-          {
-            "name": "pageToken",
-            "in": "query",
-            "description": "The identifier for the desired search results page. Only one of 'pageNumber' and 'pageToken' can be present in a query.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "pageNumber",
-            "in": "query",
-            "description": "The page number to retrieve, starting from 0. Only one of 'pageNumber' and 'pageToken' can be present in a query.",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 0,
-              "type": "integer",
-              "format": "int32",
-              "nullable": true
-            }
-          },
-          {
-            "name": "maxPageSize",
-            "in": "query",
-            "description": "The number of assets to be returned. Cannot be larger than 100.",
-            "schema": {
-              "maximum": 100,
-              "minimum": 1,
-              "type": "integer",
-              "format": "int32",
-              "default": 25
-            }
-          },
-          {
-            "name": "sortDirection",
-            "in": "query",
-            "description": "The sort direction of the search results.",
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/SortDirection"
-                }
-              ],
-              "description": "Represents the direction in which to sort the results",
-              "default": "None",
-              "x-enumNames": ["None", "Ascending", "Descending"],
-              "x-enum-varnames": ["None", "Ascending", "Descending"]
-            }
-          },
-          {
-            "name": "sortCategory",
-            "in": "query",
-            "description": "The category to sort the search results by.",
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/SortCategory"
-                }
-              ],
-              "description": "The category to sort the search results by.",
-              "default": "Relevance",
-              "x-enumNames": [
-                "Relevance",
-                "Trending",
-                "Top",
-                "AudioDuration",
-                "CreateTime",
-                "UpdatedTime",
-                "Ratings"
-              ],
-              "x-enum-varnames": [
-                "Relevance",
-                "Trending",
-                "Top",
-                "AudioDuration",
-                "CreateTime",
-                "UpdatedTime",
-                "Ratings"
-              ]
-            }
-          },
-          {
-            "name": "audioMinDurationSeconds",
-            "in": "query",
-            "description": "When searching for audio, the minimum duration of the audio assets. If included, must be greater than or equal to 0.",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 0,
-              "type": "integer",
-              "format": "int32",
-              "default": 0
-            }
-          },
-          {
-            "name": "audioMaxDurationSeconds",
-            "in": "query",
-            "description": "When searching for audio, the maximum duration of the audio assets. If included, must be greater than or equal to 0.",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 1,
-              "type": "integer",
-              "format": "int32",
-              "nullable": true
-            }
-          },
-          {
-            "name": "audioArtist",
-            "in": "query",
-            "description": "When searching for audio, the artist name of the audio assets.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "audioAlbum",
-            "in": "query",
-            "description": "When searching for audio, the album name of the audio assets.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "includeTopCharts",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "nullable": true
-            }
-          },
-          {
-            "name": "audioTypes",
-            "in": "query",
-            "description": "When searching for audio, the type of the audio assets.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/SearchAudioTypeModel"
-              },
-              "nullable": true
-            }
-          },
-          {
-            "name": "includedInstanceTypes",
-            "in": "query",
-            "description": "When searching for models, this filters that the following [Instance](https://create.roblox.com/docs/reference/engine/classes/Instance) types are included in the model.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/ModelInstanceType"
-              },
-              "nullable": true
-            }
-          },
-          {
-            "name": "includeOnlyVerifiedCreators",
-            "in": "query",
-            "description": "Whether the results should only include assets created by verified creators.",
-            "schema": {
-              "type": "boolean",
-              "default": true
-            }
-          },
-          {
-            "name": "minPriceCents",
-            "in": "query",
-            "description": "The minimum price of the asset in cents. If included, must be greater than or equal to 0.",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 0,
-              "type": "integer",
-              "format": "int64",
-              "default": 0
-            }
-          },
-          {
-            "name": "maxPriceCents",
-            "in": "query",
-            "description": "The maximum price of the asset in cents. If included, must be greater than or equal to 0.",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 0,
-              "type": "integer",
-              "format": "int64",
-              "nullable": true
-            }
-          },
-          {
-            "name": "facets",
-            "in": "query",
-            "description": "Additional keywords to query by.",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "nullable": true
-            }
-          },
-          {
-            "name": "categoryPath",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "searchView",
-            "in": "query",
-            "description": "Indicates which fields will be populated in the response.",
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/SearchView"
-                }
-              ],
-              "description": "This view controls which fields are populated in the search response. A lighter\r\nview will result in faster response times and higher reliability.",
-              "default": "Core",
-              "x-enumNames": ["IDs", "Core", "Full"],
-              "x-enum-varnames": ["IDs", "Core", "Full"]
-            }
-          },
-          {
-            "name": "musicChartType",
-            "in": "query",
-            "description": "Indicates which music charts to filter from.",
-            "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/MusicChartType"
-                }
-              ],
-              "description": "Represents which music chart to pull entries from, if any",
-              "default": "None",
-              "x-enumNames": ["None", "Current", "Week", "Month", "Year"],
-              "x-enum-varnames": ["None", "Current", "Week", "Month", "Year"]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchCreatorStoreAssetsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ProblemDetails"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                    }
-                  ],
-                  "nullable": true
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ProblemDetails"
-                    },
-                    {
-                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                    }
-                  ],
-                  "nullable": true
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server Error"
-          }
-        },
-        "x-roblox-engine-usability": {
-          "apiKeyWithHttpService": true
-        },
-        "x-roblox-stability": "BETA",
-        "x-roblox-rate-limits": {
-          "perApiKeyOwner": {
-            "period": "MINUTE",
-            "maxInPeriod": 1000
-          },
-          "perOauth2Authorization": {
-            "period": "MINUTE",
-            "maxInPeriod": 1000
-          }
-        },
-        "x-roblox-scopes": [
-          {
-            "name": "creator-store-product:read"
-          }
-        ],
-        "security": [
-          {},
-          {
-            "roblox-legacy-cookie": []
-          },
-          {
-            "roblox-api-key": []
-          }
-        ],
-        "externalDocs": {
-          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#get_toolbox_service_v2_assets_search"
-        }
-      }
-    },
     "/toolbox-service/v2/assets/{id}": {
       "get": {
         "tags": ["Assets", "Creator Store"],
@@ -65013,6 +64438,1399 @@
         ],
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/interactions#Voting_MultiGetGameVoteStatus"
+        }
+      }
+    },
+    "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/full": {
+      "get": {
+        "tags": ["Configs"],
+        "summary": "Gets full config with metadata",
+        "operationId": "CreatorConfigsPublicApi_GetConfigRepositoryFull",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigRepositoryFull"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:read",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:read"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_GetConfigRepositoryFull"
+        }
+      }
+    },
+    "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}": {
+      "get": {
+        "tags": ["Configs"],
+        "summary": "Gets the latest published config values without metadata and decorators.\r\nThis response can be used as a direct copy-and-paste to the draft update endpoints.",
+        "operationId": "CreatorConfigsPublicApi_GetConfigRepositoryValues",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigRepositoryValues"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:read",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:read"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_GetConfigRepositoryValues"
+        }
+      }
+    },
+    "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/draft": {
+      "get": {
+        "tags": ["Configs"],
+        "summary": "Gets the current draft changes for a configuration repository.",
+        "operationId": "CreatorConfigsPublicApi_GetConfigRepositoryDraft",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfigRepositoryDraft"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:read",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:read"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_GetConfigRepositoryDraft"
+        }
+      },
+      "delete": {
+        "tags": ["Configs"],
+        "summary": "Resets the current draft area. If draftHash is provided, this call will fail if the hash doesn't match.",
+        "operationId": "CreatorConfigsPublicApi_DeleteDraft",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DeleteDraftRequest"
+                  }
+                ],
+                "description": "Request model for deleting/resetting a draft."
+              }
+            },
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DeleteDraftRequest"
+                  }
+                ],
+                "description": "Request model for deleting/resetting a draft."
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DeleteDraftRequest"
+                  }
+                ],
+                "description": "Request model for deleting/resetting a draft."
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DeleteDraftRequest"
+                  }
+                ],
+                "description": "Request model for deleting/resetting a draft."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftHashResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 50
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 50
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:write",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:write"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_DeleteDraft"
+        }
+      },
+      "patch": {
+        "tags": ["Configs"],
+        "summary": "Updates the draft changes treating the payload as a partial changeset.\r\nIf draftHash is provided, this call will fail if the hash doesn't match.\r\nA key not included will not be changed. To indicate deletion, set key to null.\r\nTo discard a change, set key to its currently published value.",
+        "operationId": "CreatorConfigsPublicApi_UpdateDraft",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            },
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftHashResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 50
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 50
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:write",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:write"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_UpdateDraft"
+        }
+      }
+    },
+    "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/draft:overwrite": {
+      "put": {
+        "tags": ["Configs"],
+        "summary": "Full overwrite of current draft. The payload is the expected final state after publish.\r\nIf a key is not included, it is interpreted as removed.\r\nIf draftHash is provided, this call will fail if the hash doesn't match.",
+        "operationId": "CreatorConfigsPublicApi_OverwriteDraft",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            },
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateDraftRequest"
+                  }
+                ],
+                "description": "Request model for updating a draft (partial update)."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftHashResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 50
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 50
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:write",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:write"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_OverwriteDraft"
+        }
+      }
+    },
+    "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/publish": {
+      "post": {
+        "tags": ["Configs"],
+        "summary": "Publishes draft changes.",
+        "operationId": "CreatorConfigsPublicApi_PublishDraft",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json-patch+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PublishDraftRequest"
+                  }
+                ],
+                "description": "Request model for publishing a draft."
+              }
+            },
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PublishDraftRequest"
+                  }
+                ],
+                "description": "Request model for publishing a draft."
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PublishDraftRequest"
+                  }
+                ],
+                "description": "Request model for publishing a draft."
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PublishDraftRequest"
+                  }
+                ],
+                "description": "Request model for publishing a draft."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishDraftResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 10
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 10
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:write",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:write"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_PublishDraft"
+        }
+      }
+    },
+    "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/revisions": {
+      "get": {
+        "tags": ["Configs"],
+        "summary": "Gets the list of previous revisions to the repository.",
+        "operationId": "CreatorConfigsPublicApi_ListRevisions",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "Optional start time for filtering revisions.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "Optional end time for filtering revisions.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "MaxPageSize",
+            "in": "query",
+            "description": "Maximum page size.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Skip",
+            "in": "query",
+            "description": "Number of items to skip.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SearchKey",
+            "in": "query",
+            "description": "Search key to filter by.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SortOrder",
+            "in": "query",
+            "description": "Sort order (e.g., \"SORT_ORDER_DESCENDING\", \"SORT_ORDER_ASCENDING\").",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "SortKey",
+            "in": "query",
+            "description": "Sort key (e.g., \"SORT_KEY_LAST_MODIFIED_TIME\").",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRevisionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 100
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:read",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:read"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_ListRevisions"
+        }
+      }
+    },
+    "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/revisions/{revisionId}/restore": {
+      "post": {
+        "tags": ["Configs"],
+        "summary": "Attempts to restore configs to the provided revision. This will clear the staging and stage a revert commit.\r\nNote that you will need to publish for the revert to take place.",
+        "operationId": "CreatorConfigsPublicApi_RestoreRevision",
+        "parameters": [
+          {
+            "name": "universeId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "repositoryType",
+            "in": "path",
+            "description": "\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/CreatorConfigsPublicApi.RepositoryType"
+                }
+              ],
+              "description": "RepositoryType represents the type of repository for which an experiment can be defined.",
+              "x-enum-varnames": [
+                "Invalid",
+                "UniverseConfiguration",
+                "MatchmakingConfiguration",
+                "DataStoresConfiguration"
+              ]
+            },
+            "x-enum-varnames": [
+              "Invalid",
+              "UniverseConfiguration",
+              "MatchmakingConfiguration",
+              "DataStoresConfiguration"
+            ]
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Roblox-Api-Key",
+            "in": "header",
+            "description": "Api Key (UUID).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftHashResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            }
+          }
+        },
+        "x-roblox-stability": "EXPERIMENTAL",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 10
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 10
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "universe:write",
+            "targetResourceSpecifier": "universes"
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": false
+        },
+        "security": [
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          },
+          {
+            "roblox-oauth2": ["universe:write"]
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/configs#CreatorConfigsPublicApi_RestoreRevision"
         }
       }
     },
@@ -86532,27 +87350,6 @@
         "description": "Representation of a model asset.",
         "nullable": true
       },
-      "ModelInstanceType": {
-        "enum": ["Script", "MeshPart", "Decal", "Animation", "Audio", "Tool"],
-        "type": "string",
-        "description": "A list of model instance types. See Toolbox.Service.Models.Internal.InstanceCounts and [Instance](https://create.roblox.com/docs/reference/engine/classes/Instance) for more details.",
-        "x-enumNames": [
-          "Script",
-          "MeshPart",
-          "Decal",
-          "Animation",
-          "Audio",
-          "Tool"
-        ],
-        "x-enum-varnames": [
-          "Script",
-          "MeshPart",
-          "Decal",
-          "Animation",
-          "Audio",
-          "Tool"
-        ]
-      },
       "ModelSubType": {
         "enum": ["Ad", "MaterialPack", "Package"],
         "type": "string",
@@ -86601,13 +87398,6 @@
         "additionalProperties": false,
         "description": "Representation of a music asset.",
         "nullable": true
-      },
-      "MusicChartType": {
-        "enum": ["None", "Current", "Week", "Month", "Year"],
-        "type": "string",
-        "description": "Represents which music chart to pull entries from, if any",
-        "x-enumNames": ["None", "Current", "Week", "Month", "Year"],
-        "x-enum-varnames": ["None", "Current", "Week", "Month", "Year"]
       },
       "ObjectMeshSummary": {
         "type": "object",
@@ -86705,30 +87495,6 @@
         },
         "nullable": true
       },
-      "QueryFacets": {
-        "type": "object",
-        "properties": {
-          "appliedFacets": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Facets that are already applied to the search.",
-            "nullable": true
-          },
-          "availableFacets": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "The unused and still available facets.",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "The facets of a query.",
-        "nullable": true
-      },
       "SavesSortCategory": {
         "enum": [
           "Name",
@@ -86798,53 +87564,6 @@
           "FontFamily"
         ]
       },
-      "SearchCreatorStoreAssetsResponse": {
-        "type": "object",
-        "properties": {
-          "nextPageToken": {
-            "type": "string",
-            "description": "The page token to view the next page of results.",
-            "nullable": true
-          },
-          "queryFacets": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/QueryFacets"
-              }
-            ],
-            "description": "The applied and available facets of a query.",
-            "nullable": true
-          },
-          "creatorStoreAssets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CreatorStoreAsset"
-            },
-            "description": "The list of creator store assets returned by the search query.",
-            "nullable": true
-          },
-          "totalResults": {
-            "type": "integer",
-            "description": "The total number of results for the given search query.",
-            "format": "int64"
-          },
-          "filteredKeyword": {
-            "type": "string",
-            "description": "The filtered keyword that was used to search for assets, if applicable.",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "The response for the SearchCreatorStoreAssets endpoint.",
-        "nullable": true
-      },
-      "SearchView": {
-        "enum": ["IDs", "Core", "Full"],
-        "type": "string",
-        "description": "This view controls which fields are populated in the search response. A lighter\r\nview will result in faster response times and higher reliability.",
-        "x-enumNames": ["IDs", "Core", "Full"],
-        "x-enum-varnames": ["IDs", "Core", "Full"]
-      },
       "SocialLinkModel": {
         "type": "object",
         "properties": {
@@ -86896,37 +87615,6 @@
         "additionalProperties": false,
         "description": "Model for a Social Link.",
         "nullable": true
-      },
-      "SortCategory": {
-        "enum": [
-          "Relevance",
-          "Trending",
-          "Top",
-          "AudioDuration",
-          "CreateTime",
-          "UpdatedTime",
-          "Ratings"
-        ],
-        "type": "string",
-        "description": "The category to sort the search results by.",
-        "x-enumNames": [
-          "Relevance",
-          "Trending",
-          "Top",
-          "AudioDuration",
-          "CreateTime",
-          "UpdatedTime",
-          "Ratings"
-        ],
-        "x-enum-varnames": [
-          "Relevance",
-          "Trending",
-          "Top",
-          "AudioDuration",
-          "CreateTime",
-          "UpdatedTime",
-          "Ratings"
-        ]
       },
       "SortDirection": {
         "enum": ["None", "Ascending", "Descending"],
@@ -89349,6 +90037,339 @@
         },
         "additionalProperties": false
       },
+      "ActionResult": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "ConfigDraftEntry": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "description": "The value of the configuration entry.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the configuration entry.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A draft entry containing a value and optional description."
+      },
+      "ConfigNamespaceFull": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ConfigValueFull"
+            },
+            "description": "The configuration entries in this namespace.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A full representation of a configuration namespace, including all entries and their metadata."
+      },
+      "ConfigRepositoryDraft": {
+        "type": "object",
+        "properties": {
+          "draftHash": {
+            "type": "string",
+            "description": "The hash of the draft for concurrency control.",
+            "nullable": true
+          },
+          "namespaces": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ConfigDraftEntry"
+              },
+              "nullable": true
+            },
+            "description": "The configuration namespaces in the draft, where each namespace contains entries with values and descriptions.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A representation of the current draft changes for a configuration repository."
+      },
+      "ConfigRepositoryFull": {
+        "type": "object",
+        "properties": {
+          "namespaces": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ConfigNamespaceFull"
+            },
+            "description": "The configuration namespaces in the repository.",
+            "nullable": true
+          },
+          "metadata": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConfigRepositoryMetadata"
+              }
+            ],
+            "description": "Metadata about the configuration repository.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A full representation of a configuration repository, including all namespaces, entries, and their metadata."
+      },
+      "ConfigRepositoryMetadata": {
+        "type": "object",
+        "properties": {
+          "configVersion": {
+            "type": "integer",
+            "description": "The version of the configuration repository.",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Metadata about the configuration repository."
+      },
+      "ConfigRepositoryValues": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConfigRepositoryMetadata"
+              }
+            ],
+            "description": "Metadata about the configuration repository.",
+            "nullable": true
+          },
+          "namespaces": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {},
+              "nullable": true
+            },
+            "description": "The configuration namespaces in the repository, where each namespace contains key-value pairs.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "A representation of a configuration repository with just the values (no metadata or decorators).\r\nThis response can be used as a direct copy-and-paste to the draft update endpoints."
+      },
+      "ConfigValueFull": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "description": "The value of the configuration entry.",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "A description of the configuration entry.",
+            "nullable": true
+          },
+          "lastModifiedTime": {
+            "type": "string",
+            "description": "The time when the configuration entry was last modified.",
+            "format": "date-time"
+          },
+          "lastAccessedTime": {
+            "type": "string",
+            "description": "The time when the configuration entry was last accessed.",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "A full representation of a configuration value, including its metadata."
+      },
+      "DeleteDraftRequest": {
+        "type": "object",
+        "properties": {
+          "draftHash": {
+            "type": "string",
+            "description": "The previous draft hash for concurrency control. If provided, the delete will fail if it doesn't match.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request model for deleting/resetting a draft."
+      },
+      "DeploymentStrategy": {
+        "enum": ["Invalid", "GradualRollout", "Immediate"],
+        "type": "string",
+        "description": "Deployment strategy for publishing configurations.\n\nInvalid\n\nGradualRollout\n\nImmediate",
+        "x-enum-varnames": ["Invalid", "GradualRollout", "Immediate"]
+      },
+      "DraftHashResponse": {
+        "type": "object",
+        "properties": {
+          "draftHash": {
+            "type": "string",
+            "description": "The hash of the draft for concurrency control.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model containing the draft hash."
+      },
+      "ListRevisionsResponse": {
+        "type": "object",
+        "properties": {
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RevisionResponse"
+            },
+            "description": "The list of revisions.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for listing revisions."
+      },
+      "PublishDraftRequest": {
+        "type": "object",
+        "properties": {
+          "draftHash": {
+            "type": "string",
+            "description": "The draft hash for concurrency control. If provided, the publish will fail if it doesn't match.",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The message describing the changes being published.",
+            "nullable": true
+          },
+          "deploymentStrategy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeploymentStrategy"
+              }
+            ],
+            "description": "The deployment strategy to use when publishing.\n\nInvalid\n\nGradualRollout\n\nImmediate",
+            "x-enum-varnames": ["Invalid", "GradualRollout", "Immediate"]
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request model for publishing a draft."
+      },
+      "PublishDraftResponse": {
+        "type": "object",
+        "properties": {
+          "configVersion": {
+            "type": "integer",
+            "description": "The configuration version after publishing.",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for publishing a draft."
+      },
+      "CreatorConfigsPublicApi.RepositoryType": {
+        "enum": [
+          "Invalid",
+          "UniverseConfiguration",
+          "MatchmakingConfiguration",
+          "DataStoresConfiguration"
+        ],
+        "type": "string",
+        "description": "RepositoryType represents the type of repository for which an experiment can be defined.\n\nInvalid\n\nUniverseConfiguration\n\nMatchmakingConfiguration\n\nDataStoresConfiguration",
+        "x-enum-varnames": [
+          "Invalid",
+          "UniverseConfiguration",
+          "MatchmakingConfiguration",
+          "DataStoresConfiguration"
+        ]
+      },
+      "RevisionChange": {
+        "type": "object",
+        "properties": {
+          "before": {
+            "description": "The value before the change. Null if the key was added.",
+            "nullable": true
+          },
+          "after": {
+            "description": "The value after the change. Null if the key was deleted.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Represents a change in a revision, showing before and after values."
+      },
+      "RevisionResponse": {
+        "type": "object",
+        "properties": {
+          "revisionId": {
+            "type": "string",
+            "description": "The revision ID.",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "description": "The version number.",
+            "format": "int64"
+          },
+          "time": {
+            "type": "string",
+            "description": "The time the revision was created/updated.",
+            "format": "date-time"
+          },
+          "publishedBy": {
+            "type": "string",
+            "description": "The user ID who published this revision.",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The message describing the changes.",
+            "nullable": true
+          },
+          "deploymentResult": {
+            "type": "string",
+            "description": "The deployment result status.",
+            "nullable": true
+          },
+          "autoRestoreToVersion": {
+            "type": "integer",
+            "description": "The version to auto-restore to, or -1 if not applicable.",
+            "format": "int64"
+          },
+          "changes": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RevisionChange"
+            },
+            "description": "The changes in this revision, keyed by entry key.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Response model for a revision."
+      },
+      "UpdateDraftRequest": {
+        "type": "object",
+        "properties": {
+          "draftHash": {
+            "type": "string",
+            "description": "The previous draft hash for concurrency control. If provided, the update will fail if it doesn't match.",
+            "nullable": true
+          },
+          "namespaces": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {},
+              "nullable": true
+            },
+            "description": "The namespaces to update. Keys not included will not be changed. Set key to null to delete, or set to published value to discard.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Request model for updating a draft (partial update)."
+      },
       "CanInviteUserResponse": {
         "type": "object",
         "properties": {
@@ -90275,6 +91296,7 @@
           "auth_post_v1_passkey_ListCredentials",
           "auth_post_v1_passkey_start_authentication_by_user",
           "auth_post_v1_passkey_start_preauth_registration",
+          "auth_post_v1_passkey_finish_ar_preauth_registration",
           "auth_post_v1_passkey_StartAuthentication",
           "auth_post_v1_passkey_StartRegistration",
           "auth_get_v1_passwords_validate",
@@ -90400,7 +91422,6 @@
           "post_legacy_publish_v1_badges__badgeId__icon",
           "publish_post_v1_badges__badgeId__icon",
           "badges_post_v1_badges__badgeId__icon",
-          "get_toolbox_service_v2_assets_search",
           "get_toolbox_service_v2_assets__id_",
           "patch_asset_permissions_api_v1_assets_permissions",
           "assetdelivery_get_v1_alias__alias_",
@@ -90463,9 +91484,7 @@
           "publish_post_v1_plugins__pluginId__icon",
           "thumbnails_get_v1_asset_thumbnail_animated",
           "thumbnails_get_v1_assets",
-          "thumbnails_get_v1_assets_thumbnail_3d",
-          "assetdelivery_get_v1_openCloud_assetId__assetId_",
-          "assetdelivery_get_v1_openCloud_assetId__assetId__version__versionNumber_"
+          "thumbnails_get_v1_assets_thumbnail_3d"
         ]
       }
     },
@@ -90599,6 +91618,25 @@
       }
     },
     {
+      "name": "Configs",
+      "description": "Manage your in-experience config values in real time without restarting servers. See the [Configs documentation](https://create.roblox.com/docs/production/configs) for setup and usage.\n",
+      "x-roblox-tag-info": {
+        "path": "configs",
+        "content": "HTTP APIs for working with creator configs on Roblox Cloud",
+        "ordering": [
+          "CreatorConfigsPublicApi_GetConfigRepositoryFull",
+          "CreatorConfigsPublicApi_GetConfigRepositoryValues",
+          "CreatorConfigsPublicApi_GetConfigRepositoryDraft",
+          "CreatorConfigsPublicApi_UpdateDraft",
+          "CreatorConfigsPublicApi_DeleteDraft",
+          "CreatorConfigsPublicApi_OverwriteDraft",
+          "CreatorConfigsPublicApi_PublishDraft",
+          "CreatorConfigsPublicApi_ListRevisions",
+          "CreatorConfigsPublicApi_RestoreRevision"
+        ]
+      }
+    },
+    {
       "name": "Creator Store",
       "description": "Manage your presence on the [Creator Store](/production/creator-store). [Create](#Cloud_CreateCreatorStoreProduct) and [update](#Cloud_UpdateCreatorStoreProduct) product listings for your assets, and [search the toolbox](#get_toolbox_service_v2_assets_search) for assets using various filters.\n",
       "x-roblox-tag-info": {
@@ -90608,7 +91646,6 @@
           "Cloud_CreateCreatorStoreProduct",
           "Cloud_GetCreatorStoreProduct",
           "Cloud_UpdateCreatorStoreProduct",
-          "get_toolbox_service_v2_assets_search",
           "get_toolbox_service_v2_assets__id_",
           "get_toolbox_service_v1_saves",
           "post_toolbox_service_v1_saves",

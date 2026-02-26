@@ -637,10 +637,17 @@ end
 --[[
   depth=0, this child specifically and then shallow view of it's children
 ]]
-local function EncodeInstance(inst: Instance, depth: number, nilReference: any): EncodedInstance
+local function EncodeInstance(
+  inst: Instance,
+  depth: number,
+  nilReference: any,
+  relativeTo: Instance?
+): EncodedInstance
   assert(typeof(inst) == "Instance", "InvalidInstance")
   assert(math.isfinite(depth) and math.floor(depth) == depth, "InvalidDepth")
   assert(nilReference ~= nil, "InvalidNilReference")
+  assert(relativeTo == nil or typeof(relativeTo) == "Instance")
+  local relativeTo = relativeTo or game
 
   local result: EncodedInstance = {
     Name = Paths.EscapeName(inst.Name),

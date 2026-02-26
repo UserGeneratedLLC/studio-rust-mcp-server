@@ -1,0 +1,617 @@
+---
+description: Vide reactive UI library - sources, effects, scopes, components, and dynamic rendering
+alwaysApply: false
+---
+# Vide - Reactive UI Library
+
+Vide is a reactive UI library for Luau, inspired by SolidJS.
+
+For detailed API docs and tutorials, search `.cursor/rules/vide/` using glob and grep.
+
+## Core Concepts
+
+### Sources
+Sources store reactive values. Call with no args to read, with an arg to set.
+
+```luau
+local count = source(0)
+print(count()) -- 0
+count(count() + 1)
+print(count()) -- 1
+```
+
+### Effects
+Effects rerun when tracked sources update. Created with `effect()`.
+
+```luau
+local count = source(0)
+
+effect(function()
+    print(count()) -- reruns when count changes
+end)
+```
+
+### Scopes
+Two types: **stable** (never rerun) and **reactive** (rerun on source updates).
+
+| Function | Scope Type |
+|----------|------------|
+| `root()` | stable |
+| `untrack()` | stable |
+| `effect()` | reactive |
+| `derive()` | reactive |
+| `show()`, `switch()`, `indexes()`, `values()` | reactive internally, stable for component |
+
+**Rules:**
+- Reactive scopes cannot be created directly inside another reactive scope
+- All scopes must be created within another scope (except `root()`)
+- When a scope is destroyed, all child scopes are destroyed
+- **Never yield** in any scope (no `task.wait()`, `:Wait()`, etc.)
+
+## Element Creation
+
+Use `create()` for instances. String keys set properties, number keys set children.
+
+```luau
+local frame = create "Frame" {
+    Name = "Container",
+    Size = UDim2.fromScale(0.5, 0.5),
+
+    create "TextLabel" { Text = "Hello" },
+    create "UICorner" {}
+}
+```
+
+### Clone Existing Instances
+
+Pass an Instance instead of a string to clone it:
+
+```luau
+local template = ReplicatedStorage.Templates.Button
+local button = create(template) {
+    Text = "Cloned Button"
+}
+```
+
+### Property Binding (Implicit Effects)
+
+Assign a function to create an effect that updates the property:
+
+```luau
+create "TextLabel" {
+    Text = function()
+        return `Count: {count()}`
+    end
+}
+```
+
+### Event Connections
+
+Assign a function to an event property to connect:
+
+```luau
+create "TextButton" {
+    Activated = function()
+        print("clicked")
+    end
+}
+```
+
+### Property Setting Rules
+
+- **String key + function + event property:** connect as callback
+- **String key + function + non-event:** create effect to update property
+- **String key + non-function:** set property directly
+- **Number key + instance:** set as child
+- **Number key + function:** create effect to update children
+- **Number key + action:** run action
+- **Number key + table:** recurse table
+
+## Components
+
+Components are functions returning UI. Accept a `props` table parameter.
+
+```luau
+local function Button(props: {
+    Text: string | () -> string,
+    Activated: () -> ()
+})
+    return create "TextButton" {
+        Text = props.Text,
+        Activated = props.Activated,
+        create "UICorner" {}
+    }
+end
+
+-- Usage
+Button {
+    Text = "Click Me",
+    Activated = function() print("clicked") end
+}
+```
+
+## Mounting
+
+Use `mount()` to parent UI to an existing instance.
+
+```luau
+local function App()
+    return create "ScreenGui" {
+        create "TextLabel" { Text = "Hello" }
+    }
+end
+
+local destroy = mount(App, PlayerGui)
+-- Call destroy() to unmount and cleanup
+```
+
+## Derived Sources
+
+Use `derive()` when a computed value is read multiple times between updates.
+
+```luau
+-- Without derive: reruns on every read
+local text = function()
+    return `Count: {count()}`
+end
+
+-- With derive: caches result, only recomputes when count changes
+local text = derive(function()
+    return `Count: {count()}`
+end)
+```
+
+## Dynamic Scopes
+
+Dynamic scope functions create/destroy scopes in response to source updates.
+**All return a source** holding the current component (or `nil`/array).
+
+### show() - Conditional Rendering
+
+```luau
+function show<T>(source: () -> unknown, component: () -> (T, number?)): () -> T?
+function show<T, U>(source: () -> unknown, component: () -> (T, number?), fallback: () -> U): () -> T | U
+```
+
+```luau
+local visible = source(false)
+
+create "Frame" {
+    show(visible, function()
+        return create "TextLabel" { Text = "I'm visible!" }
+    end)
+}
+
+-- With fallback
+show(visible, TrueComponent, FalseComponent)
+```
+
+### switch() - Multiple Conditions
+
+```luau
+local tab = source("home")
+
+local content = switch(tab) {
+    home = function()
+        return create "Frame" { Name = "Home" }
+    end,
+    settings = function()
+        return create "Frame" { Name = "Settings" }
+    end
+}
+```
+
+### indexes() - List by Index
+
+Use when mapping indices to UI elements. **Value is a source, index is raw.**
+
+```luau
+local items = source({ "A", "B", "C" })
+
+indexes(items, function(value, index)
+    -- value() is a SOURCE (call to read)
+    -- index is the raw index
+    return create "TextLabel" {
+        Text = function()
+            return `{index}: {value()}`
+        end
+    }
+end)
+```
+
+### values() - List by Value
+
+Use when mapping unique objects to UI elements. **Value is raw, index is a source.**
+
+```luau
+local players = source({})
+
+values(players, function(player, index)
+    -- player is the actual value (raw)
+    -- index() is a SOURCE (call to read)
+    return create "TextLabel" {
+        Text = player.Name,
+        LayoutOrder = function() return index() end
+    }
+end)
+```
+
+**Warning:** `values()` expects unique values. Duplicates cause unexpected behavior.
+
+**When to use which:**
+- `indexes()`: Primitive values, fixed indices (stats display)
+- `values()`: Unique objects that may reorder (players, items, notifications)
+
+### Delayed Destruction
+
+Return a second value (seconds) to delay scope destruction for animations:
+
+```luau
+show(visible, function()
+    local frame = create "Frame" {}
+    return frame, 0.5 -- delay destruction by 0.5 seconds
+end)
+```
+
+If the source becomes truthy again before the timer finishes, destruction is cancelled.
+
+## Cleanup
+
+Queue callbacks for scope destruction or rerun:
+
+```luau
+effect(function()
+    local connection = SomeSignal:Connect(handler)
+    cleanup(connection) -- auto-disconnects on rerun/destroy
+end)
+```
+
+Accepts: functions, `{ destroy: () -> () }`, `{ disconnect: () -> () }`, threads.
+
+**Note:** Roblox instances don't need explicit cleanup to be GC'd (just parent to nil).
+Exception: self-referencing event connections require `cleanup()`.
+
+## Animation
+
+### spring()
+
+Returns an animated source and a control function:
+
+```luau
+function spring<T>(
+    source: () -> T & Animatable,
+    period: number = 1,
+    damping_ratio: number = 1
+): (() -> T, SpringControl<T>)
+
+type Animatable = number | CFrame | Color3 | UDim | UDim2 | Vector2 | Vector3 | Rect
+
+type SpringControl<T> = ({
+    position: T?,
+    velocity: T?,
+    impulse: T?
+}) -> ()
+```
+
+```luau
+local target = source(0)
+local animated, control = spring(target, 0.5, 1)
+
+create "Frame" {
+    Position = function()
+        return UDim2.fromScale(animated(), 0)
+    end
+}
+
+-- Optional: manually control spring
+control({ impulse = 10 })
+```
+
+**Damping ratios:**
+- `>1` = Overdamped (slowly reaches target, no overshoot)
+- `1` = Critically damped (reaches target, no overshoot)
+- `<1` = Underdamped (overshoots)
+- `0` = Undamped (oscillates forever)
+
+**Advanced:** Call `vide.step(dt)` to manually advance spring simulation.
+
+## Utility Functions
+
+### untrack() - Read Without Tracking
+
+```luau
+effect(function()
+    local a = count() -- tracked
+    local b = untrack(otherSource) -- not tracked
+end)
+```
+
+### batch() - Batch Multiple Updates
+
+```luau
+batch(function()
+    a(1)
+    b(2)
+    -- Effects only run once after batch completes
+end)
+```
+
+### read() - Read Value or Source
+
+```luau
+local value = read(maybeSource) -- works if source or primitive
+```
+
+### context() - Dependency Injection
+
+```luau
+local theme = context("light")
+
+local function Button()
+    local currentTheme = theme() -- reads current context value
+    return create "TextButton" {}
+end
+
+-- Provide different value (runs in stable scope)
+theme("dark", function()
+    return Button() -- uses "dark" theme
+end)
+```
+
+## Actions
+
+Custom callbacks run on instance creation. Use `action()`:
+
+```luau
+local function onRef(callback: (Instance) -> ())
+    return action(function(instance)
+        callback(instance)
+    end)
+end
+
+create "Frame" {
+    onRef(function(frame)
+        print(frame.AbsoluteSize)
+    end)
+}
+```
+
+**Priority:** `action(fn, priority)` - lower priority runs first (default: 1).
+
+### changed() - Property Change Listener
+
+Runs immediately and on every property update:
+
+```luau
+local textValue = source("")
+
+create "TextBox" {
+    changed("Text", textValue) -- updates source when Text changes
+}
+```
+
+## Strict Mode
+
+Enabled automatically in Studio (O0/O1). Disable for production: `vide.strict = false`
+
+Strict mode checks:
+1. Runs reactive scopes twice to catch impure computations
+2. Detects yields in scopes
+3. Checks `indexes()`/`values()` outputting primitives
+4. Checks `values()` input for duplicate values
+5. Checks duplicate nested properties at same depth
+6. Checks destruction of active scopes
+7. Better error traces
+
+## Common Patterns
+
+### Reactive Component with Internal State
+
+```luau
+local function Counter()
+    local count = source(0)
+
+    return create "TextButton" {
+        Text = function() return `Count: {count()}` end,
+        Activated = function() count(count() + 1) end
+    }
+end
+```
+
+### Stateful Component Factory with `root()`
+
+For components that need external state updates and manual destruction, use `root()` to create a factory:
+
+```luau
+local function createItemFrame(initialState: Item)
+    local frame: Frame
+    local itemSource: typeof(source(initialState))
+
+    local destroy = root(function()
+        itemSource = source(initialState)
+
+        frame = create "Frame" {
+            Text = function() return itemSource().name end
+        }
+
+        return frame
+    end)
+
+    local function setState(newItem: Item)
+        itemSource(newItem)
+    end
+
+    return frame, setState, destroy
+end
+
+-- Usage
+local frame, setState, destroy = createItemFrame(initialItem)
+frame.Parent = container
+setState(updatedItem)  -- Updates reactively
+destroy()  -- Cleanup when done
+```
+
+### Helper Functions as Reactive Getters
+
+Define functions inside `root()` that read sources - they become reactive when passed to property bindings:
+
+```luau
+root(function()
+    local itemSource = source(initialItem)
+
+    local function getMutation()
+        return itemSource().mutation  -- reads source
+    end
+
+    local function getDisplayName()
+        return itemSource().name:upper()
+    end
+
+    return create "Frame" {
+        -- Pass function reference directly - creates reactive binding
+        Text = getDisplayName,
+
+        -- Also works with show()
+        show(getMutation, function()
+            return create "TextLabel" { Text = getMutation }
+        end)
+    }
+end)
+```
+
+### Conditional Children with `if then else nil`
+
+For static config-based conditionals (not reactive), use inline `if`:
+
+```luau
+local function ItemFrame(props: { showName: boolean, showIcon: boolean })
+    return create "Frame" {
+        if props.showName then create "TextLabel" {
+            Name = "NameLabel",
+            Text = "Item Name"
+        } else nil,
+
+        if props.showIcon then create "ImageLabel" {
+            Name = "Icon",
+            Image = "rbxassetid://123"
+        } else nil,
+    }
+end
+```
+
+**Note:** Use `show()` for reactive conditionals based on sources. Use `if then else nil` for static config that doesn't change.
+
+### Trove + `cleanup()` in Effects
+
+For complex cleanup in effects, create a Trove and register it with `cleanup()`:
+
+```luau
+effect(function()
+    local item = itemSource()
+
+    local trove = Trove.new()
+    cleanup(function()
+        trove:Destroy()
+    end)
+
+    -- Everything added to trove is cleaned when effect reruns or scope dies
+    local model = trove:Clone(template)
+    model.Parent = viewport
+
+    trove:Connect(someSignal, handler)
+end)
+```
+
+### Accessing Children for Imperative Setup
+
+Separate declarative structure from imperative setup by accessing children after creation:
+
+```luau
+root(function()
+    local frame = create "Frame" {
+        create "ViewportFrame" { Name = "Viewport" },
+    }
+
+    local viewport = frame:FindFirstChild("Viewport") :: ViewportFrame
+
+    -- Imperative setup in separate effect
+    effect(function()
+        local item = itemSource()
+
+        local trove = Trove.new()
+        cleanup(function() trove:Destroy() end)
+
+        setupViewport(viewport, item, trove)
+    end)
+
+    return frame
+end)
+```
+
+### Non-Vide Setup Functions with Trove
+
+Imperative helper functions can work alongside Vide. Pass a Trove for cleanup:
+
+```luau
+-- Plain Luau function, NOT a Vide component
+local function setupViewport(
+    viewport: ViewportFrame,
+    item: Item,
+    trove: typeof(Trove.new())
+)
+    local model = trove:Clone(assets.Template)
+    model.Parent = viewport
+
+    local camera = Instance.new("Camera")
+    camera.Parent = viewport
+    viewport.CurrentCamera = camera
+    trove:Add(camera)
+end
+```
+
+### Passing Sources as Props
+
+```luau
+local function Display(props: { value: () -> number })
+    return create "TextLabel" {
+        Text = function() return tostring(props.value()) end
+    }
+end
+
+local count = source(0)
+Display { value = count }
+```
+
+### Updating Table Sources
+
+Tables must be re-set to trigger effects:
+
+```luau
+local items = source({ "a", "b" })
+
+-- Wrong: effects won't run
+table.insert(items(), "c")
+
+-- Correct: re-set the source
+local t = items()
+table.insert(t, "c")
+items(t)
+
+-- Alternative: clone then modify
+items(table.clone(items()))
+```
+
+## Important Rules
+
+1. **Never yield in scopes** - No `task.wait()`, `:Wait()`, or async calls
+2. **Never create reactive scopes inside reactive scopes** - Use `untrack()` or dynamic scope functions
+3. **Always call sources to read** - `count()` not `count`
+4. **Update table sources by re-setting** - `items(modifiedTable)` after modifications
+5. **Use derive() for expensive computations** read multiple times
+6. **Use cleanup() for connections** to prevent memory leaks
+7. **Mount at the top level** - Create one root scope for your entire UI
+8. **values() needs unique values** - Duplicates cause unexpected behavior
+9. **Use `root()` for factory components** - Return `(instance, setState, destroy)` for externally controllable components
+10. **Use Trove + cleanup() together** - Create Trove in effect, register with `cleanup()` for automatic cleanup on rerun
+11. **Use `if then else nil` for static conditionals** - Use `show()` only when condition is reactive
+12. **Pass function references for reactive bindings** - `Text = getDisplayName` not `Text = getDisplayName()`

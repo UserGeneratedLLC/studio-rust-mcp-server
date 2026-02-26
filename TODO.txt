@@ -143,6 +143,10 @@ Endpoints:
 * translate_frame paths udim2
 * scale_frame paths vector2
 * rotate_frame paths degree
+* get_clipboard
+* set_clipboard
+* ability to copy/paste from other studio instances
+ - we could accomplish this with SerializationService .rbxm's
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie
@@ -180,3 +184,6 @@ this would eliminate needing cursor at all, and you would just be using Claude d
 
 [CSG]
 We will want to support CSG in some way
+
+[Multi-studio support]
+How are we going to accomplish this?
