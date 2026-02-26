@@ -13,7 +13,8 @@ if ($Mode -eq "release") {
 
 $Exe = ".\target\$Mode\rbx-studio-mcp.exe"
 
-gsudo Stop-Process -Name "rbx-studio-mcp" -Force -ErrorAction SilentlyContinue
+Get-Process -Name "rbx-studio-mcp" -ErrorAction SilentlyContinue | Stop-Process -Force
+gsudo Get-Process -Name "rbx-studio-mcp" -ErrorAction SilentlyContinue | Stop-Process -Force
 gsudo New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
 gsudo Copy-Item "$Exe" "$InstallDir\"
 gsudo Copy-Item ".\target\$Mode\rbx_studio_mcp.pdb" "$InstallDir\"

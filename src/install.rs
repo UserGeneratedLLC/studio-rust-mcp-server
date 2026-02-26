@@ -182,7 +182,7 @@ pub fn install_to_config(
                 eyre!("Could not write to {name} config file at {config_path:?}: {e:#?}")
             })?;
 
-        println!("Installed MCP Studio plugin to {name} config {config_path:?}");
+        eprintln!("Installed MCP Studio plugin to {name} config {config_path:?}");
     }
 
     Ok(name.to_string())
@@ -207,7 +207,7 @@ async fn install_internal() -> Result<String> {
         })?;
         file.write_all(plugin_bytes)?;
     }
-    println!(
+    eprintln!(
         "Installed Roblox Studio plugin to {}",
         output_plugin.display()
     );
@@ -235,9 +235,9 @@ async fn install_internal() -> Result<String> {
         return Err(error);
     }
 
-    println!();
+    eprintln!();
     let msg = get_message(successes.join("\n"));
-    println!("{msg}");
+    eprintln!("{msg}");
     Ok(msg)
 }
 
