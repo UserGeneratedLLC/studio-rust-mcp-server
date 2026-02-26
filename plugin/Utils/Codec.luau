@@ -1,10 +1,13 @@
 --!strict
 --!optimize 2
 
+-- TODO(low): cleanup the error messages in here
+-- TODO(medium): add assertions for each decoder function as needed, try to rely on the roblox api's we are calling to error instead for performance
+
 local EncodingService = game:GetService("EncodingService")
 local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
--- selene: allow(incorrect_standard_library_use)
+
 local Paths = require("Paths")
 
 export type EncodedInstance = {
@@ -122,17 +125,19 @@ local PropertiesFilter: ReflectionMemberFilter = {
 }
 
 local function EncodeNumber(v: number): any
-  return tostring(v)
+  return v
 end
 local function DecodeNumber(v: any): number
-  return assert(tonumber(v))
+  assert(type(v) == "number")
+  return v
 end
 
-local function EncodeString(v: any): string
-  return buffer.tostring(EncodingService:Base64Encode(buffer.fromstring(v)))
+local function EncodeString(v: string): string
+  return v
 end
 local function DecodeString(v: any): string
-  return buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(v)))
+  assert(type(v) == "string")
+  return v
 end
 
 local function EncodeBoolean(v: boolean): any
@@ -144,10 +149,10 @@ local function DecodeBoolean(v: any): boolean
 end
 
 local function EncodeBuffer(v: buffer): any
-  return buffer.tostring(EncodingService:Base64Encode(v))
+  return buffer.tostring(v)
 end
 local function DecodeBuffer(v: any): buffer
-  return EncodingService:Base64Decode(buffer.fromstring(v))
+  return buffer.fromstring(v)
 end
 
 local function EncodeEnumItem(v: EnumItem): any
@@ -158,22 +163,21 @@ local function DecodeEnumItem(v: any): EnumItem
 end
 
 local function EncodeUDim(v: UDim): any
-  return { EncodeNumber(v.Scale), EncodeNumber(v.Offset) }
+  return { v.Scale, v.Offset }
 end
 local function DecodeUDim(v: any): UDim
-  return UDim.new(DecodeNumber(v[1]), DecodeNumber(v[2]))
+  return UDim.new(v[1], v[2])
 end
 
+-- stylua: ignore
 local function EncodeUDim2(v: UDim2): any
   return {
-    EncodeNumber(v.X.Scale),
-    EncodeNumber(v.X.Offset),
-    EncodeNumber(v.Y.Scale),
-    EncodeNumber(v.Y.Offset),
+    v.X.Scale, v.X.Offset,
+    v.Y.Scale, v.Y.Offset,
   }
 end
 local function DecodeUDim2(v: any): UDim2
-  return UDim2.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]), DecodeNumber(v[4]))
+  return UDim2.new(v[1], v[2], v[3], v[4])
 end
 
 local function EncodeVector2int16(v: Vector2int16): any
@@ -191,24 +195,24 @@ local function DecodeVector3int16(v: any): Vector3int16
 end
 
 local function EncodeVector2(v: Vector2): any
-  return { EncodeNumber(v.X), EncodeNumber(v.Y) }
+  return { v.X, v.Y }
 end
 local function DecodeVector2(v: any): Vector2
-  return Vector2.new(DecodeNumber(v[1]), DecodeNumber(v[2]))
+  return Vector2.new(v[1], v[2])
 end
 
 local function EncodeVector3(v: Vector3): any
-  return { EncodeNumber(v.X), EncodeNumber(v.Y), EncodeNumber(v.Z) }
+  return { v.X, v.Y, v.Z }
 end
 local function DecodeVector3(v: any): Vector3
-  return Vector3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]))
+  return Vector3.new(v[1], v[2], v[3])
 end
 
 local function EncodeColor3(v: Color3): any
-  return { EncodeNumber(v.R), EncodeNumber(v.G), EncodeNumber(v.B) }
+  return { v.R, v.G, v.B }
 end
 local function DecodeColor3(v: any): Color3
-  return Color3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]))
+  return Color3.new(v[1], v[2], v[3])
 end
 
 -- TODO(low): EncodeContent silently produces garbage for non-URI Content
@@ -244,45 +248,31 @@ local function DecodeBrickColor(v: any): BrickColor
   return BrickColor.new(v)
 end
 
+-- stylua: ignore
 local function EncodeCFrame(v: CFrame): any
   local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = v:GetComponents()
   return {
-    EncodeNumber(x),
-    EncodeNumber(y),
-    EncodeNumber(z),
-    EncodeNumber(r00),
-    EncodeNumber(r01),
-    EncodeNumber(r02),
-    EncodeNumber(r10),
-    EncodeNumber(r11),
-    EncodeNumber(r12),
-    EncodeNumber(r20),
-    EncodeNumber(r21),
-    EncodeNumber(r22),
+    x,   y,   z,
+    r00, r01, r02,
+    r10, r11, r12,
+    r20, r21, r22,
   }
 end
+-- stylua: ignore
 local function DecodeCFrame(v: any): CFrame
   return CFrame.new(
-    DecodeNumber(v[1]),
-    DecodeNumber(v[2]),
-    DecodeNumber(v[3]),
-    DecodeNumber(v[4]),
-    DecodeNumber(v[5]),
-    DecodeNumber(v[6]),
-    DecodeNumber(v[7]),
-    DecodeNumber(v[8]),
-    DecodeNumber(v[9]),
-    DecodeNumber(v[10]),
-    DecodeNumber(v[11]),
-    DecodeNumber(v[12])
+    v[1],  v[2],  v[3],
+    v[4],  v[5],  v[6],
+    v[7],  v[8],  v[9],
+    v[10], v[11], v[12]
   )
 end
 
 local function EncodeNumberRange(v: NumberRange): any
-  return { EncodeNumber(v.Min), EncodeNumber(v.Max) }
+  return { v.Min, v.Max }
 end
 local function DecodeNumberRange(v: any): NumberRange
-  return NumberRange.new(DecodeNumber(v[1]), DecodeNumber(v[2]))
+  return NumberRange.new(v[1], v[2])
 end
 
 local function EncodeNumberSequence(v: NumberSequence): any
@@ -290,9 +280,9 @@ local function EncodeNumberSequence(v: NumberSequence): any
   local keypoints = table.create(#raw)
   for i, kp in raw do
     keypoints[i] = {
-      EncodeNumber(kp.Time),
-      EncodeNumber(kp.Value),
-      EncodeNumber(kp.Envelope),
+      kp.Time,
+      kp.Value,
+      kp.Envelope,
     }
   end
   return keypoints
@@ -300,8 +290,7 @@ end
 local function DecodeNumberSequence(v: any): NumberSequence
   local keypoints = table.create(#v)
   for i, kp in v do
-    keypoints[i] =
-      NumberSequenceKeypoint.new(DecodeNumber(kp[1]), DecodeNumber(kp[2]), DecodeNumber(kp[3]))
+    keypoints[i] = NumberSequenceKeypoint.new(kp[1], kp[2], kp[3])
   end
   return NumberSequence.new(keypoints)
 end
@@ -311,10 +300,10 @@ local function EncodeColorSequence(v: ColorSequence): any
   local keypoints = table.create(#raw)
   for i, kp in raw do
     keypoints[i] = {
-      EncodeNumber(kp.Time),
-      EncodeNumber(kp.Value.R),
-      EncodeNumber(kp.Value.G),
-      EncodeNumber(kp.Value.B),
+      kp.Time,
+      kp.Value.R,
+      kp.Value.G,
+      kp.Value.B,
     }
   end
   return keypoints
@@ -322,24 +311,20 @@ end
 local function DecodeColorSequence(v: any): ColorSequence
   local keypoints = table.create(#v)
   for i, kp in v do
-    keypoints[i] = ColorSequenceKeypoint.new(
-      DecodeNumber(kp[1]),
-      Color3.new(DecodeNumber(kp[2]), DecodeNumber(kp[3]), DecodeNumber(kp[4]))
-    )
+    keypoints[i] = ColorSequenceKeypoint.new(kp[1], Color3.new(kp[2], kp[3], kp[4]))
   end
   return ColorSequence.new(keypoints)
 end
 
+-- stylua: ignore
 local function EncodeRect(v: Rect): any
   return {
-    EncodeNumber(v.Min.X),
-    EncodeNumber(v.Min.Y),
-    EncodeNumber(v.Max.X),
-    EncodeNumber(v.Max.Y),
+    v.Min.X, v.Min.Y,
+    v.Max.X, v.Max.Y,
   }
 end
 local function DecodeRect(v: any): Rect
-  return Rect.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]), DecodeNumber(v[4]))
+  return Rect.new(v[1], v[2], v[3], v[4])
 end
 
 local function EncodeFont(v: Font): any
@@ -356,21 +341,15 @@ end
 
 local function EncodePhysicalProperties(v: PhysicalProperties): any
   return {
-    EncodeNumber(v.Density),
-    EncodeNumber(v.Friction),
-    EncodeNumber(v.Elasticity),
-    EncodeNumber(v.FrictionWeight),
-    EncodeNumber(v.ElasticityWeight),
+    v.Density,
+    v.Friction,
+    v.Elasticity,
+    v.FrictionWeight,
+    v.ElasticityWeight,
   }
 end
 local function DecodePhysicalProperties(v: any): PhysicalProperties
-  return PhysicalProperties.new(
-    DecodeNumber(v[1]),
-    DecodeNumber(v[2]),
-    DecodeNumber(v[3]),
-    DecodeNumber(v[4]),
-    DecodeNumber(v[5])
-  )
+  return PhysicalProperties.new(v[1], v[2], v[3], v[4], v[5])
 end
 
 local function EncodeAxes(v: Axes): any
@@ -430,21 +409,15 @@ local function DecodeDateTime(v: any): DateTime
   return assert(DateTime.fromIsoDate(v))
 end
 
+-- stylua: ignore
 local function EncodeRay(v: Ray): any
   return {
-    EncodeNumber(v.Origin.X),
-    EncodeNumber(v.Origin.Y),
-    EncodeNumber(v.Origin.Z),
-    EncodeNumber(v.Direction.X),
-    EncodeNumber(v.Direction.Y),
-    EncodeNumber(v.Direction.Z),
+    v.Origin.X,    v.Origin.Y,    v.Origin.Z,
+    v.Direction.X, v.Direction.Y, v.Direction.Z,
   }
 end
 local function DecodeRay(v: any): Ray
-  return Ray.new(
-    Vector3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3])),
-    Vector3.new(DecodeNumber(v[4]), DecodeNumber(v[5]), DecodeNumber(v[6]))
-  )
+  return Ray.new(Vector3.new(v[1], v[2], v[3]), Vector3.new(v[4], v[5], v[6]))
 end
 
 local function EncodeInstanceRef(v: Instance, relativeTo: Instance?): any
@@ -454,35 +427,26 @@ local function DecodeInstanceRef(v: any, relativeTo: Instance?): Instance
   return Paths.FromRelativePath(v, relativeTo)
 end
 
+-- stylua: ignore
 local function EncodeRegion3(v: Region3): any
   local center = v.CFrame.Position
   local half = v.Size * 0.5
   local min = center - half
   local max = center + half
   return {
-    EncodeNumber(min.X),
-    EncodeNumber(min.Y),
-    EncodeNumber(min.Z),
-    EncodeNumber(max.X),
-    EncodeNumber(max.Y),
-    EncodeNumber(max.Z),
+    min.X, min.Y, min.Z,
+    max.X, max.Y, max.Z,
   }
 end
 local function DecodeRegion3(v: any): Region3
-  return Region3.new(
-    Vector3.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3])),
-    Vector3.new(DecodeNumber(v[4]), DecodeNumber(v[5]), DecodeNumber(v[6]))
-  )
+  return Region3.new(Vector3.new(v[1], v[2], v[3]), Vector3.new(v[4], v[5], v[6]))
 end
 
+-- stylua: ignore
 local function EncodeRegion3int16(v: Region3int16): any
   return {
-    v.Min.X,
-    v.Min.Y,
-    v.Min.Z,
-    v.Max.X,
-    v.Max.Y,
-    v.Max.Z,
+    v.Min.X, v.Min.Y, v.Min.Z,
+    v.Max.X, v.Max.Y, v.Max.Z,
   }
 end
 local function DecodeRegion3int16(v: any): Region3int16
@@ -519,37 +483,6 @@ local PropertyEncoders: { [string]: (any, Instance?) -> any } = {
   ["Region3"] = EncodeRegion3,
   ["Region3int16"] = EncodeRegion3int16,
 }
-local function EncodeProperty(
-  value: any,
-  nilReference: any,
-  scriptType: string,
-  relativeTo: Instance?
-): any
-  if value == nil then
-    return {
-      [scriptType] = nilReference,
-    }
-  end
-  if scriptType == "string" then
-    if utf8.len(value) then
-      return value
-    end
-  elseif scriptType == "number" then
-    -- selene: allow(incorrect_standard_library_use)
-    if math.isfinite(value) then
-      return value
-    end
-  elseif scriptType == "boolean" then
-    return value
-  end
-  local encoder = PropertyEncoders[scriptType]
-  if not encoder then
-    error(`UnknownType {scriptType}`)
-  end
-  return {
-    [scriptType] = encoder(value, relativeTo),
-  }
-end
 
 local PropertiesCache: { [string]: { ReflectedProperty } } = {}
 
@@ -601,6 +534,17 @@ local function GetCachedProperties(className: string): { ReflectedProperty }
   return filtered
 end
 
+local function EncodeProperty(
+  value: any,
+  nilReference: any,
+  scriptType: string,
+  relativeTo: Instance?
+): any
+  if value == nil then
+    return nilReference
+  end
+  return PropertyEncoders[scriptType](value, relativeTo)
+end
 local function EncodeProperties(
   inst: Instance,
   nilReference: any,
@@ -608,18 +552,21 @@ local function EncodeProperties(
 ): { [string]: any }
   local props = GetCachedProperties(inst.ClassName)
   local result: { [string]: any } = {}
+  local instAny = inst :: any
   for _, prop in props do
-    local success, value = pcall(function()
-      return (inst :: any)[prop.Name]
-    end)
-    if success then
-      result[prop.Name] = EncodeProperty(
-        value,
-        nilReference,
-        assert(prop.Type.ScriptType, "missing ScriptType"),
-        relativeTo
-      )
+    local name = prop.Name
+    local ok, value = pcall(function(instAny_, name_)
+      return instAny_[name_]
+    end, instAny, name)
+    if not ok then
+      error(`Failed to read property "{name}" on {inst.ClassName}: {value}`)
     end
+    result[name] = EncodeProperty(
+      value,
+      nilReference,
+      assert(prop.Type.ScriptType, "missing ScriptType"),
+      relativeTo
+    )
   end
   return result
 end
@@ -663,20 +610,6 @@ local function DecodeProperty(
   if value == nilReference then
     return nil
   end
-  local t = typeof(value)
-  if t == "boolean" or t == "number" or t == "string" then
-    if t == scriptType then
-      return value
-    end
-  elseif t == "table" then
-    local inner = value[scriptType]
-    if inner ~= nil then
-      if inner == nilReference then
-        return nil
-      end
-      value = inner
-    end
-  end
   return PropertyDecoders[scriptType](value, relativeTo)
 end
 
@@ -699,18 +632,10 @@ local AttributeEncoders: { [string]: (any) -> any } = {
 }
 local function EncodeAttribute(value: any): any
   local t = typeof(value)
-  if t == "string" then
-    if utf8.len(value) then
-      return value
-    end
-  elseif t == "number" then
-    -- selene: allow(incorrect_standard_library_use)
-    if math.isfinite(value) then
-      return value
-    end
-  elseif t == "boolean" then
+  if t == "string" or t == "number" or t == "boolean" then
     return value
   end
+  -- TODO(high): can we just disambiguiate for these
   return {
     [t] = AttributeEncoders[t](value),
   }
@@ -738,6 +663,7 @@ local function DecodeAttribute(value: any): any
   if t == "boolean" or t == "number" or t == "string" then
     return value
   end
+  -- TODO(high): can we just disambiguiate for these
   if t == "table" then
     local key = next(value)
     if type(key) == "string" then
