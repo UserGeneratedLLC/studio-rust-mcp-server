@@ -118,6 +118,8 @@ local PropertiesFilter: ReflectionMemberFilter = {
   ExcludeDisplay = false,
 }
 
+local DebugIdMap: { [string]: Instance } = {}
+
 local function GetDebugId(inst: Instance): string return inst:GetDebugId(0) end
 
 local function UnescapeName(name: string): string
@@ -153,20 +155,46 @@ local function GetDistinctPath(inst: Instance): string
   return table.concat(names, "/")
 end
 
---[[
-  TODO(high):
-  * split
-  * pull out DebugId [if present]
-  * un-escape each component
-  * start de-referencing one-by-one
-  * root starts with game:FindService(name)
-  * when we de-reference, check if there are duplicate named children and add that to search space
-  * if we do not have a DebugId and there is a duplicately named children, warn & return nil
-  * once we know the search space, start looking for the correct child given our DebugId
-  * we could do a single-shot attempt at finding the child (fast-path) and check if it matches the DebugId, then actually build search space
-  * NOTE: we really have to maintain a DebugId map of all instances, and then just do a table check & make sure path is still the same.
-]]
-local function FromDistinctPath(path: string): Instance? end
+local function FromDistinctPath(path: string): Instance?
+  local tildePos = string.find(path, "~")
+  local debugId: string?
+  local pathWithoutId: string
+  if tildePos then
+    debugId = string.sub(path, tildePos + 1)
+    pathWithoutId = string.sub(path, 1, tildePos - 1)
+  else
+    pathWithoutId = path
+  end
+
+  if debugId then
+    local inst = DebugIdMap[debugId]
+    if inst and path == GetDistinctPath(inst) then return inst end
+  end
+
+  local segments = string.split(pathWithoutId, "/")
+  if #segments == 0 then return nil end
+
+  local parts = table.create(#segments)
+  for i, seg in segments do
+    parts[i] = string.format("> [Name = %s]", string.format("%q", UnescapeName(seg)))
+  end
+  local selector = table.concat(parts, " ")
+
+  local ok, results = pcall(game.QueryDescendants, game, selector)
+  if not ok then
+    warn(`FromDistinctPathQueryDescendants: {results}`)
+    return nil
+  end
+
+  if debugId then
+    for _, inst in results do
+      if GetDebugId(inst) == debugId then return inst end
+    end
+  elseif #results == 1 then
+    return results[1]
+  end
+  return nil
+end
 
 local function EncodeNumber(v: number): any return tostring(v) end
 local function DecodeNumber(v: any): number return assert(tonumber(v)) end
@@ -801,10 +829,17 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
   return inst
 end
 
--- TODO(medium): UpdateInstance: service detection if parent==game, overwrite with defaults optionally
+-- TODO(medium): UpdateInstance: service detection if parent==game, overwrite with defaults optionally (see: ResetPropertyToDefault)
 
 local module = {
   EncodeInstance = EncodeInstance,
 }
+
+-- Watcher
+game.DescendantAdded:Connect(function(inst) DebugIdMap[GetDebugId(inst)] = inst end)
+game.DescendantRemoving:Connect(function(inst) DebugIdMap[GetDebugId(inst)] = nil end)
+for _, inst in game:GetDescendants() do
+  DebugIdMap[GetDebugId(inst)] = inst
+end
 
 return table.freeze(module)

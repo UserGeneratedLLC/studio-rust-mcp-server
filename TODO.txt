@@ -84,35 +84,33 @@ Endpoints:
  - Result: { success, value, error, logs, errors, duration, isTimeout }
 * insert_model query [DONE]
  - Searches marketplace, inserts into workspace, returns model name
-* get_instance_tree path [depth]
+* get_instance_tree paths [depth]
  - outputs our instance codec scheme noted above
-* set_properties path data
+* set_properties paths data
  - msgpack data so it supports nulls/infs, leaves unreferenced values
  - supports refs
  - probably respond with current instance state?
-* get_properties path
+* get_properties paths
  - msgpack data so it supports nulls/infs, leaves unreferenced values
-* add_tags path tags
+* add_tags paths tags
  - probably respond with current instance state?
-* remove_tags path tags
+* remove_tags paths tags
  - probably respond with current instance state?
-* get_tags path
-* get_attributes path
-* set_attributes path data
+* get_tags paths
+* get_attributes paths
+* set_attributes paths data
  - msgpack data so it supports nulls/infs, leaves unreferenced values
  - probably respond with current instance state?
 * delete_instances paths
-* set_parent path parentPath
- - returns path
-* create_instance path classname
+* set_parent paths parentPath
+ - returns paths
+* create_instance paths classname
  - could include optional properties, tags, and attributes
  - probably respond with current instance state?
-* take_screenshot [path]
+* take_screenshot [paths]
  - Path could be a ScreenGui, a Part, Model - anything. Will intelligently crop.
  - Encode as PNG over wire
  - Output to agent as base64
-* clone_instance path targetParent
- - should send back the resulting path
 * get_selections
 * set_selections paths
 * get_performance_stats
@@ -121,21 +119,46 @@ Endpoints:
  - UniverseID, PlaceId, PlaceName, time info, etc...
 * undo [times]
 * redo [times]
-* rename_instance path newName
- - returns path
-* get_script_source path
-* set_script_source path source
+* rename_instance paths newName
+ - returns paths
+* get_script_source paths
+* set_script_source paths source
 * search_script_source filter [includes] [excludes]
  - model after grep
-* search_instances [name] [tag] [classname]
- - needs more thought, this can be a goldmine of an endpoint of setup right.
- - inspiration should be grep
-* publish_place [target placeid, defaults to our placeid]
+* query query [parents]
+ - SEE: https://create.roblox.com/docs/reference/engine/classes/Instance#QueryDescendants
+* publish_place <target placeid, defaults to our placeid>
+* docs ClassNames
+ - returns roblox docs given a classname
+ - we could probably just include this as a Skill on how to browse the roblox docs git
+* schema ClassNames
+ - includes property info with inheritence info, defaults, enum options, hierarchy
+* clone Paths Parent
+ - should send back the resulting path
+* transform_parts paths cframe [pivot] [shallow]
+ - applies both rotation/translation in one
+* translate_parts paths vector3 [shallow]
+* rotate_parts paths angle-vector3 [pivot] [shallow]
+* scale_parts paths vector3 [pivot] [shallow]
+* translate_frame paths udim2
+* scale_frame paths vector2
+* rotate_frame paths degree
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie
 use that for any other endpoints which opencloud doesnt currently support
 Endpoints:
+* placeid <-> gameid
+* place information
+* game information
+* searching for games
+* list games in group
+* group information
+* user information
+* search catalog
+* search users
+* search toolbox
+* toolbox assets
 
 [Luau Code Execution]
 We can use OpenCloud to perform remote luau code execution
@@ -154,3 +177,6 @@ Swap to websockets for lower latency, perform tasks async so it can have like 10
 [merging]
 we need to do a cursor style code merging/accept UI in roblox studio when we do this
 this would eliminate needing cursor at all, and you would just be using Claude desktop app + roblox studio.
+
+[CSG]
+We will want to support CSG in some way
