@@ -9,3 +9,5 @@ cargo build "--$MODE"
 EXE="./target/$MODE/rbx-studio-mcp"
 pkill -f rbx-studio-mcp || true
 sudo cp "$EXE" /usr/local/bin/
+
+bash "$SCRIPT_DIR/install-plugin.sh"
