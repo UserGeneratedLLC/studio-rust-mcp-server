@@ -100,8 +100,5 @@ sync_repo "luau-lang" "site" "master" "src/content/docs" "rules/luau"
 sync_repo "Roblox" "creator-docs" "main" "content" "rules/roblox"
 sync_repo "centau" "vide" "main" "docs" "rules/vide"
 
-# Download single files
-download_file "https://raw.githubusercontent.com/UserGeneratedLLC/rojo/refs/heads/master/.cursor/rules/atlas-project.mdc" "rules/atlas-project.mdc"
-
 echo ""
 echo -e "${GREEN}Sync completed successfully!${NC}"

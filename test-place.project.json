@@ -1,0 +1,24 @@
+{
+  "name": "MCPStudioPlugin Test Place",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "MCPPlugin": {
+        "$path": "plugin"
+      },
+      "Packages": {
+        "$path": "Packages"
+      }
+    },
+    "ServerScriptService": {
+      "RunTests": {
+        "$path": "run-tests.server.luau"
+      }
+    },
+    "Players": {
+      "$properties": {
+        "CharacterAutoLoads": false
+      }
+    }
+  }
+}

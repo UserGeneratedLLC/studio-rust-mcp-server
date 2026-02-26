@@ -9,8 +9,7 @@
   "files.encoding": "utf8",
   "files.autoGuessEncoding": false,
 
-  "luau-lsp.sourcemap.rojoProjectFile": "plugin/default.project.json",
-  "luau-lsp.sourcemap.sourcemapFile": "plugin/sourcemap.json",
+  "luau-lsp.sourcemap.rojoProjectFile": "plugin.project.json",
   "luau-lsp.plugin.maximumRequestBodySize": "500mb",
   "luau-lsp.plugin.enabled": true,
   "luau-lsp.completion.autocompleteEnd": true,
@@ -26,7 +25,6 @@
   "luau-lsp.completion.imports.requireStyle": "alwaysAbsolute",
   "luau-lsp.completion.fillCallArguments": false,
   "luau-lsp.completion.showDeprecatedItems": false,
-  "luau-lsp.sourcemap.generatorCommand": "atlas sourcemap plugin/default.project.json --output plugin/sourcemap.json --include-non-scripts --watch",
   "luau-lsp.fflags.enableNewSolver": false,
   "luau-lsp.index.maxFiles": 100000,
   "luau-lsp.plugin.port": 3669,

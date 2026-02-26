@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    name: Build & Release Plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Build Plugin
+        run: rojo build plugin.project.json --output MCPStudioPlugin.rbxm
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create ${{ github.ref_name }} --draft --verify-tag --title ${{ github.ref_name }}
+
+      - name: Upload to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.ref_name }} MCPStudioPlugin.rbxm
+
+      - name: Upload to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MCPStudioPlugin.rbxm
+          path: MCPStudioPlugin.rbxm
+
+      - name: Upload Plugin to Roblox
+        env:
+          RBX_API_KEY: ${{ secrets.PLUGIN_UPLOAD_TOKEN }}
+          RBX_UNIVERSE_ID: ${{ vars.PLUGIN_CI_UNIVERSE_ID }}
+          RBX_PLACE_ID: ${{ vars.PLUGIN_CI_PLACE_ID }}
+        run: lune run upload-plugin MCPStudioPlugin.rbxm

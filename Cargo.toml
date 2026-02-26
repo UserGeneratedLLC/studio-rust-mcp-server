@@ -25,7 +25,7 @@ security-translocate = "0.2.1"
 core-foundation = "0.10.1"
 
 [build-dependencies]
-atlas = { git = "https://github.com/UserGeneratedLLC/rojo.git", tag = "v8.4.1" }
+rojo = "7.6.1"
 
 [package.metadata.bundle]
 name = "RobloxStudioMCP"

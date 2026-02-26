@@ -129,7 +129,7 @@ end
 
 ### Alternative: Attribute-Based Sidecar
 
-Instead of a separate manifest, embed the external ref data as attributes on the instances themselves before serialization (similar to Atlas `Rojo_Ref_*` attributes):
+Instead of a separate manifest, embed the external ref data as attributes on the instances themselves before serialization (similar to Rojo `Rojo_Ref_*` attributes):
 
 ```luau
 -- On copy: tag the instance

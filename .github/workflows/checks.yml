@@ -1,39 +1,56 @@
-name: Code Quality Checks
+name: CI
 
 on:
   pull_request:
 
 jobs:
-  clippy:
+  lint:
+    name: Rustfmt, Clippy, Stylua, & Selene
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Clippy
-        run: cargo clippy -- -D warnings
 
-  fmt:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check formatting
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Stylua
+        run: stylua --check plugin
+
+      - name: Selene
+        run: selene plugin
+
+      - name: Rustfmt
         run: cargo fmt -- --check
 
-  selene:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Selene
-        working-directory: plugin
-        run: |
-          cargo install selene
-          selene .
+      - name: Clippy
+        run: cargo clippy -- -D warnings
 
-  StyLua:
+  luau-tests:
+    name: Run Luau Tests via Open Cloud
     runs-on: ubuntu-latest
+    concurrency:
+      group: luau-execution
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
-      - name: StyLua
-        working-directory: plugin
-        run: |
-          cargo install stylua --features luau 
-          stylua . --check
+
+      - name: Setup Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Install Wally packages
+        run: wally install
+
+      - name: Build test place
+        run: rojo build test-place.project.json -o TestPlace.rbxl
+
+      - name: Upload & run tests via Open Cloud
+        run: lune run run-tests TestPlace.rbxl
+        env:
+          RBX_API_KEY: ${{ secrets.PLUGIN_UPLOAD_TOKEN }}
+          RBX_UNIVERSE_ID: ${{ vars.PLUGIN_CI_UNIVERSE_ID }}
+          RBX_PLACE_ID: ${{ vars.PLUGIN_CI_PLACE_ID }}

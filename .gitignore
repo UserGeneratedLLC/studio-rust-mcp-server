@@ -4,3 +4,14 @@ target/
 .idea/
 .vs/
 output/
+
+build/
+node_modules/
+.DS_Store
+sourcemap.json
+
+.env
+TestPlace.rbxl
+*.rbxm
+Packages/
+wally.lock
