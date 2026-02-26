@@ -4,8 +4,7 @@
 local EncodingService = game:GetService("EncodingService")
 local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
-local TouchInputService = game:GetService("TouchInputService")
-
+-- selene: allow(incorrect_standard_library_use)
 local Paths = require("Paths")
 
 export type EncodedInstance = {
@@ -116,13 +115,18 @@ local SerializeOverride: { [string]: boolean } = {
 }
 
 local PropertiesFilter: ReflectionMemberFilter = {
+  -- selene: allow(undefined_variable)
   Security = SecurityCapabilities.fromCurrent(),
   ExcludeInherited = false,
   ExcludeDisplay = false,
 }
 
-local function EncodeNumber(v: number): any return tostring(v) end
-local function DecodeNumber(v: any): number return assert(tonumber(v)) end
+local function EncodeNumber(v: number): any
+  return tostring(v)
+end
+local function DecodeNumber(v: any): number
+  return assert(tonumber(v))
+end
 
 local function EncodeString(v: any): string
   return buffer.tostring(EncodingService:Base64Encode(buffer.fromstring(v)))
@@ -131,13 +135,17 @@ local function DecodeString(v: any): string
   return buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(v)))
 end
 
-local function EncodeBoolean(v: boolean): any return v end
+local function EncodeBoolean(v: boolean): any
+  return v
+end
 local function DecodeBoolean(v: any): boolean
-  assert(type(v) == "boolean")
+  assert(type(v) == "boolean", "expected boolean")
   return v
 end
 
-local function EncodeBuffer(v: buffer): any return buffer.tostring(EncodingService:Base64Encode(v)) end
+local function EncodeBuffer(v: buffer): any
+  return buffer.tostring(EncodingService:Base64Encode(v))
+end
 local function DecodeBuffer(v: any): buffer
   return EncodingService:Base64Decode(buffer.fromstring(v))
 end
@@ -145,10 +153,16 @@ end
 local function EncodeEnumItem(v: EnumItem): any
   return { Type = tostring(v.EnumType), Name = v.Name }
 end
-local function DecodeEnumItem(v: any): EnumItem return (Enum :: any)[v.Type][v.Name] end
+local function DecodeEnumItem(v: any): EnumItem
+  return (Enum :: any)[v.Type][v.Name]
+end
 
-local function EncodeUDim(v: UDim): any return { EncodeNumber(v.Scale), EncodeNumber(v.Offset) } end
-local function DecodeUDim(v: any): UDim return UDim.new(DecodeNumber(v[1]), DecodeNumber(v[2])) end
+local function EncodeUDim(v: UDim): any
+  return { EncodeNumber(v.Scale), EncodeNumber(v.Offset) }
+end
+local function DecodeUDim(v: any): UDim
+  return UDim.new(DecodeNumber(v[1]), DecodeNumber(v[2]))
+end
 
 local function EncodeUDim2(v: UDim2): any
   return {
@@ -162,13 +176,23 @@ local function DecodeUDim2(v: any): UDim2
   return UDim2.new(DecodeNumber(v[1]), DecodeNumber(v[2]), DecodeNumber(v[3]), DecodeNumber(v[4]))
 end
 
-local function EncodeVector2int16(v: Vector2int16): any return { v.X, v.Y } end
-local function DecodeVector2int16(v: any): Vector2int16 return Vector2int16.new(v[1], v[2]) end
+local function EncodeVector2int16(v: Vector2int16): any
+  return { v.X, v.Y }
+end
+local function DecodeVector2int16(v: any): Vector2int16
+  return Vector2int16.new(v[1], v[2])
+end
 
-local function EncodeVector3int16(v: Vector3int16): any return { v.X, v.Y, v.Z } end
-local function DecodeVector3int16(v: any): Vector3int16 return Vector3int16.new(v[1], v[2], v[3]) end
+local function EncodeVector3int16(v: Vector3int16): any
+  return { v.X, v.Y, v.Z }
+end
+local function DecodeVector3int16(v: any): Vector3int16
+  return Vector3int16.new(v[1], v[2], v[3])
+end
 
-local function EncodeVector2(v: Vector2): any return { EncodeNumber(v.X), EncodeNumber(v.Y) } end
+local function EncodeVector2(v: Vector2): any
+  return { EncodeNumber(v.X), EncodeNumber(v.Y) }
+end
 local function DecodeVector2(v: any): Vector2
   return Vector2.new(DecodeNumber(v[1]), DecodeNumber(v[2]))
 end
@@ -209,10 +233,16 @@ local function EncodeContent(v: Content): any
   end
   return data
 end
-local function DecodeContent(v: string): Content return Content.fromUri(v) end
+local function DecodeContent(v: string): Content
+  return Content.fromUri(v)
+end
 
-local function EncodeBrickColor(v: BrickColor): any return v.Name end
-local function DecodeBrickColor(v: any): BrickColor return BrickColor.new(v) end
+local function EncodeBrickColor(v: BrickColor): any
+  return v.Name
+end
+local function DecodeBrickColor(v: any): BrickColor
+  return BrickColor.new(v)
+end
 
 local function EncodeCFrame(v: CFrame): any
   local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = v:GetComponents()
@@ -343,12 +373,20 @@ local function DecodePhysicalProperties(v: any): PhysicalProperties
   )
 end
 
-local function EncodeAxes(v: Axes): any return { X = v.X, Y = v.Y, Z = v.Z } end
+local function EncodeAxes(v: Axes): any
+  return { X = v.X, Y = v.Y, Z = v.Z }
+end
 local function DecodeAxes(v: any): Axes
   local axes = {}
-  if v.X then table.insert(axes, Enum.Axis.X) end
-  if v.Y then table.insert(axes, Enum.Axis.Y) end
-  if v.Z then table.insert(axes, Enum.Axis.Z) end
+  if v.X then
+    table.insert(axes, Enum.Axis.X)
+  end
+  if v.Y then
+    table.insert(axes, Enum.Axis.Y)
+  end
+  if v.Z then
+    table.insert(axes, Enum.Axis.Z)
+  end
   return Axes.new(unpack(axes))
 end
 
@@ -364,17 +402,33 @@ local function EncodeFaces(v: Faces): any
 end
 local function DecodeFaces(v: any): Faces
   local faces = {}
-  if v.Top then table.insert(faces, Enum.NormalId.Top) end
-  if v.Bottom then table.insert(faces, Enum.NormalId.Bottom) end
-  if v.Left then table.insert(faces, Enum.NormalId.Left) end
-  if v.Right then table.insert(faces, Enum.NormalId.Right) end
-  if v.Front then table.insert(faces, Enum.NormalId.Front) end
-  if v.Back then table.insert(faces, Enum.NormalId.Back) end
+  if v.Top then
+    table.insert(faces, Enum.NormalId.Top)
+  end
+  if v.Bottom then
+    table.insert(faces, Enum.NormalId.Bottom)
+  end
+  if v.Left then
+    table.insert(faces, Enum.NormalId.Left)
+  end
+  if v.Right then
+    table.insert(faces, Enum.NormalId.Right)
+  end
+  if v.Front then
+    table.insert(faces, Enum.NormalId.Front)
+  end
+  if v.Back then
+    table.insert(faces, Enum.NormalId.Back)
+  end
   return Faces.new(unpack(faces))
 end
 
-local function EncodeDateTime(v: DateTime): any return v:ToIsoDate() end
-local function DecodeDateTime(v: any): DateTime return assert(DateTime.fromIsoDate(v)) end
+local function EncodeDateTime(v: DateTime): any
+  return v:ToIsoDate()
+end
+local function DecodeDateTime(v: any): DateTime
+  return assert(DateTime.fromIsoDate(v))
+end
 
 local function EncodeRay(v: Ray): any
   return {
@@ -398,7 +452,9 @@ local function EncodeInstanceRef(v: Instance, relativeTo: Instance?): any
 end
 local function DecodeInstanceRef(v: any, relativeTo: Instance?): Instance
   local inst = Paths.FromRelativePath(v, relativeTo)
-  if not inst then error(`UnknownRef {v}`) end
+  if not inst then
+    error(`UnknownRef {v}`)
+  end
   return inst
 end
 
@@ -473,18 +529,27 @@ local function EncodeProperty(
   scriptType: string,
   relativeTo: Instance?
 ): any
-  if value == nil then return {
-    [scriptType] = nilReference,
-  } end
+  if value == nil then
+    return {
+      [scriptType] = nilReference,
+    }
+  end
   if scriptType == "string" then
-    if utf8.len(value) then return value end
+    if utf8.len(value) then
+      return value
+    end
   elseif scriptType == "number" then
-    if math.isfinite(value) then return value end
+    -- selene: allow(incorrect_standard_library_use)
+    if math.isfinite(value) then
+      return value
+    end
   elseif scriptType == "boolean" then
     return value
   end
   local encoder = PropertyEncoders[scriptType]
-  if not encoder then error(`UnknownType {scriptType}`) end
+  if not encoder then
+    error(`UnknownType {scriptType}`)
+  end
   return {
     [scriptType] = encoder(value, relativeTo),
   }
@@ -494,7 +559,9 @@ local PropertiesCache: { [string]: { ReflectedProperty } } = {}
 
 local function GetCachedProperties(className: string): { ReflectedProperty }
   local cached = PropertiesCache[className]
-  if cached then return cached end
+  if cached then
+    return cached
+  end
   local reflected: { ReflectedProperty }? =
     ReflectionService:GetPropertiesOfClass(className, PropertiesFilter) :: any
   if not reflected then
@@ -504,17 +571,33 @@ local function GetCachedProperties(className: string): { ReflectedProperty }
   local filtered = {}
   for _, prop in reflected do
     local name = prop.Name
-    if SkipProps[name] then continue end
-    if not prop.Type.ScriptType then continue end
-    if not PropertyEncoders[prop.Type.ScriptType] then continue end
-    if not prop.Permits.Read then continue end
+    if SkipProps[name] then
+      continue
+    end
+    if not prop.Type.ScriptType then
+      continue
+    end
+    if not PropertyEncoders[prop.Type.ScriptType] then
+      continue
+    end
+    if not prop.Permits.Read then
+      continue
+    end
     local override = SerializeOverride[name]
     if override ~= nil then
-      if not override then continue end
+      if not override then
+        continue
+      end
     else
-      if not prop.Serialized then continue end
-      if prop.Display and prop.Display.DeprecationMessage then continue end
-      if not prop.Permits.Write then continue end
+      if not prop.Serialized then
+        continue
+      end
+      if prop.Display and prop.Display.DeprecationMessage then
+        continue
+      end
+      if not prop.Permits.Write then
+        continue
+      end
     end
     table.insert(filtered, prop)
   end
@@ -530,10 +613,16 @@ local function EncodeProperties(
   local props = GetCachedProperties(inst.ClassName)
   local result: { [string]: any } = {}
   for _, prop in props do
-    local success, value = pcall(function() return (inst :: any)[prop.Name] end)
+    local success, value = pcall(function()
+      return (inst :: any)[prop.Name]
+    end)
     if success then
-      result[prop.Name] =
-        EncodeProperty(value, nilReference, assert(prop.Type.ScriptType), relativeTo)
+      result[prop.Name] = EncodeProperty(
+        value,
+        nilReference,
+        assert(prop.Type.ScriptType, "missing ScriptType"),
+        relativeTo
+      )
     end
   end
   return result
@@ -575,14 +664,20 @@ local function DecodeProperty(
   scriptType: string,
   relativeTo: Instance?
 ): any
-  if value == nilReference then return nil end
+  if value == nilReference then
+    return nil
+  end
   local t = typeof(value)
   if t == "boolean" or t == "number" or t == "string" then
-    if t == scriptType then return value end
+    if t == scriptType then
+      return value
+    end
   elseif t == "table" then
     local inner = value[scriptType]
     if inner ~= nil then
-      if inner == nilReference then return nil end
+      if inner == nilReference then
+        return nil
+      end
       value = inner
     end
   end
@@ -609,9 +704,14 @@ local AttributeEncoders: { [string]: (any) -> any } = {
 local function EncodeAttribute(value: any): any
   local t = typeof(value)
   if t == "string" then
-    if utf8.len(value) then return value end
+    if utf8.len(value) then
+      return value
+    end
   elseif t == "number" then
-    if math.isfinite(value) then return value end
+    -- selene: allow(incorrect_standard_library_use)
+    if math.isfinite(value) then
+      return value
+    end
   elseif t == "boolean" then
     return value
   end
@@ -639,12 +739,16 @@ local AttributeDecoders: { [string]: (any) -> any } = {
 }
 local function DecodeAttribute(value: any): any
   local t = typeof(value)
-  if t == "boolean" or t == "number" or t == "string" then return value end
+  if t == "boolean" or t == "number" or t == "string" then
+    return value
+  end
   if t == "table" then
     local key = next(value)
     if type(key) == "string" then
       local decoder = AttributeDecoders[key]
-      if not decoder then error(`UnknownType {key}`) end
+      if not decoder then
+        error(`UnknownType {key}`)
+      end
       return decoder(value[key])
     end
   end
@@ -661,9 +765,10 @@ local function EncodeInstance(
   _relativeTo: Instance?
 ): EncodedInstance
   assert(typeof(inst) == "Instance", "InvalidInstance")
+  -- selene: allow(incorrect_standard_library_use)
   assert(math.isfinite(depth) and math.floor(depth) == depth, "InvalidDepth")
   assert(nilReference ~= nil, "InvalidNilReference")
-  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
+  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance", "expected Instance or nil")
   local relativeTo = _relativeTo or game
 
   local result: EncodedInstance = {
@@ -679,19 +784,27 @@ local function EncodeInstance(
     for i, child in rawChildren do
       children[i] = EncodeInstance(child, childDepth, nilReference, inst)
     end
-    if #children > 0 then result.Children = children end
+    if #children > 0 then
+      result.Children = children
+    end
     -- Properties
     local properties = EncodeProperties(inst, nilReference, relativeTo)
-    if next(properties) then result.Properties = properties end
+    if next(properties) then
+      result.Properties = properties
+    end
     -- Attributes
     local attributes = {}
     for key, val in inst:GetAttributes() do
       attributes[key] = EncodeAttribute(val)
     end
-    if next(attributes) then result.Attributes = attributes end
+    if next(attributes) then
+      result.Attributes = attributes
+    end
     -- Tags
     local tags = inst:GetTags()
-    if #tags > 0 then result.Tags = tags end
+    if #tags > 0 then
+      result.Tags = tags
+    end
   else
     result.Shallow = true
   end
@@ -726,10 +839,14 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
       properties = table.clone(properties)
       local function decodeProperty<T>(key: string, scriptType: string, defaultValue: T): T
         local encoded = properties[key]
-        if encoded == nil then return defaultValue end
+        if encoded == nil then
+          return defaultValue
+        end
         properties[key] = nil
         local success, result = pcall(DecodeProperty, encoded, nilReference, scriptType, parent)
-        if not success then error(`MalformedProperty {key}: {result}`) end
+        if not success then
+          error(`MalformedProperty {key}: {result}`)
+        end
         return result
       end
       meshId = decodeProperty("MeshId", "string", meshId)
@@ -748,9 +865,16 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
         local key = prop.Name
         local encoded = properties[key]
         if encoded ~= nil then
-          local success, result =
-            pcall(DecodeProperty, encoded, nilReference, assert(prop.Type.ScriptType), parent)
-          if not success then error(`MalformedProperty {key}: {result}`) end
+          local success, result = pcall(
+            DecodeProperty,
+            encoded,
+            nilReference,
+            assert(prop.Type.ScriptType, "missing ScriptType"),
+            parent
+          )
+          if not success then
+            error(`MalformedProperty {key}: {result}`)
+          end
           instAny[key] = result
         end
       end
@@ -758,14 +882,18 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
     if data.Attributes then
       for key, value in data.Attributes do
         local success, result = pcall(DecodeAttribute, value)
-        if not success then error(`MalformedAttribute {key}: {result}`) end
+        if not success then
+          error(`MalformedAttribute {key}: {result}`)
+        end
         inst:SetAttribute(key, result)
       end
     end
     if data.Children then
       for i, childData in data.Children do
         local success, result = pcall(DecodeInstance, childData, nilReference, inst)
-        if not success then error(`MalformedChild {i}: {result}`) end
+        if not success then
+          error(`MalformedChild {i}: {result}`)
+        end
       end
     end
     if data.Tags then
@@ -774,7 +902,9 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
       end
     end
   end
-  if parent then inst.Parent = parent end
+  if parent then
+    inst.Parent = parent
+  end
   return inst
 end
 

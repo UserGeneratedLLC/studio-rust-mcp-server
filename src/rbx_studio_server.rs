@@ -346,10 +346,12 @@ pub async fn dud_proxy_loop(state: PackedState, exit: Receiver<()>) {
                     .json::<RunCommandResponse>()
                     .await
                     .map_err(Into::into)
-                    .and_then(|r| if r.success {
-                        Ok(r.response)
-                    } else {
-                        Err(Report::from(eyre!(r.response)))
+                    .and_then(|r| {
+                        if r.success {
+                            Ok(r.response)
+                        } else {
+                            Err(Report::from(eyre!(r.response)))
+                        }
                     });
                 tx.send(res).unwrap();
             } else {

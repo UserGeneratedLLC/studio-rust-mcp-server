@@ -4,7 +4,9 @@ local StudioTestService = game:GetService("StudioTestService")
 
 local MCP_STOP_PLAY_MESSAGE_KEY = "MCP_STOP_PLAY_MESSAGE"
 
-local function stopPlay() PluginUtils.setSettings(MCP_STOP_PLAY_MESSAGE_KEY, true) end
+local function stopPlay()
+  PluginUtils.setSettings(MCP_STOP_PLAY_MESSAGE_KEY, true)
+end
 
 local function monitorForStopPlay()
   PluginUtils.setSettings(MCP_STOP_PLAY_MESSAGE_KEY, false)

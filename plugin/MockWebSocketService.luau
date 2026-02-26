@@ -65,19 +65,17 @@ function MockWebSocketClient.new(uri: string): MockWebSocketClient
 end
 
 local function doRequest(url: string, method: "GET" | "POST", body: any)
-  local ok, response = pcall(
-    function()
-      return HttpService:RequestAsync({
-        Url = url,
-        Method = method,
-        Headers = {
-          ["Content-Type"] = "application/json",
-        },
-        Body = if body then HttpService:JSONEncode(body) else nil,
-        Compress = Enum.HttpCompression.None,
-      })
-    end
-  )
+  local ok, response = pcall(function()
+    return HttpService:RequestAsync({
+      Url = url,
+      Method = method,
+      Headers = {
+        ["Content-Type"] = "application/json",
+      },
+      Body = if body then HttpService:JSONEncode(body) else nil,
+      Compress = Enum.HttpCompression.None,
+    })
+  end)
 
   return if ok then response else nil
 end
@@ -128,10 +126,7 @@ function MockWebSocketClient.Close(self: MockWebSocketClientPrivate)
 end
 
 -- START DEVIATION: These methods are not present in the real WebSocketClient instance
-function MockWebSocketClient.SetReceiveEndpoint(
-  self: MockWebSocketClientPrivate,
-  endpoint: string
-)
+function MockWebSocketClient.SetReceiveEndpoint(self: MockWebSocketClientPrivate, endpoint: string)
   self._receiveEndpoint = endpoint
 end
 

@@ -12,7 +12,9 @@ local tools: { [string]: Types.ToolFunction } = {
 
 local function dispatchTool(toolName: string, args: Types.ToolArgs): string?
   local toolFunction = tools[toolName]
-  if not toolFunction then error("Tool " .. toolName .. " not found") end
+  if not toolFunction then
+    error("Tool " .. toolName .. " not found")
+  end
 
   return toolFunction(args)
 end

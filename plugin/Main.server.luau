@@ -21,21 +21,31 @@ PluginUtils.plugin = plugin
 
 local datamodelType = DataModelType.getDataModelType()
 
-if datamodelType == "Server" then task.spawn(GameStopUtil.monitorForStopPlay) end
+if datamodelType == "Server" then
+  task.spawn(GameStopUtil.monitorForStopPlay)
+end
 
-if RunService:IsRunning() then return end
+if RunService:IsRunning() then
+  return
+end
 
 local connMessageOut = ConsoleOutput.startListener()
-plugin.Unloading:Connect(function() connMessageOut:Disconnect() end)
+plugin.Unloading:Connect(function()
+  connMessageOut:Disconnect()
+end)
 
 local old_warn = warn
 local function log(...)
-  if false then old_warn(...) end
+  if false then
+    old_warn(...)
+  end
 end
 
 local function toolCallHandler(args: Types.ToolArgs): string
   local toolName = next(args)
-  if not toolName then error("No tool name found in request") end
+  if not toolName then
+    error("No tool name found in request")
+  end
 
   local toolArgs = args[toolName]
   if not toolArgs or type(toolArgs) ~= "table" then
@@ -48,7 +58,9 @@ local function toolCallHandler(args: Types.ToolArgs): string
     ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
   end
 
-  if success then return response or "" end
+  if success then
+    return response or ""
+  end
   error("Error handling request: " .. tostring(response))
 end
 
@@ -57,9 +69,13 @@ local function connectWebSocket()
   client:SetReceiveEndpoint(RECEIVE_ENDPOINT)
   client:SetSendEndpoint(SEND_ENDPOINT)
 
-  client.Opened:Once(function() log("[MCP] Connection opened") end)
+  client.Opened:Once(function()
+    log("[MCP] Connection opened")
+  end)
 
-  client.Closed:Once(function() log("[MCP] Connection closed") end)
+  client.Closed:Once(function()
+    log("[MCP] Connection closed")
+  end)
 
   client.MessageReceived:Connect(function(message)
     log("[MCP] Message received")
@@ -93,7 +109,9 @@ local function connectWebSocket()
 end
 
 local function getButtonImage()
-  local ok, response = pcall(function() return StudioService:GetClassIcon("PackageLink").Image end)
+  local ok, response = pcall(function()
+    return StudioService:GetClassIcon("PackageLink").Image
+  end)
   return ok and response or "rbxasset://textures/ui/GuiImagePlaceholder.png"
 end
 

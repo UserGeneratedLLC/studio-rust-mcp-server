@@ -6,8 +6,12 @@ local function getDataModelType(): DataModelType
   if RunService:IsEdit() then
     return "Edit"
   else
-    if RunService:IsServer() then return "Server" end
-    if RunService:IsClient() then return "Client" end
+    if RunService:IsServer() then
+      return "Server"
+    end
+    if RunService:IsClient() then
+      return "Client"
+    end
   end
   return "Unknown"
 end

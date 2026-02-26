@@ -15,7 +15,9 @@ local function callWithTimeout(callback: () -> any, timeout: number, timeoutResu
   local isTimeout = false
 
   task.spawn(function()
-    _success, result = pcall(function() return callback() end)
+    _success, result = pcall(function()
+      return callback()
+    end)
     if not isDone then
       isDone = true
       BindableEvent:Fire()
@@ -30,19 +32,21 @@ local function callWithTimeout(callback: () -> any, timeout: number, timeoutResu
     end
   end)
 
-  if not isDone then BindableEvent.Event:Wait() end
+  if not isDone then
+    BindableEvent.Event:Wait()
+  end
   return result, isTimeout
 end
 
 local function startPlay(): string?
   ConsoleOutput.outputMessage = ""
   GlobalVariables.studioMode = "start_play"
-  local result, isTimeout = callWithTimeout(
-    function() return StudioTestService:ExecutePlayModeAsync({}) end,
-    0.1,
-    "Started play"
-  )
-  if not isTimeout then return "Already in play mode" end
+  local result, isTimeout = callWithTimeout(function()
+    return StudioTestService:ExecutePlayModeAsync({})
+  end, 0.1, "Started play")
+  if not isTimeout then
+    return "Already in play mode"
+  end
   return result
 end
 
@@ -55,17 +59,19 @@ end
 
 local function runServer(): string?
   GlobalVariables.studioMode = "run_server"
-  local result, isTimeout = callWithTimeout(
-    function() return StudioTestService:ExecuteRunModeAsync({}) end,
-    0.1,
-    "Ran server"
-  )
-  if not isTimeout then return "Already in run_server mode" end
+  local result, isTimeout = callWithTimeout(function()
+    return StudioTestService:ExecuteRunModeAsync({})
+  end, 0.1, "Ran server")
+  if not isTimeout then
+    return "Already in run_server mode"
+  end
   return result
 end
 
 local function handleStartStopPlay(startStopPlayArgs: Types.StartStopPlayArgs): string?
-  if type(startStopPlayArgs.mode) ~= "string" then error("Missing mode in StartStopPlay") end
+  if type(startStopPlayArgs.mode) ~= "string" then
+    error("Missing mode in StartStopPlay")
+  end
 
   if startStopPlayArgs.mode == "start_play" then
     return startPlay()

@@ -3,7 +3,9 @@
 
 local DebugIdMap: { [string]: Instance } = {}
 
-local function GetDebugId(inst: Instance): string return inst:GetDebugId(0) end
+local function GetDebugId(inst: Instance): string
+  return inst:GetDebugId(0)
+end
 
 local function UnescapeName(name: string): string
   name = string.gsub(name, "%%40", "@")
@@ -39,7 +41,9 @@ local function GetDistinctName(inst: Instance): string
 end
 
 local function GetDistinctPath(inst: Instance): string
-  if inst == game then return "" end
+  if inst == game then
+    return ""
+  end
   local names = { GetDistinctName(inst) }
   local pivot: Instance? = inst.Parent
   while pivot and pivot ~= game do
@@ -67,11 +71,15 @@ local function FromDistinctPath(path: string): Instance?
 
   if debugId then
     local inst = DebugIdMap[debugId]
-    if inst and path == GetDistinctPath(inst) then return inst end
+    if inst and path == GetDistinctPath(inst) then
+      return inst
+    end
   end
 
   if pathWithoutId == "" then
-    if debugId and GetDebugId(game) ~= debugId then return nil end
+    if debugId and GetDebugId(game) ~= debugId then
+      return nil
+    end
     return game
   end
 
@@ -88,7 +96,9 @@ local function FromDistinctPath(path: string): Instance?
   end
   if debugId then
     for _, inst in results do
-      if GetDebugId(inst) == debugId then return inst end
+      if GetDebugId(inst) == debugId then
+        return inst
+      end
     end
   elseif #results == 1 then
     return results[1]
@@ -99,28 +109,36 @@ local function FromDistinctPath(path: string): Instance?
 end
 
 local function IsAmbiguous(inst: Instance, _relativeTo: Instance?): boolean
-  assert(typeof(inst) == "Instance")
-  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
+  assert(typeof(inst) == "Instance", "expected Instance")
+  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance", "expected Instance or nil")
   local relativeTo = _relativeTo or game
   local pivot = inst
   while true do
-    if pivot == relativeTo then return false end
+    if pivot == relativeTo then
+      return false
+    end
     local parent = pivot.Parent
-    if not parent then return true end -- Not a descendant of root
+    if not parent then
+      return true
+    end -- Not a descendant of root
     local ok, results =
       pcall(parent.QueryDescendants, parent, string.format("> [Name = %q]", pivot.Name))
-    if not ok or #results > 1 then return true end
+    if not ok or #results > 1 then
+      return true
+    end
     pivot = parent
   end
 end
 
 local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
-  assert(typeof(inst) == "Instance")
-  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
+  assert(typeof(inst) == "Instance", "expected Instance")
+  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance", "expected Instance or nil")
   local relativeTo: Instance = _relativeTo or game
 
   if inst == relativeTo then
-    if relativeTo == game then return "@game" end
+    if relativeTo == game then
+      return "@game"
+    end
     return "@self"
   end
 
@@ -144,7 +162,9 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
     while pivot do
       levelsUp += 1
       commonIdx = instSet[pivot :: Instance]
-      if commonIdx then break end
+      if commonIdx then
+        break
+      end
       pivot = (pivot :: Instance).Parent
     end
   end
@@ -164,9 +184,7 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
   -- Build single result array: prefix segments + name segments
   local segCount = commonIdx - 1
   local prefixCount: number
-  if levelsUp == 0 then
-    prefixCount = 1
-  elseif levelsUp == 1 then
+  if levelsUp <= 1 then
     prefixCount = 1
   else
     prefixCount = levelsUp - 1
@@ -204,11 +222,13 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
 end
 
 local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
-  assert(type(path) == "string")
-  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
+  assert(type(path) == "string", "expected string")
+  assert(_relativeTo == nil or typeof(_relativeTo) == "Instance", "expected Instance or nil")
   local relativeTo: Instance = _relativeTo or game
 
-  if path == "" then return nil end
+  if path == "" then
+    return nil
+  end
 
   -- Extract debugId from last segment (last ~ after last /)
   local debugId: string?
@@ -216,7 +236,9 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   do
     local lastSlash = string.find(path, "/[^/]*$")
     local searchFrom = 1
-    if lastSlash then searchFrom = lastSlash + 1 end
+    if lastSlash then
+      searchFrom = lastSlash + 1
+    end
     local tildePos = string.find(path, "~", searchFrom, true)
     if tildePos then
       debugId = string.sub(path, tildePos + 1)
@@ -228,6 +250,7 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   if debugId then
     local candidate = DebugIdMap[debugId]
     if candidate and GetDebugId(candidate) == debugId then
+      error("nyi")
       -- TODO(high): we now have a literal path of the instance. we can literally walk it like we do below without having to do expensive calls to FindChildren
       -- crappy solution: just regenerate the path and compare, ignoring DebugId the at the ends. if it matches, return the instance. otherwise, fall through.
     end
@@ -255,11 +278,15 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
     end
   end
 
-  if not current then return nil end
+  if not current then
+    return nil
+  end
 
   -- Walk segments step by step (matches Luau navigateThroughPath)
   for i = startIdx, #segments do
-    if not current then return nil end
+    if not current then
+      return nil
+    end
     local seg = segments[i]
     if seg == ".." then
       current = current.Parent
@@ -276,14 +303,22 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
     end
   end
 
-  if not current then return nil end
-  if debugId and GetDebugId(current) ~= debugId then return nil end
+  if not current then
+    return nil
+  end
+  if debugId and GetDebugId(current) ~= debugId then
+    return nil
+  end
   return current
 end
 
 -- Watcher
-game.DescendantAdded:Connect(function(inst) DebugIdMap[GetDebugId(inst)] = inst end)
-game.DescendantRemoving:Connect(function(inst) DebugIdMap[GetDebugId(inst)] = nil end)
+game.DescendantAdded:Connect(function(inst)
+  DebugIdMap[GetDebugId(inst)] = inst
+end)
+game.DescendantRemoving:Connect(function(inst)
+  DebugIdMap[GetDebugId(inst)] = nil
+end)
 for _, inst in game:GetDescendants() do
   DebugIdMap[GetDebugId(inst)] = inst
 end

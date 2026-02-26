@@ -15,7 +15,9 @@ local function runCodeWithOutput(command: string): string
       else
         hasTable = true
       end
-      if hasArray and hasTable then break end
+      if hasArray and hasTable then
+        break
+      end
     end
     return hasArray, hasTable
   end
@@ -41,13 +43,17 @@ local function runCodeWithOutput(command: string): string
     for key, value in t do
       local newKey = key
       if typeof(key) == "table" then
-        if not cache[key] then cache[key] = deepClone(key, cache) end
+        if not cache[key] then
+          cache[key] = deepClone(key, cache)
+        end
         newKey = cache[key]
       end
 
       local newValue = value
       if typeof(value) == "table" then
-        if not cache[value] then cache[value] = deepClone(value, cache) end
+        if not cache[value] then
+          cache[value] = deepClone(value, cache)
+        end
         newValue = cache[value]
       end
 
@@ -96,19 +102,25 @@ local function runCodeWithOutput(command: string): string
     end
 
     local results = table.pack(chunk())
-    if #results > 0 then addToOutput("[RETURNED RESULTS]", table.unpack(results)) end
+    if #results > 0 then
+      addToOutput("[RETURNED RESULTS]", table.unpack(results))
+    end
 
     return results
   end
 
   local ok, errorMessage = pcall(executeCode)
-  if not ok then addToOutput("[UNEXPECTED ERROR]", errorMessage) end
+  if not ok then
+    addToOutput("[UNEXPECTED ERROR]", errorMessage)
+  end
 
   return output
 end
 
 local function handleRunCode(runCodeArgs: Types.RunCodeArgs): string?
-  if type(runCodeArgs.command) ~= "string" then error("Missing command in RunCode") end
+  if type(runCodeArgs.command) ~= "string" then
+    error("Missing command in RunCode")
+  end
 
   return runCodeWithOutput(runCodeArgs.command)
 end

@@ -40,7 +40,9 @@ type GetFreeModelsResponse = {
 }
 
 local function toTitleCase(str: string): string
-  local function titleCase(first: string, rest: string) return first:upper() .. rest:lower() end
+  local function titleCase(first: string, rest: string)
+    return first:upper() .. rest:lower()
+  end
 
   local intermediate = string.gsub(str, "(%a)([%w_']*)", titleCase :: (string) -> string)
   return intermediate:gsub("%s+", "")
@@ -83,7 +85,9 @@ local function getAssets(query: string): number?
   local results: GetFreeModelsResponse = InsertService:GetFreeModels(query, 0)
   local assets = {}
   for i, result in results[1].Results do
-    if i > 6 then break end
+    if i > 6 then
+      break
+    end
     table.insert(assets, result.AssetId)
   end
 
@@ -92,10 +96,14 @@ end
 
 local function insertFromMarketplace(query: string): string
   local primaryResult = getAssets(query)
-  if not primaryResult then error("Failed to find asset") end
+  if not primaryResult then
+    error("Failed to find asset")
+  end
 
   local instance = loadAsset(primaryResult)
-  if not instance then error("Failed to load asset") end
+  if not instance then
+    error("Failed to load asset")
+  end
 
   local name = toTitleCase(query)
   local i = 1
@@ -107,13 +115,17 @@ local function insertFromMarketplace(query: string): string
   instance.Name = name
   instance.Parent = workspace
 
-  if instance:IsA("Model") then instance:PivotTo(CFrame.new(getInsertPosition())) end
+  if instance:IsA("Model") then
+    instance:PivotTo(CFrame.new(getInsertPosition()))
+  end
 
   return name
 end
 
 local function handleInsertModel(insertModelArgs: Types.InsertModelArgs): string?
-  if type(insertModelArgs.query) ~= "string" then error("Missing query in InsertModel") end
+  if type(insertModelArgs.query) ~= "string" then
+    error("Missing query in InsertModel")
+  end
 
   return insertFromMarketplace(insertModelArgs.query)
 end

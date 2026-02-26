@@ -11,8 +11,12 @@ return function()
   local orphan, orphanChild
   local basePath
 
-  local function id(inst) return Paths.GetDebugId(inst) end
-  local function esc(name) return Paths.EscapeName(name) end
+  local function id(inst)
+    return Paths.GetDebugId(inst)
+  end
+  local function esc(name)
+    return Paths.EscapeName(name)
+  end
 
   beforeAll(function()
     root = Instance.new("Folder")
@@ -110,82 +114,91 @@ return function()
       expect(Paths.EscapeName("MyFolder123")).to.equal("MyFolder123")
     end)
 
-    it("should escape percent", function() expect(Paths.EscapeName("a%b")).to.equal("a%25b") end)
+    it("should escape percent", function()
+      expect(Paths.EscapeName("a%b")).to.equal("a%25b")
+    end)
 
-    it("should escape tilde", function() expect(Paths.EscapeName("a~b")).to.equal("a%7Eb") end)
+    it("should escape tilde", function()
+      expect(Paths.EscapeName("a~b")).to.equal("a%7Eb")
+    end)
 
-    it(
-      "should escape forward slash",
-      function() expect(Paths.EscapeName("a/b")).to.equal("a%2Fb") end
-    )
+    it("should escape forward slash", function()
+      expect(Paths.EscapeName("a/b")).to.equal("a%2Fb")
+    end)
 
-    it("should escape dot", function() expect(Paths.EscapeName("a.b")).to.equal("a%2Eb") end)
+    it("should escape dot", function()
+      expect(Paths.EscapeName("a.b")).to.equal("a%2Eb")
+    end)
 
-    it("should escape at sign", function() expect(Paths.EscapeName("a@b")).to.equal("a%40b") end)
+    it("should escape at sign", function()
+      expect(Paths.EscapeName("a@b")).to.equal("a%40b")
+    end)
 
-    it(
-      "should escape all special characters at once",
-      function() expect(Paths.EscapeName("%~/.@")).to.equal("%25%7E%2F%2E%40") end
-    )
+    it("should escape all special characters at once", function()
+      expect(Paths.EscapeName("%~/.@")).to.equal("%25%7E%2F%2E%40")
+    end)
 
-    it("should handle empty string", function() expect(Paths.EscapeName("")).to.equal("") end)
+    it("should handle empty string", function()
+      expect(Paths.EscapeName("")).to.equal("")
+    end)
 
-    it("should escape a single dot", function() expect(Paths.EscapeName(".")).to.equal("%2E") end)
+    it("should escape a single dot", function()
+      expect(Paths.EscapeName(".")).to.equal("%2E")
+    end)
 
-    it("should escape double dot", function() expect(Paths.EscapeName("..")).to.equal("%2E%2E") end)
+    it("should escape double dot", function()
+      expect(Paths.EscapeName("..")).to.equal("%2E%2E")
+    end)
 
-    it(
-      "should escape name that looks like @game",
-      function() expect(Paths.EscapeName("@game")).to.equal("%40game") end
-    )
+    it("should escape name that looks like @game", function()
+      expect(Paths.EscapeName("@game")).to.equal("%40game")
+    end)
 
-    it(
-      "should escape name that looks like @self",
-      function() expect(Paths.EscapeName("@self")).to.equal("%40self") end
-    )
+    it("should escape name that looks like @self", function()
+      expect(Paths.EscapeName("@self")).to.equal("%40self")
+    end)
 
-    it(
-      "should escape multiple percent signs",
-      function() expect(Paths.EscapeName("%%")).to.equal("%25%25") end
-    )
+    it("should escape multiple percent signs", function()
+      expect(Paths.EscapeName("%%")).to.equal("%25%25")
+    end)
 
-    it(
-      "should escape percent before other chars to avoid double-encoding",
-      function() expect(Paths.EscapeName("%2E")).to.equal("%252E") end
-    )
+    it("should escape percent before other chars to avoid double-encoding", function()
+      expect(Paths.EscapeName("%2E")).to.equal("%252E")
+    end)
   end)
 
   describe("UnescapeName", function()
-    it(
-      "should pass through normal names unchanged",
-      function() expect(Paths.UnescapeName("Hello")).to.equal("Hello") end
-    )
+    it("should pass through normal names unchanged", function()
+      expect(Paths.UnescapeName("Hello")).to.equal("Hello")
+    end)
 
-    it(
-      "should unescape percent",
-      function() expect(Paths.UnescapeName("a%25b")).to.equal("a%b") end
-    )
+    it("should unescape percent", function()
+      expect(Paths.UnescapeName("a%25b")).to.equal("a%b")
+    end)
 
-    it("should unescape tilde", function() expect(Paths.UnescapeName("a%7Eb")).to.equal("a~b") end)
+    it("should unescape tilde", function()
+      expect(Paths.UnescapeName("a%7Eb")).to.equal("a~b")
+    end)
 
-    it(
-      "should unescape forward slash",
-      function() expect(Paths.UnescapeName("a%2Fb")).to.equal("a/b") end
-    )
+    it("should unescape forward slash", function()
+      expect(Paths.UnescapeName("a%2Fb")).to.equal("a/b")
+    end)
 
-    it("should unescape dot", function() expect(Paths.UnescapeName("a%2Eb")).to.equal("a.b") end)
+    it("should unescape dot", function()
+      expect(Paths.UnescapeName("a%2Eb")).to.equal("a.b")
+    end)
 
-    it(
-      "should unescape at sign",
-      function() expect(Paths.UnescapeName("a%40b")).to.equal("a@b") end
-    )
+    it("should unescape at sign", function()
+      expect(Paths.UnescapeName("a%40b")).to.equal("a@b")
+    end)
 
-    it(
-      "should unescape all special characters at once",
-      function() expect(Paths.UnescapeName("%25%7E%2F%2E%40")).to.equal("%~/.@") end
-    )
+    it("should unescape all special characters at once", function()
+      expect(Paths.UnescapeName("%25%7E%2F%2E%40")).to.equal("%~/.@")
+    end)
 
-    it("should handle empty string", function() expect(Paths.UnescapeName("")).to.equal("") end)
+    it("should handle empty string", function()
+      expect(Paths.UnescapeName("")).to.equal("")
+    end)
 
     it("should be case insensitive for hex digits", function()
       expect(Paths.UnescapeName("%2f")).to.equal("/")
@@ -196,10 +209,9 @@ return function()
       expect(Paths.UnescapeName("%2E")).to.equal(".")
     end)
 
-    it(
-      "should unescape %25 last to avoid double-decode",
-      function() expect(Paths.UnescapeName("%252E")).to.equal("%2E") end
-    )
+    it("should unescape %25 last to avoid double-decode", function()
+      expect(Paths.UnescapeName("%252E")).to.equal("%2E")
+    end)
   end)
 
   describe("EscapeName / UnescapeName round-trip", function()
@@ -213,10 +225,9 @@ return function()
       expect(Paths.UnescapeName(Paths.EscapeName(original))).to.equal(original)
     end)
 
-    it(
-      "should round-trip empty string",
-      function() expect(Paths.UnescapeName(Paths.EscapeName(""))).to.equal("") end
-    )
+    it("should round-trip empty string", function()
+      expect(Paths.UnescapeName(Paths.EscapeName(""))).to.equal("")
+    end)
 
     it("should round-trip already-escaped-looking text", function()
       local original = "%25already"
@@ -243,82 +254,57 @@ return function()
 
   describe("GetRelativePath", function()
     describe("with default relativeTo (game)", function()
-      it(
-        "should return @game for game itself",
-        function() expect(Paths.GetRelativePath(game)).to.equal("@game") end
-      )
+      it("should return @game for game itself", function()
+        expect(Paths.GetRelativePath(game)).to.equal("@game")
+      end)
 
-      it(
-        "should return @game for game with explicit nil",
-        function() expect(Paths.GetRelativePath(game, nil)).to.equal("@game") end
-      )
+      it("should return @game for game with explicit nil", function()
+        expect(Paths.GetRelativePath(game, nil)).to.equal("@game")
+      end)
 
-      it(
-        "should return @game/ServiceName for a service",
-        function() expect(Paths.GetRelativePath(RS)).to.equal("@game/" .. esc(RS.Name)) end
-      )
+      it("should return @game/ServiceName for a service", function()
+        expect(Paths.GetRelativePath(RS)).to.equal("@game/" .. esc(RS.Name))
+      end)
 
-      it(
-        "should return full path for direct child of test root",
-        function() expect(Paths.GetRelativePath(alpha)).to.equal(basePath .. "/Alpha") end
-      )
+      it("should return full path for direct child of test root", function()
+        expect(Paths.GetRelativePath(alpha)).to.equal(basePath .. "/Alpha")
+      end)
 
-      it(
-        "should return full path for nested child",
-        function() expect(Paths.GetRelativePath(beta)).to.equal(basePath .. "/Alpha/Beta") end
-      )
+      it("should return full path for nested child", function()
+        expect(Paths.GetRelativePath(beta)).to.equal(basePath .. "/Alpha/Beta")
+      end)
 
-      it(
-        "should return full path for deep descendant",
-        function() expect(Paths.GetRelativePath(gamma)).to.equal(basePath .. "/Alpha/Beta/Gamma") end
-      )
+      it("should return full path for deep descendant", function()
+        expect(Paths.GetRelativePath(gamma)).to.equal(basePath .. "/Alpha/Beta/Gamma")
+      end)
 
-      it(
-        "should return full path for 4-level deep instance",
-        function()
-          expect(Paths.GetRelativePath(deep4)).to.equal(basePath .. "/Deep1/Deep2/Deep3/Deep4")
-        end
-      )
+      it("should return full path for 4-level deep instance", function()
+        expect(Paths.GetRelativePath(deep4)).to.equal(basePath .. "/Deep1/Deep2/Deep3/Deep4")
+      end)
 
-      it(
-        "should escape dot in instance name",
-        function()
-          expect(Paths.GetRelativePath(dotName)).to.equal(basePath .. "/" .. esc("Has.Dot"))
-        end
-      )
+      it("should escape dot in instance name", function()
+        expect(Paths.GetRelativePath(dotName)).to.equal(basePath .. "/" .. esc("Has.Dot"))
+      end)
 
-      it(
-        "should escape at sign in instance name",
-        function() expect(Paths.GetRelativePath(atName)).to.equal(basePath .. "/" .. esc("Has@At")) end
-      )
+      it("should escape at sign in instance name", function()
+        expect(Paths.GetRelativePath(atName)).to.equal(basePath .. "/" .. esc("Has@At"))
+      end)
 
-      it(
-        "should escape slash in instance name",
-        function()
-          expect(Paths.GetRelativePath(slashName)).to.equal(basePath .. "/" .. esc("Has/Slash"))
-        end
-      )
+      it("should escape slash in instance name", function()
+        expect(Paths.GetRelativePath(slashName)).to.equal(basePath .. "/" .. esc("Has/Slash"))
+      end)
 
-      it(
-        "should escape tilde in instance name",
-        function()
-          expect(Paths.GetRelativePath(tildeName)).to.equal(basePath .. "/" .. esc("Has~Tilde"))
-        end
-      )
+      it("should escape tilde in instance name", function()
+        expect(Paths.GetRelativePath(tildeName)).to.equal(basePath .. "/" .. esc("Has~Tilde"))
+      end)
 
-      it(
-        "should escape percent in instance name",
-        function()
-          expect(Paths.GetRelativePath(pctName)).to.equal(basePath .. "/" .. esc("Has%Pct"))
-        end
-      )
+      it("should escape percent in instance name", function()
+        expect(Paths.GetRelativePath(pctName)).to.equal(basePath .. "/" .. esc("Has%Pct"))
+      end)
 
-      it(
-        "should escape all special characters in name",
-        function()
-          expect(Paths.GetRelativePath(allSpecial)).to.equal(basePath .. "/" .. esc("%~/.@"))
-        end
-      )
+      it("should escape all special characters in name", function()
+        expect(Paths.GetRelativePath(allSpecial)).to.equal(basePath .. "/" .. esc("%~/.@"))
+      end)
 
       it("should produce bare path with debugId for orphaned instance", function()
         local path = Paths.GetRelativePath(orphan)
@@ -334,39 +320,31 @@ return function()
     end)
 
     describe("with @self (relativeTo is ancestor)", function()
-      it(
-        "should return @self when inst equals relativeTo",
-        function() expect(Paths.GetRelativePath(alpha, alpha)).to.equal("@self") end
-      )
+      it("should return @self when inst equals relativeTo", function()
+        expect(Paths.GetRelativePath(alpha, alpha)).to.equal("@self")
+      end)
 
-      it(
-        "should return @self/Child for direct child",
-        function() expect(Paths.GetRelativePath(beta, alpha)).to.equal("@self/Beta") end
-      )
+      it("should return @self/Child for direct child", function()
+        expect(Paths.GetRelativePath(beta, alpha)).to.equal("@self/Beta")
+      end)
 
-      it(
-        "should return @self for deep descendant path",
-        function() expect(Paths.GetRelativePath(gamma, alpha)).to.equal("@self/Beta/Gamma") end
-      )
+      it("should return @self for deep descendant path", function()
+        expect(Paths.GetRelativePath(gamma, alpha)).to.equal("@self/Beta/Gamma")
+      end)
 
-      it(
-        "should return @self with escaped name",
-        function() expect(Paths.GetRelativePath(dotName, root)).to.equal("@self/" .. esc("Has.Dot")) end
-      )
+      it("should return @self with escaped name", function()
+        expect(Paths.GetRelativePath(dotName, root)).to.equal("@self/" .. esc("Has.Dot"))
+      end)
 
-      it(
-        "should return @self path from service to deep child",
-        function()
-          expect(Paths.GetRelativePath(gamma, RS)).to.equal(
-            "@self/" .. esc(root.Name) .. "/Alpha/Beta/Gamma"
-          )
-        end
-      )
+      it("should return @self path from service to deep child", function()
+        expect(Paths.GetRelativePath(gamma, RS)).to.equal(
+          "@self/" .. esc(root.Name) .. "/Alpha/Beta/Gamma"
+        )
+      end)
 
-      it(
-        "should return @game when inst and relativeTo are both game",
-        function() expect(Paths.GetRelativePath(game, game)).to.equal("@game") end
-      )
+      it("should return @game when inst and relativeTo are both game", function()
+        expect(Paths.GetRelativePath(game, game)).to.equal("@game")
+      end)
 
       it("should not add debugId on unambiguous @self path", function()
         local path = Paths.GetRelativePath(beta, alpha)
@@ -375,15 +353,13 @@ return function()
     end)
 
     describe("with . prefix (parent of relativeTo)", function()
-      it(
-        "should return . for parent of relativeTo",
-        function() expect(Paths.GetRelativePath(alpha, beta)).to.equal(".") end
-      )
+      it("should return . for parent of relativeTo", function()
+        expect(Paths.GetRelativePath(alpha, beta)).to.equal(".")
+      end)
 
-      it(
-        "should return . for root when relativeTo is direct child",
-        function() expect(Paths.GetRelativePath(root, alpha)).to.equal(".") end
-      )
+      it("should return . for root when relativeTo is direct child", function()
+        expect(Paths.GetRelativePath(root, alpha)).to.equal(".")
+      end)
 
       it("should not add debugId to bare . path", function()
         local path = Paths.GetRelativePath(alpha, beta)
@@ -404,20 +380,17 @@ return function()
     end)
 
     describe("with .. prefix (grandparent and above)", function()
-      it(
-        "should return .. for grandparent",
-        function() expect(Paths.GetRelativePath(alpha, gamma)).to.equal("..") end
-      )
+      it("should return .. for grandparent", function()
+        expect(Paths.GetRelativePath(alpha, gamma)).to.equal("..")
+      end)
 
-      it(
-        "should return ../.. for great-grandparent",
-        function() expect(Paths.GetRelativePath(root, gamma)).to.equal("../..") end
-      )
+      it("should return ../.. for great-grandparent", function()
+        expect(Paths.GetRelativePath(root, gamma)).to.equal("../..")
+      end)
 
-      it(
-        "should return ../../.. for 4 levels up",
-        function() expect(Paths.GetRelativePath(RS, gamma)).to.equal("../../..") end
-      )
+      it("should return ../../.. for 4 levels up", function()
+        expect(Paths.GetRelativePath(RS, gamma)).to.equal("../../..")
+      end)
 
       it("should not add debugId to bare .. paths", function()
         expect(string.find(Paths.GetRelativePath(alpha, gamma), "~")).to.equal(nil)
@@ -436,10 +409,9 @@ return function()
         expect(path).to.equal("../../.." .. "/Epsilon/Zeta~" .. id(zeta))
       end)
 
-      it(
-        "should handle game from deep instance",
-        function() expect(Paths.GetRelativePath(game, deep4)).to.equal("../../../../..") end
-      )
+      it("should handle game from deep instance", function()
+        expect(Paths.GetRelativePath(game, deep4)).to.equal("../../../../..")
+      end)
     end)
 
     describe("ambiguity and DebugId", function()
@@ -454,15 +426,13 @@ return function()
         expect(string.find(Paths.GetRelativePath(gamma, alpha), "~")).to.equal(nil)
       end)
 
-      it(
-        "should not add debugId to @self with no segments",
-        function() expect(string.find(Paths.GetRelativePath(alpha, alpha), "~")).to.equal(nil) end
-      )
+      it("should not add debugId to @self with no segments", function()
+        expect(string.find(Paths.GetRelativePath(alpha, alpha), "~")).to.equal(nil)
+      end)
 
-      it(
-        "should not add debugId to @game with no segments",
-        function() expect(string.find(Paths.GetRelativePath(game), "~")).to.equal(nil) end
-      )
+      it("should not add debugId to @game with no segments", function()
+        expect(string.find(Paths.GetRelativePath(game), "~")).to.equal(nil)
+      end)
 
       it("should not add debugId to bare . or .. paths (no name segments)", function()
         expect(string.find(Paths.GetRelativePath(alpha, beta), "~")).to.equal(nil)
@@ -485,10 +455,9 @@ return function()
         expect(string.find(Paths.GetRelativePath(twin2Leaf), "~")).to.be.ok()
       end)
 
-      it(
-        "should add debugId for multi-level ambiguous leaf",
-        function() expect(string.find(Paths.GetRelativePath(twin1Leaf2), "~")).to.be.ok() end
-      )
+      it("should add debugId for multi-level ambiguous leaf", function()
+        expect(string.find(Paths.GetRelativePath(twin1Leaf2), "~")).to.be.ok()
+      end)
 
       it("should produce distinct paths for ambiguous twins", function()
         local path1 = Paths.GetRelativePath(twin1)
@@ -544,262 +513,197 @@ return function()
 
   describe("FromRelativePath", function()
     describe("@game prefix", function()
-      it(
-        "should resolve @game to game",
-        function() expect(Paths.FromRelativePath("@game")).to.equal(game) end
-      )
+      it("should resolve @game to game", function()
+        expect(Paths.FromRelativePath("@game")).to.equal(game)
+      end)
 
-      it(
-        "should resolve @game/ServiceName to service",
-        function() expect(Paths.FromRelativePath("@game/" .. esc(RS.Name))).to.equal(RS) end
-      )
+      it("should resolve @game/ServiceName to service", function()
+        expect(Paths.FromRelativePath("@game/" .. esc(RS.Name))).to.equal(RS)
+      end)
 
-      it(
-        "should resolve deep @game path",
-        function() expect(Paths.FromRelativePath(basePath .. "/Alpha/Beta/Gamma")).to.equal(gamma) end
-      )
+      it("should resolve deep @game path", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha/Beta/Gamma")).to.equal(gamma)
+      end)
 
-      it(
-        "should resolve @game path to test root",
-        function() expect(Paths.FromRelativePath(basePath)).to.equal(root) end
-      )
+      it("should resolve @game path to test root", function()
+        expect(Paths.FromRelativePath(basePath)).to.equal(root)
+      end)
 
-      it(
-        "should return nil for @game/NonExistent",
-        function() expect(Paths.FromRelativePath("@game/NonExistent")).to.equal(nil) end
-      )
+      it("should return nil for @game/NonExistent", function()
+        expect(Paths.FromRelativePath("@game/NonExistent")).to.equal(nil)
+      end)
 
-      it(
-        "should return nil for @game/ (empty child)",
-        function() expect(Paths.FromRelativePath("@game/")).to.equal(nil) end
-      )
+      it("should return nil for @game/ (empty child)", function()
+        expect(Paths.FromRelativePath("@game/")).to.equal(nil)
+      end)
 
-      it(
-        "should resolve path with escaped dot",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has.Dot"))).to.equal(dotName)
-        end
-      )
+      it("should resolve path with escaped dot", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has.Dot"))).to.equal(dotName)
+      end)
 
-      it(
-        "should resolve path with escaped at-sign",
-        function() expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has@At"))).to.equal(atName) end
-      )
+      it("should resolve path with escaped at-sign", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has@At"))).to.equal(atName)
+      end)
 
-      it(
-        "should resolve path with escaped slash",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has/Slash"))).to.equal(slashName)
-        end
-      )
+      it("should resolve path with escaped slash", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has/Slash"))).to.equal(slashName)
+      end)
 
-      it(
-        "should resolve path with escaped tilde",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has~Tilde"))).to.equal(tildeName)
-        end
-      )
+      it("should resolve path with escaped tilde", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has~Tilde"))).to.equal(tildeName)
+      end)
 
-      it(
-        "should resolve path with escaped percent",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has%Pct"))).to.equal(pctName)
-        end
-      )
+      it("should resolve path with escaped percent", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has%Pct"))).to.equal(pctName)
+      end)
 
-      it(
-        "should resolve path with all special chars escaped",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("%~/.@"))).to.equal(allSpecial)
-        end
-      )
+      it("should resolve path with all special chars escaped", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("%~/.@"))).to.equal(allSpecial)
+      end)
     end)
 
     describe("@self prefix", function()
-      it(
-        "should resolve @self to relativeTo",
-        function() expect(Paths.FromRelativePath("@self", alpha)).to.equal(alpha) end
-      )
+      it("should resolve @self to relativeTo", function()
+        expect(Paths.FromRelativePath("@self", alpha)).to.equal(alpha)
+      end)
 
-      it(
-        "should resolve @self/Child",
-        function() expect(Paths.FromRelativePath("@self/Beta", alpha)).to.equal(beta) end
-      )
+      it("should resolve @self/Child", function()
+        expect(Paths.FromRelativePath("@self/Beta", alpha)).to.equal(beta)
+      end)
 
-      it(
-        "should resolve deep @self path",
-        function() expect(Paths.FromRelativePath("@self/Beta/Gamma", alpha)).to.equal(gamma) end
-      )
+      it("should resolve deep @self path", function()
+        expect(Paths.FromRelativePath("@self/Beta/Gamma", alpha)).to.equal(gamma)
+      end)
 
-      it(
-        "should return nil for @self/NonExistent",
-        function() expect(Paths.FromRelativePath("@self/NonExistent", alpha)).to.equal(nil) end
-      )
+      it("should return nil for @self/NonExistent", function()
+        expect(Paths.FromRelativePath("@self/NonExistent", alpha)).to.equal(nil)
+      end)
 
-      it(
-        "should resolve @self to game when relativeTo defaults",
-        function() expect(Paths.FromRelativePath("@self")).to.equal(game) end
-      )
+      it("should resolve @self to game when relativeTo defaults", function()
+        expect(Paths.FromRelativePath("@self")).to.equal(game)
+      end)
 
-      it(
-        "should return nil for @self/ (empty rest)",
-        function() expect(Paths.FromRelativePath("@self/", alpha)).to.equal(nil) end
-      )
+      it("should return nil for @self/ (empty rest)", function()
+        expect(Paths.FromRelativePath("@self/", alpha)).to.equal(nil)
+      end)
 
-      it(
-        "should resolve @self with escaped child name",
-        function()
-          expect(Paths.FromRelativePath("@self/" .. esc("Has.Dot"), root)).to.equal(dotName)
-        end
-      )
+      it("should resolve @self with escaped child name", function()
+        expect(Paths.FromRelativePath("@self/" .. esc("Has.Dot"), root)).to.equal(dotName)
+      end)
     end)
 
     describe("./ prefix (1 level up)", function()
-      it(
-        "should resolve ./Sibling",
-        function() expect(Paths.FromRelativePath("./Delta", beta)).to.equal(delta) end
-      )
+      it("should resolve ./Sibling", function()
+        expect(Paths.FromRelativePath("./Delta", beta)).to.equal(delta)
+      end)
 
-      it(
-        "should resolve . to parent",
-        function() expect(Paths.FromRelativePath(".", beta)).to.equal(alpha) end
-      )
+      it("should resolve . to parent", function()
+        expect(Paths.FromRelativePath(".", beta)).to.equal(alpha)
+      end)
 
-      it(
-        "should resolve ./A/B to deep sibling path",
-        function() expect(Paths.FromRelativePath("./Epsilon/Zeta", alpha)).to.equal(zeta) end
-      )
+      it("should resolve ./A/B to deep sibling path", function()
+        expect(Paths.FromRelativePath("./Epsilon/Zeta", alpha)).to.equal(zeta)
+      end)
 
-      it(
-        "should return nil for ./NonExistent",
-        function() expect(Paths.FromRelativePath("./NonExistent", beta)).to.equal(nil) end
-      )
+      it("should return nil for ./NonExistent", function()
+        expect(Paths.FromRelativePath("./NonExistent", beta)).to.equal(nil)
+      end)
 
-      it(
-        "should return nil when relativeTo is game (game.Parent = nil)",
-        function() expect(Paths.FromRelativePath("./Anything")).to.equal(nil) end
-      )
+      it("should return nil when relativeTo is game (game.Parent = nil)", function()
+        expect(Paths.FromRelativePath("./Anything")).to.equal(nil)
+      end)
 
-      it(
-        "should return nil when relativeTo has no parent",
-        function() expect(Paths.FromRelativePath("./Foo", orphan)).to.equal(nil) end
-      )
+      it("should return nil when relativeTo has no parent", function()
+        expect(Paths.FromRelativePath("./Foo", orphan)).to.equal(nil)
+      end)
 
-      it(
-        "should resolve . to parent for deep instance",
-        function() expect(Paths.FromRelativePath(".", gamma)).to.equal(beta) end
-      )
+      it("should resolve . to parent for deep instance", function()
+        expect(Paths.FromRelativePath(".", gamma)).to.equal(beta)
+      end)
     end)
 
     describe("../ prefix (2+ levels up)", function()
-      it(
-        "should resolve .. to grandparent",
-        function() expect(Paths.FromRelativePath("..", gamma)).to.equal(alpha) end
-      )
+      it("should resolve .. to grandparent", function()
+        expect(Paths.FromRelativePath("..", gamma)).to.equal(alpha)
+      end)
 
-      it(
-        "should resolve ../Uncle",
-        function() expect(Paths.FromRelativePath("../Delta", beta)).to.equal(delta) end
-      )
+      it("should resolve ../Uncle", function()
+        expect(Paths.FromRelativePath("../Delta", beta)).to.equal(delta)
+      end)
 
-      it(
-        "should resolve ../.. to great-grandparent",
-        function() expect(Paths.FromRelativePath("../..", gamma)).to.equal(root) end
-      )
+      it("should resolve ../.. to great-grandparent", function()
+        expect(Paths.FromRelativePath("../..", gamma)).to.equal(root)
+      end)
 
-      it(
-        "should resolve ../../Cousin",
-        function() expect(Paths.FromRelativePath("../../Epsilon/Zeta", gamma)).to.equal(zeta) end
-      )
+      it("should resolve ../../Cousin", function()
+        expect(Paths.FromRelativePath("../../Epsilon/Zeta", gamma)).to.equal(zeta)
+      end)
 
-      it(
-        "should resolve deep .. chaining to root",
-        function() expect(Paths.FromRelativePath("../../..", deep4)).to.equal(root) end
-      )
+      it("should resolve deep .. chaining to root", function()
+        expect(Paths.FromRelativePath("../../..", deep4)).to.equal(root)
+      end)
 
-      it(
-        "should resolve very deep .. chaining to game",
-        function() expect(Paths.FromRelativePath("../../../../..", deep4)).to.equal(game) end
-      )
+      it("should resolve very deep .. chaining to game", function()
+        expect(Paths.FromRelativePath("../../../../..", deep4)).to.equal(game)
+      end)
 
-      it(
-        "should return nil when .. goes past DataModel root",
-        function()
-          expect(Paths.FromRelativePath("../../../../../../../../../..", alpha)).to.equal(nil)
-        end
-      )
+      it("should return nil when .. goes past DataModel root", function()
+        expect(Paths.FromRelativePath("../../../../../../../../../..", alpha)).to.equal(nil)
+      end)
 
-      it(
-        "should return nil for ../NonExistent",
-        function() expect(Paths.FromRelativePath("../NonExistent", beta)).to.equal(nil) end
-      )
+      it("should return nil for ../NonExistent", function()
+        expect(Paths.FromRelativePath("../NonExistent", beta)).to.equal(nil)
+      end)
     end)
 
     describe(".. anywhere in path", function()
-      it(
-        "should resolve @self/Child/../OtherChild",
-        function() expect(Paths.FromRelativePath("@self/Beta/../Delta", alpha)).to.equal(delta) end
-      )
+      it("should resolve @self/Child/../OtherChild", function()
+        expect(Paths.FromRelativePath("@self/Beta/../Delta", alpha)).to.equal(delta)
+      end)
 
-      it(
-        "should resolve @game path with mid-path ..",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/Alpha/Beta/../Delta")).to.equal(delta)
-        end
-      )
+      it("should resolve @game path with mid-path ..", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha/Beta/../Delta")).to.equal(delta)
+      end)
 
-      it(
-        "should resolve multiple mid-path .. segments",
-        function()
-          expect(Paths.FromRelativePath("@self/Beta/Gamma/../../Delta", alpha)).to.equal(delta)
-        end
-      )
+      it("should resolve multiple mid-path .. segments", function()
+        expect(Paths.FromRelativePath("@self/Beta/Gamma/../../Delta", alpha)).to.equal(delta)
+      end)
 
-      it(
-        "should resolve . then .. in path",
-        function() expect(Paths.FromRelativePath("@self/./Beta/../Delta", alpha)).to.equal(delta) end
-      )
+      it("should resolve . then .. in path", function()
+        expect(Paths.FromRelativePath("@self/./Beta/../Delta", alpha)).to.equal(delta)
+      end)
 
-      it(
-        "should resolve .. back to start then descend",
-        function() expect(Paths.FromRelativePath("@self/Beta/..", alpha)).to.equal(alpha) end
-      )
+      it("should resolve .. back to start then descend", function()
+        expect(Paths.FromRelativePath("@self/Beta/..", alpha)).to.equal(alpha)
+      end)
 
-      it(
-        "should resolve @game/Service/../Service back to service",
-        function()
-          expect(Paths.FromRelativePath("@game/" .. esc(RS.Name) .. "/../" .. esc(RS.Name))).to.equal(
-            RS
-          )
-        end
-      )
+      it("should resolve @game/Service/../Service back to service", function()
+        expect(Paths.FromRelativePath("@game/" .. esc(RS.Name) .. "/../" .. esc(RS.Name))).to.equal(
+          RS
+        )
+      end)
     end)
 
     describe(". segment (no-op)", function()
-      it(
-        "should treat . as no-op in @self path",
-        function() expect(Paths.FromRelativePath("@self/./Beta", alpha)).to.equal(beta) end
-      )
+      it("should treat . as no-op in @self path", function()
+        expect(Paths.FromRelativePath("@self/./Beta", alpha)).to.equal(beta)
+      end)
 
-      it(
-        "should treat . as no-op in @game path",
-        function() expect(Paths.FromRelativePath("@game/./" .. esc(RS.Name))).to.equal(RS) end
-      )
+      it("should treat . as no-op in @game path", function()
+        expect(Paths.FromRelativePath("@game/./" .. esc(RS.Name))).to.equal(RS)
+      end)
 
-      it(
-        "should handle multiple consecutive . segments",
-        function() expect(Paths.FromRelativePath("@self/./././Beta", alpha)).to.equal(beta) end
-      )
+      it("should handle multiple consecutive . segments", function()
+        expect(Paths.FromRelativePath("@self/./././Beta", alpha)).to.equal(beta)
+      end)
 
-      it(
-        "should resolve ./. to parent",
-        function() expect(Paths.FromRelativePath("./.", beta)).to.equal(alpha) end
-      )
+      it("should resolve ./. to parent", function()
+        expect(Paths.FromRelativePath("./.", beta)).to.equal(alpha)
+      end)
 
-      it(
-        "should resolve ./.  then child",
-        function() expect(Paths.FromRelativePath("././Delta", beta)).to.equal(delta) end
-      )
+      it("should resolve ./.  then child", function()
+        expect(Paths.FromRelativePath("././Delta", beta)).to.equal(delta)
+      end)
     end)
 
     describe("DebugId handling", function()
@@ -815,25 +719,22 @@ return function()
         expect(Paths.FromRelativePath(path2)).to.equal(twin2)
       end)
 
-      it(
-        "should resolve path without debugId normally",
-        function() expect(Paths.FromRelativePath(basePath .. "/Alpha")).to.equal(alpha) end
-      )
+      it("should resolve path without debugId normally", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha")).to.equal(alpha)
+      end)
 
-      it(
-        "should return nil for mismatched debugId",
-        function() expect(Paths.FromRelativePath(basePath .. "/Alpha~INVALID")).to.equal(nil) end
-      )
+      it("should return nil for mismatched debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha~INVALID")).to.equal(nil)
+      end)
 
       it("should resolve relative path with debugId", function()
         local path = Paths.GetRelativePath(delta, beta)
         expect(Paths.FromRelativePath(path, beta)).to.equal(delta)
       end)
 
-      it(
-        "should validate debugId after traversal",
-        function() expect(Paths.FromRelativePath(basePath .. "/Alpha~" .. id(beta))).to.equal(nil) end
-      )
+      it("should validate debugId after traversal", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha~" .. id(beta))).to.equal(nil)
+      end)
 
       it("should resolve debugId on @self paths", function()
         local child = Instance.new("Folder")
@@ -853,10 +754,9 @@ return function()
 
     describe("ambiguity handling", function()
       -- Last segment ambiguity
-      it(
-        "should return nil for ambiguous last segment without debugId",
-        function() expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin")).to.equal(nil) end
-      )
+      it("should return nil for ambiguous last segment without debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin")).to.equal(nil)
+      end)
 
       it("should resolve ambiguous last segment with correct debugId", function()
         expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~" .. id(twin1))).to.equal(
@@ -867,29 +767,18 @@ return function()
         )
       end)
 
-      it(
-        "should return nil for ambiguous last segment with bogus debugId",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~BOGUS")).to.equal(nil)
-        end
-      )
+      it("should return nil for ambiguous last segment with bogus debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~BOGUS")).to.equal(nil)
+      end)
 
-      it(
-        "should return nil for ambiguous last segment with wrong valid debugId",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~" .. id(alpha))).to.equal(
-            nil
-          )
-        end
-      )
+      it("should return nil for ambiguous last segment with wrong valid debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin~" .. id(alpha))).to.equal(nil)
+      end)
 
       -- Intermediate ambiguity (one level)
-      it(
-        "should return nil for ambiguous intermediate without debugId",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf")).to.equal(nil)
-        end
-      )
+      it("should return nil for ambiguous intermediate without debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf")).to.equal(nil)
+      end)
 
       it("should resolve through ambiguous intermediate with debugId on leaf", function()
         expect(Paths.FromRelativePath(basePath .. "/AmbigParent/Twin/Leaf~" .. id(twin1Leaf))).to.equal(
@@ -918,83 +807,64 @@ return function()
       end)
 
       -- Non-canonical paths through ambiguity
-      it(
-        "should resolve non-canonical @game path through ambiguous segment",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/Alpha/../AmbigParent/Twin~" .. id(twin2))).to.equal(
-            twin2
-          )
-        end
-      )
+      it("should resolve non-canonical @game path through ambiguous segment", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha/../AmbigParent/Twin~" .. id(twin2))).to.equal(
+          twin2
+        )
+      end)
 
-      it(
-        "should resolve non-canonical @game path through ambiguous intermediate",
-        function()
-          expect(
-            Paths.FromRelativePath(basePath .. "/Alpha/../AmbigParent/Twin/Leaf~" .. id(twin1Leaf))
-          ).to.equal(twin1Leaf)
-        end
-      )
+      it("should resolve non-canonical @game path through ambiguous intermediate", function()
+        expect(
+          Paths.FromRelativePath(basePath .. "/Alpha/../AmbigParent/Twin/Leaf~" .. id(twin1Leaf))
+        ).to.equal(twin1Leaf)
+      end)
 
       -- @self paths through ambiguity
-      it(
-        "should return nil for @self path into ambiguous children without debugId",
-        function() expect(Paths.FromRelativePath("@self/Twin", ambigParent)).to.equal(nil) end
-      )
+      it("should return nil for @self path into ambiguous children without debugId", function()
+        expect(Paths.FromRelativePath("@self/Twin", ambigParent)).to.equal(nil)
+      end)
 
       it("should resolve @self path into ambiguous children with debugId", function()
         expect(Paths.FromRelativePath("@self/Twin~" .. id(twin1), ambigParent)).to.equal(twin1)
         expect(Paths.FromRelativePath("@self/Twin~" .. id(twin2), ambigParent)).to.equal(twin2)
       end)
 
-      it(
-        "should return nil for @self path through ambiguous to leaf without debugId",
-        function() expect(Paths.FromRelativePath("@self/Twin/Leaf", ambigParent)).to.equal(nil) end
-      )
+      it("should return nil for @self path through ambiguous to leaf without debugId", function()
+        expect(Paths.FromRelativePath("@self/Twin/Leaf", ambigParent)).to.equal(nil)
+      end)
 
-      it(
-        "should resolve @self path through ambiguous intermediate with debugId",
-        function()
-          expect(Paths.FromRelativePath("@self/Twin/Leaf~" .. id(twin2Leaf), ambigParent)).to.equal(
-            twin2Leaf
-          )
-        end
-      )
+      it("should resolve @self path through ambiguous intermediate with debugId", function()
+        expect(Paths.FromRelativePath("@self/Twin/Leaf~" .. id(twin2Leaf), ambigParent)).to.equal(
+          twin2Leaf
+        )
+      end)
 
       -- ./ paths through ambiguity
-      it(
-        "should return nil for ./ path into ambiguous without debugId",
-        function() expect(Paths.FromRelativePath("./Twin", twin1)).to.equal(nil) end
-      )
+      it("should return nil for ./ path into ambiguous without debugId", function()
+        expect(Paths.FromRelativePath("./Twin", twin1)).to.equal(nil)
+      end)
 
-      it(
-        "should resolve ./ path into ambiguous with debugId",
-        function() expect(Paths.FromRelativePath("./Twin~" .. id(twin2), twin1)).to.equal(twin2) end
-      )
+      it("should resolve ./ path into ambiguous with debugId", function()
+        expect(Paths.FromRelativePath("./Twin~" .. id(twin2), twin1)).to.equal(twin2)
+      end)
 
       -- ../ paths through ambiguity
-      it(
-        "should return nil for ../ path into ambiguous without debugId",
-        function() expect(Paths.FromRelativePath("../Twin", twin1Leaf)).to.equal(nil) end
-      )
+      it("should return nil for ../ path into ambiguous without debugId", function()
+        expect(Paths.FromRelativePath("../Twin", twin1Leaf)).to.equal(nil)
+      end)
 
-      it(
-        "should resolve ../ path into ambiguous with debugId",
-        function()
-          expect(Paths.FromRelativePath("../Twin~" .. id(twin2), twin1Leaf)).to.equal(twin2)
-        end
-      )
+      it("should resolve ../ path into ambiguous with debugId", function()
+        expect(Paths.FromRelativePath("../Twin~" .. id(twin2), twin1Leaf)).to.equal(twin2)
+      end)
 
       -- Unique paths still resolve without debugId
-      it(
-        "should resolve unique sibling path through AmbigParent without debugId",
-        function() expect(Paths.FromRelativePath(basePath .. "/AmbigParent")).to.equal(ambigParent) end
-      )
+      it("should resolve unique sibling path through AmbigParent without debugId", function()
+        expect(Paths.FromRelativePath(basePath .. "/AmbigParent")).to.equal(ambigParent)
+      end)
 
-      it(
-        "should resolve unique @self path without debugId",
-        function() expect(Paths.FromRelativePath("@self/Beta", alpha)).to.equal(beta) end
-      )
+      it("should resolve unique @self path without debugId", function()
+        expect(Paths.FromRelativePath("@self/Beta", alpha)).to.equal(beta)
+      end)
 
       -- Round-trips through all ambiguous instances
       it("should round-trip all ambiguous instances from game", function()
@@ -1059,78 +929,57 @@ return function()
     end)
 
     describe("edge cases", function()
-      it(
-        "should return nil for empty string",
-        function() expect(Paths.FromRelativePath("")).to.equal(nil) end
-      )
+      it("should return nil for empty string", function()
+        expect(Paths.FromRelativePath("")).to.equal(nil)
+      end)
 
-      it(
-        "should return nil for path to nonexistent child",
-        function() expect(Paths.FromRelativePath("@game/Nonexistent/Path")).to.equal(nil) end
-      )
+      it("should return nil for path to nonexistent child", function()
+        expect(Paths.FromRelativePath("@game/Nonexistent/Path")).to.equal(nil)
+      end)
 
-      it(
-        "should return nil when @game/.. goes past root",
-        function() expect(Paths.FromRelativePath("@game/..")).to.equal(nil) end
-      )
+      it("should return nil when @game/.. goes past root", function()
+        expect(Paths.FromRelativePath("@game/..")).to.equal(nil)
+      end)
 
-      it(
-        "should handle double slashes by skipping empty segments",
-        function() expect(Paths.FromRelativePath(basePath .. "//Alpha")).to.equal(alpha) end
-      )
+      it("should handle double slashes by skipping empty segments", function()
+        expect(Paths.FromRelativePath(basePath .. "//Alpha")).to.equal(alpha)
+      end)
 
-      it(
-        "should handle trailing slash gracefully",
-        function() expect(Paths.FromRelativePath(basePath .. "/Alpha/")).to.equal(alpha) end
-      )
+      it("should handle trailing slash gracefully", function()
+        expect(Paths.FromRelativePath(basePath .. "/Alpha/")).to.equal(alpha)
+      end)
 
-      it(
-        "should resolve escaped slash name",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has/Slash"))).to.equal(slashName)
-        end
-      )
+      it("should resolve escaped slash name", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has/Slash"))).to.equal(slashName)
+      end)
 
-      it(
-        "should resolve escaped tilde name (not confused with debugId)",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has~Tilde"))).to.equal(tildeName)
-        end
-      )
+      it("should resolve escaped tilde name (not confused with debugId)", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has~Tilde"))).to.equal(tildeName)
+      end)
 
-      it(
-        "should resolve escaped percent name",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has%Pct"))).to.equal(pctName)
-        end
-      )
+      it("should resolve escaped percent name", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has%Pct"))).to.equal(pctName)
+      end)
 
-      it(
-        "should resolve escaped dot name",
-        function()
-          expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has.Dot"))).to.equal(dotName)
-        end
-      )
+      it("should resolve escaped dot name", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has.Dot"))).to.equal(dotName)
+      end)
 
-      it(
-        "should resolve escaped at-sign name",
-        function() expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has@At"))).to.equal(atName) end
-      )
+      it("should resolve escaped at-sign name", function()
+        expect(Paths.FromRelativePath(basePath .. "/" .. esc("Has@At"))).to.equal(atName)
+      end)
 
-      it(
-        "should return game for bare @game with default relativeTo",
-        function() expect(Paths.FromRelativePath("@game")).to.equal(game) end
-      )
+      it("should return game for bare @game with default relativeTo", function()
+        expect(Paths.FromRelativePath("@game")).to.equal(game)
+      end)
 
-      it(
-        "should return nil for garbage input",
-        function() expect(Paths.FromRelativePath("not_a_valid_path_probably")).to.equal(nil) end
-      )
+      it("should return nil for garbage input", function()
+        expect(Paths.FromRelativePath("not_a_valid_path_probably")).to.equal(nil)
+      end)
 
-      it(
-        "should return nil for bare path when game is relativeTo",
-        function() expect(Paths.FromRelativePath("CompletelyFake/Path")).to.equal(nil) end
-      )
+      it("should return nil for bare path when game is relativeTo", function()
+        expect(Paths.FromRelativePath("CompletelyFake/Path")).to.equal(nil)
+      end)
     end)
   end)
 

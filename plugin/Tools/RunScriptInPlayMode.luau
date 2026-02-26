@@ -85,7 +85,9 @@ end
 
 local function removeTestScript()
   local testScript = ServerScriptService:FindFirstChild(TEST_SCRIPT_NAME)
-  if testScript then testScript:Destroy() end
+  if testScript then
+    testScript:Destroy()
+  end
 end
 
 local function injectTestScript(args: Types.RunScriptInPlayModeArgs)
@@ -115,7 +117,9 @@ local function runScriptInPlayMode(args: Types.RunScriptInPlayModeArgs): string?
   GlobalVariables.studioMode = "stop"
   removeTestScript()
 
-  if not success then error("Failed to run script in play mode: " .. result) end
+  if not success then
+    error("Failed to run script in play mode: " .. result)
+  end
 
   local resultStr = HttpService:JSONEncode(result)
   return resultStr
