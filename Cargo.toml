@@ -24,6 +24,9 @@ native-dialog = "0.9"
 security-translocate = "0.2.1"
 core-foundation = "0.10.1"
 
+[profile.release]
+debug = "line-tables-only"
+
 [build-dependencies]
 rojo = "7.6.1"
 

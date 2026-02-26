@@ -1,0 +1,12 @@
+services:
+  test-linux-x86_64:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    platform: linux/amd64
+
+  test-linux-aarch64:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    platform: linux/arm64

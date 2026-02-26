@@ -1,0 +1,13 @@
+target/
+.cursor/
+.git/
+.github/
+.vscode/
+.env
+*.rbxl
+*.rbxlx
+*.rbxm
+TestPlace.rbxl
+Packages/
+node_modules/
+docs/

@@ -2,11 +2,32 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    branches:
+      - main
+
+env:
+  VERSION: "0.2.${{ github.run_number }}"
+
+permissions:
+  contents: write
 
 jobs:
-  release:
-    name: Build & Release Plugin
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Tag and Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+          gh release create "v$VERSION" --title "v$VERSION"
+
+  build-plugin:
+    needs: ["create-release"]
+    name: Build Roblox Studio Plugin
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,17 +38,13 @@ jobs:
       - name: Build Plugin
         run: rojo build plugin.project.json --output MCPStudioPlugin.rbxm
 
-      - name: Create GitHub Release
+      - name: Upload Plugin to Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${{ github.ref_name }} --draft --verify-tag --title ${{ github.ref_name }}
+        run: |
+          gh release upload "v$VERSION" MCPStudioPlugin.rbxm
 
-      - name: Upload to GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.ref_name }} MCPStudioPlugin.rbxm
-
-      - name: Upload to Artifacts
+      - name: Upload Plugin to Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: MCPStudioPlugin.rbxm
@@ -39,3 +56,107 @@ jobs:
           RBX_UNIVERSE_ID: ${{ vars.PLUGIN_CI_UNIVERSE_ID }}
           RBX_PLACE_ID: ${{ vars.PLUGIN_CI_PLACE_ID }}
         run: lune run upload-plugin MCPStudioPlugin.rbxm
+
+  build:
+    needs: ["create-release"]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: linux
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            label: linux-x86_64
+
+          - host: linux
+            os: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            label: linux-aarch64
+
+          - host: windows
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            label: windows-x86_64
+
+          - host: windows
+            os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            label: windows-aarch64
+
+          - host: macos
+            os: macos-latest
+            target: x86_64-apple-darwin
+            label: macos-x86_64
+
+          - host: macos
+            os: macos-latest
+            target: aarch64-apple-darwin
+            label: macos-aarch64
+
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    env:
+      BIN: rbx-studio-mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Restore Rust Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Set Version
+        run: |
+          cargo install cargo-edit
+          cargo set-version --workspace "${{ env.VERSION }}"
+
+      - name: Build Release
+        run: cargo build --release --verbose --target ${{ matrix.target }}
+
+      - name: Save Rust Cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Generate Artifact Name
+        shell: bash
+        run: |
+          echo "ARTIFACT_NAME=$BIN-$VERSION-${{ matrix.label }}.zip" >> "$GITHUB_ENV"
+
+      - name: Create Archive and Upload to Release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir staging
+
+          if [ "${{ matrix.host }}" = "windows" ]; then
+            cp "target/${{ matrix.target }}/release/$BIN.exe" staging/
+            cd staging
+            7z a ../$ARTIFACT_NAME *
+          else
+            cp "target/${{ matrix.target }}/release/$BIN" staging/
+            cd staging
+            zip ../$ARTIFACT_NAME *
+          fi
+
+          gh release upload "v$VERSION" ../$ARTIFACT_NAME
+
+      - name: Upload Archive to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_NAME }}

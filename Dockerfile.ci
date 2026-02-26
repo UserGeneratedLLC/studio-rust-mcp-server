@@ -1,0 +1,13 @@
+FROM rust:latest
+
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+COPY . .
+
+RUN cargo build --locked --verbose
+CMD ["cargo", "test", "--locked", "--verbose"]
