@@ -120,9 +120,7 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
   local relativeTo: Instance = _relativeTo or game
 
   if inst == relativeTo then
-    if relativeTo == game then
-      return "@game"
-    end
+    if relativeTo == game then return "@game" end
     return "@self"
   end
 
@@ -210,15 +208,15 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
   local relativeTo: Instance = _relativeTo or game
 
+  if path == "" then return nil end
+
   -- Extract debugId from last segment (last ~ after last /)
   local debugId: string?
   local cleanPath = path
   do
     local lastSlash = string.find(path, "/[^/]*$")
     local searchFrom = 1
-    if lastSlash then
-      searchFrom = lastSlash + 1
-    end
+    if lastSlash then searchFrom = lastSlash + 1 end
     local tildePos = string.find(path, "~", searchFrom, true)
     if tildePos then
       debugId = string.sub(path, tildePos + 1)
@@ -227,51 +225,42 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   end
 
   -- Build candidate ancestor set for debugId disambiguation
-  local candidateAncestors: { [Instance]: true }?
   if debugId then
     local candidate = DebugIdMap[debugId]
-    if candidate then
-      local ancestors: { [Instance]: true } = {}
-      local pivot: Instance? = candidate
-      while pivot do
-        ancestors[pivot] = true
-        pivot = pivot.Parent
-      end
-      candidateAncestors = ancestors
+    if candidate and GetDebugId(candidate) == debugId then
+      -- TODO(high): we now have a literal path of the instance. we can literally walk it like we do below without having to do expensive calls to FindChildren
+      -- crappy solution: just regenerate the path and compare, ignoring DebugId the at the ends. if it matches, return the instance. otherwise, fall through.
     end
   end
 
-  -- Exact matches (no traversal needed)
-  if cleanPath == "@game" then return game end
-  if cleanPath == "@self" then return relativeTo end
-
-  -- Determine start instance and remaining path
+  -- Split into segments and classify by first component (matches Luau navigateImpl)
+  local segments = string.split(cleanPath, "/")
   local current: Instance?
-  local rest: string
-  if string.sub(cleanPath, 1, 6) == "@game/" then
+  local startIdx = 1
+  local first = segments[1]
+
+  if first == "@game" then
     current = game
-    rest = string.sub(cleanPath, 7)
-  elseif string.sub(cleanPath, 1, 6) == "@self/" then
+    startIdx = 2
+  elseif first == "@self" then
     current = relativeTo
-    rest = string.sub(cleanPath, 7)
-  elseif string.byte(cleanPath, 1) == 0x2E then
+    startIdx = 2
+  elseif first == "." or first == ".." then
     current = relativeTo.Parent
-    rest = cleanPath
   else
     if relativeTo == game then
       current = game
     else
       current = relativeTo.Parent
     end
-    rest = cleanPath
   end
 
-  if not current or rest == "" then return nil end
+  if not current then return nil end
 
-  -- Walk segments step by step with proper ambiguity handling
-  local segments = string.split(rest, "/")
-  for _, seg in segments do
+  -- Walk segments step by step (matches Luau navigateThroughPath)
+  for i = startIdx, #segments do
     if not current then return nil end
+    local seg = segments[i]
     if seg == ".." then
       current = current.Parent
     elseif seg ~= "." and seg ~= "" then
@@ -280,16 +269,6 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
         return nil
       elseif #results == 1 then
         current = results[1]
-      elseif candidateAncestors then
-        local found: Instance?
-        for _, inst in results do
-          if candidateAncestors[inst] then
-            found = inst
-            break
-          end
-        end
-        if not found then return nil end
-        current = found
       else
         warn(`FromRelativePath Ambiguous: {#results}`)
         return nil
