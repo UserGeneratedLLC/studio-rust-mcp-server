@@ -141,6 +141,7 @@ local function GetDistinctName(inst: Instance): string
 end
 
 local function GetDistinctPath(inst: Instance): string
+  if inst == game then return "" end
   local names = { GetDistinctName(inst) }
   local pivot: Instance? = inst.Parent
   while pivot and pivot ~= game do
@@ -171,27 +172,30 @@ local function FromDistinctPath(path: string): Instance?
     if inst and path == GetDistinctPath(inst) then return inst end
   end
 
-  local segments = string.split(pathWithoutId, "/")
-  if #segments == 0 then return nil end
+  if pathWithoutId == "" then
+    if debugId and GetDebugId(game) ~= debugId then return nil end
+    return game
+  end
 
+  local segments = string.split(pathWithoutId, "/")
   local parts = table.create(#segments)
   for i, seg in segments do
     parts[i] = string.format("> [Name = %s]", string.format("%q", UnescapeName(seg)))
   end
   local selector = table.concat(parts, " ")
-
   local ok, results = pcall(game.QueryDescendants, game, selector)
   if not ok then
-    warn(`FromDistinctPathQueryDescendants: {results}`)
+    warn(`FromDistinctPath QueryDescendants: {results}`)
     return nil
   end
-
   if debugId then
     for _, inst in results do
       if GetDebugId(inst) == debugId then return inst end
     end
   elseif #results == 1 then
     return results[1]
+  elseif #results > 1 then
+    warn(`FromDistinctPath Ambiguous: {#results}`)
   end
   return nil
 end
