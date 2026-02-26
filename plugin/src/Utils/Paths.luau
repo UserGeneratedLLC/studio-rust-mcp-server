@@ -108,9 +108,7 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
   assert(_relativeTo == nil or typeof(_relativeTo) == "Instance")
   local relativeTo: Instance = _relativeTo or game
 
-  if inst == relativeTo then
-    return if relativeTo == game then "@game" else "@self"
-  end
+  if inst == relativeTo then return if relativeTo == game then "@game" else "@self" end
 
   -- inst's ancestor chain [inst, parent, grandparent, ..., root] with O(1) lookup
   local instChain: { Instance } = {}
@@ -148,9 +146,7 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
     for i = 1, center do
       names[i], names[n - i + 1] = names[n - i + 1], names[i]
     end
-    if IsAmbiguous(inst, _relativeTo) then
-      names[n] = `{names[n]}~{GetDebugId(inst)}`
-    end
+    if IsAmbiguous(inst, relativeTo) then names[n] = `{names[n]}~{GetDebugId(inst)}` end
     return table.concat(names, "/")
   end
 
@@ -165,22 +161,18 @@ local function GetRelativePath(inst: Instance, _relativeTo: Instance?): string
     names[i], names[segCount - i + 1] = names[segCount - i + 1], names[i]
   end
 
-  if segCount > 0 and IsAmbiguous(inst, _relativeTo) then
+  if segCount > 0 and IsAmbiguous(inst, relativeTo) then
     names[segCount] = `{names[segCount]}~{GetDebugId(inst)}`
   end
 
   local segDown: string? = if segCount > 0 then table.concat(names, "/") else nil
 
   if levelsUp == 0 then
-    if relativeTo == game then
-      return if segDown then `@game/{segDown}` else "@game"
-    end
+    if relativeTo == game then return if segDown then `@game/{segDown}` else "@game" end
     return if segDown then `@self/{segDown}` else "@self"
   end
 
-  if levelsUp == 1 then
-    return if segDown then `./{segDown}` else "."
-  end
+  if levelsUp == 1 then return if segDown then `./{segDown}` else "." end
 
   -- levelsUp >= 2: (levelsUp-1) ".." segments
   local prefixParts = table.create(levelsUp - 1)
@@ -212,7 +204,7 @@ local function FromRelativePath(path: string, _relativeTo: Instance?): Instance?
   -- DebugId fast path: O(1) lookup + canonical validation
   if debugId then
     local inst = DebugIdMap[debugId]
-    if inst and GetRelativePath(inst, _relativeTo) == path then return inst end
+    if inst and GetRelativePath(inst, relativeTo) == path then return inst end
   end
 
   -- Exact matches (no traversal needed)
