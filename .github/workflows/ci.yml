@@ -118,7 +118,7 @@ jobs:
         run: rojo sourcemap test-place.project.json -o sourcemap.json
 
       - name: Process requires with darklua
-        run: darklua process --config .darklua.json plugin plugin-build
+        run: rm -rf plugin-build && darklua process --config .darklua.json plugin plugin-build
 
       - name: Build test place
         run: rojo build test-place-build.project.json -o TestPlace.rbxl

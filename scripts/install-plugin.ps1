@@ -13,6 +13,7 @@ if ($LASTEXITCODE -ne 0) {
   exit 1
 }
 
+if (Test-Path "plugin-build") { Remove-Item -Recurse -Force "plugin-build" }
 darklua process --config .darklua.json plugin plugin-build
 if ($LASTEXITCODE -ne 0) {
   Write-Host "Failed to process requires with darklua" -ForegroundColor Red

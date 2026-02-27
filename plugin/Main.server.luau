@@ -10,7 +10,7 @@ local DataModelType = require("./Utils/DataModelType")
 local GameStopUtil = require("./Utils/GameStopUtil")
 local PluginUtils = require("./Utils/PluginUtils")
 local ToolDispatcher = require("./Utils/ToolDispatcher")
-local msgpack = require("./Tools/msgpack")
+local msgpack = require("./Utils/msgpack")
 
 local WS_URI = "ws://localhost:44756/ws"
 local PLUGIN_DISABLED_SETTING_KEY = "Disabled-MCP-plugin-setting"
@@ -124,12 +124,15 @@ local toggleButton =
 toggleButton.ClickableWhenViewportHidden = true
 
 local connectionLoop: thread? = nil
+local currentClient: any = nil
 
 local function startConnectionLoop()
   connectionLoop = task.spawn(function()
     while true do
       local client, disconnectEvent = connectToServer()
+      currentClient = client
       disconnectEvent.Event:Wait()
+      currentClient = nil
       warn("[MCP] Disconnected from server. Reconnecting in " .. RECONNECT_INTERVAL .. "s...")
       pcall(function()
         client:Close()
@@ -143,6 +146,12 @@ local function stopConnectionLoop()
   if connectionLoop then
     task.cancel(connectionLoop)
     connectionLoop = nil
+  end
+  if currentClient then
+    pcall(function()
+      currentClient:Close()
+    end)
+    currentClient = nil
   end
 end
 

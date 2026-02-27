@@ -42,7 +42,7 @@ jobs:
         run: rojo sourcemap plugin.project.json -o sourcemap.json
 
       - name: Process requires with darklua
-        run: darklua process --config .darklua.json plugin plugin-build
+        run: rm -rf plugin-build && darklua process --config .darklua.json plugin plugin-build
 
       - name: Build Plugin
         run: rojo build plugin-build.project.json --output MCPStudioPlugin.rbxm

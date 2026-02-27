@@ -5,7 +5,7 @@ local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
 
 local Paths = require("./Paths")
-local msgpack = require("../Tools/msgpack")
+local msgpack = require("./msgpack")
 
 export type EncodedInstance = {
   Name: string,

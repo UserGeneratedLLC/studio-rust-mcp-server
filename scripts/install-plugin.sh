@@ -10,6 +10,7 @@ cd "$SCRIPT_DIR/.."
 PLUGINS_DIR="$HOME/Documents/Roblox/Plugins"
 
 rojo sourcemap plugin.project.json -o sourcemap.json
+rm -rf plugin-build
 darklua process --config .darklua.json plugin plugin-build
 rojo build plugin-build.project.json -o MCPStudioPlugin.rbxm
 
