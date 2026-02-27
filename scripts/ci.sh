@@ -55,7 +55,7 @@ rust_tests=$?
 record "Rust Tests" $rust_tests
 
 step 7 "Run Roblox Plugin Tests"
-rojo build test-place.project.json -o TestPlace.rbxl
+bash scripts/build-test-place.sh
 if [ $? -eq 0 ]; then
     run-in-roblox --script run-tests.server.luau --place TestPlace.rbxl
     plugin_tests=$?

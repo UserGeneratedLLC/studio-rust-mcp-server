@@ -11,7 +11,7 @@ $env:RBX_UNIVERSE_ID = $env:PLUGIN_CI_UNIVERSE_ID
 $env:RBX_PLACE_ID = $env:PLUGIN_CI_PLACE_ID
 
 Write-Host "Building test place..." -ForegroundColor Cyan
-rojo build test-place.project.json -o TestPlace.rbxl
+.\scripts\build-test-place.ps1
 
 Write-Host "Running tests via Open Cloud..." -ForegroundColor Cyan
 lune run run-tests TestPlace.rbxl

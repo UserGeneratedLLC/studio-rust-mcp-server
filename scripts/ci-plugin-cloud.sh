@@ -40,7 +40,7 @@ export RBX_API_KEY="$PLUGIN_UPLOAD_TOKEN"
 export RBX_UNIVERSE_ID="$PLUGIN_CI_UNIVERSE_ID"
 export RBX_PLACE_ID="$PLUGIN_CI_PLACE_ID"
 
-rojo build test-place.project.json -o TestPlace.rbxl
+bash scripts/build-test-place.sh
 if [ $? -eq 0 ]; then
     lune run run-tests TestPlace.rbxl
     plugin_tests=$?

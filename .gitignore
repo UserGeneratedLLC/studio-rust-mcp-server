@@ -6,6 +6,7 @@ target/
 output/
 
 build/
+plugin-build/
 node_modules/
 .DS_Store
 sourcemap.json

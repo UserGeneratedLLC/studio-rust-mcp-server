@@ -54,7 +54,7 @@ $testOutput | Write-Host
 Record-Result "Rust Tests" $rustTests
 
 Write-Step 7 "Run Roblox Plugin Tests"
-rojo build test-place.project.json -o TestPlace.rbxl
+.\scripts\build-test-place.ps1
 if ($LASTEXITCODE -eq 0) {
     run-in-roblox --script run-tests.server.luau --place TestPlace.rbxl
     $pluginTests = $LASTEXITCODE
