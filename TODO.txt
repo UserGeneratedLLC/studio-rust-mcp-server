@@ -1,13 +1,20 @@
 [App]
+* Rename the project to something better
+* Cleanup latent project files from the original github
+* Update README.md
 * Auto install as a service
 * Auto-install to the mcp.json with the http mode
 * Auto-install the plugin automatically
 * Auto-update
 * Add proper rust logging lib like we had on Atlas D:\UserGenerated\rojo
+ - replace all eprint's and print's with this logging.
+ - ensure correct log levels for everything
+ - make sure console colors work as expected
+* Update and improve the ServerInfo data
+ - We should probably move this to a file instead? See what other big MCPs do. An icon would be nice, too.
 
 [OpenCloud APIs MCP]
 Use env to get API KEY
-Allow ENV to configure: GroupId, ExperienceId, and maybe PlaceId
 Start hooking up all known open cloud APIs
 Endpoints:
 * upload_asset file [name] [assetid for replacing]
@@ -18,10 +25,8 @@ Endpoints:
 * "luau code execution"
 
 [Studio Plugin MCP]
-* Ensure that every function definition has typed parameters and typed results. you can ignore functions which have no return value, those are fine.
-* Utilize ChangeHistoryService
-* Upgrade to msgpack for rust<->plugin comms
-* Should utilize msgpack for encoding scheme
+* rename tools to match the rust side exactly, e.g. "InsertModel.luau" should be "insert_model.luau" for simplicity and reduced constants.
+* For "set_studio(studio_id=X)", can we just make it "set_studio(id=X)" for simplicity? or even just "set_studio(x)" if prudent.
 * Handle inf/nan values somehow
 Endpoints:
 * run_code command [DONE]

@@ -1,92 +1,54 @@
-use axum::routing::{get, post};
-use clap::Parser;
+use axum::routing::get;
 use color_eyre::eyre::Result;
-use rbx_studio_server::{
-    dud_proxy_loop, proxy_handler, request_handler, response_handler, RBXStudioServer,
-    STUDIO_PLUGIN_PORT,
+use rbx_studio_server::{ws_handler, RBXStudioServer, STUDIO_PLUGIN_PORT};
+use rmcp::transport::streamable_http_server::{
+    session::local::LocalSessionManager,
+    tower::{StreamableHttpServerConfig, StreamableHttpService},
 };
-use rmcp::ServiceExt;
 use server_state::AppState;
-use std::io;
 use std::net::Ipv4Addr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing_subscriber::{self, EnvFilter};
+
 mod error;
-mod install;
 mod rbx_studio_server;
 mod server_state;
 mod tools;
-
-/// Simple MCP proxy for Roblox Studio
-/// Run without arguments to install the plugin
-#[derive(Parser)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Run as MCP server on stdio
-    #[arg(short, long)]
-    stdio: bool,
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
-        .with_writer(io::stderr)
         .with_target(false)
         .with_thread_ids(true)
         .init();
 
-    let args = Args::parse();
-    if !args.stdio {
-        return install::install().await;
-    }
+    let app_state = Arc::new(Mutex::new(AppState::new()));
 
-    tracing::debug!("Debug MCP tracing enabled");
+    let mcp_state = app_state.clone();
+    let mcp_service = StreamableHttpService::new(
+        move || {
+            let router = tools::build_router::<RBXStudioServer>(mcp_state.clone());
+            Ok(RBXStudioServer::new(router))
+        },
+        Arc::new(LocalSessionManager::default()),
+        StreamableHttpServerConfig::default(),
+    );
 
-    let server_state = Arc::new(Mutex::new(AppState::new()));
-
-    let (close_tx, close_rx) = tokio::sync::oneshot::channel();
+    let app = axum::Router::new()
+        .route("/ws", get(ws_handler))
+        .nest_service("/mcp", mcp_service)
+        .with_state(app_state);
 
     let listener =
-        tokio::net::TcpListener::bind((Ipv4Addr::new(127, 0, 0, 1), STUDIO_PLUGIN_PORT)).await;
+        tokio::net::TcpListener::bind((Ipv4Addr::new(127, 0, 0, 1), STUDIO_PLUGIN_PORT)).await?;
+    tracing::info!("MCP server listening on http://127.0.0.1:{STUDIO_PLUGIN_PORT}");
+    tracing::info!("  WebSocket endpoint: ws://127.0.0.1:{STUDIO_PLUGIN_PORT}/ws");
+    tracing::info!("  MCP endpoint: http://127.0.0.1:{STUDIO_PLUGIN_PORT}/mcp");
 
-    let server_state_clone = Arc::clone(&server_state);
-    let server_handle = if let Ok(listener) = listener {
-        let app = axum::Router::new()
-            .route("/request", get(request_handler))
-            .route("/response", post(response_handler))
-            .route("/proxy", post(proxy_handler))
-            .with_state(server_state_clone);
-        tracing::info!("This MCP instance is HTTP server listening on {STUDIO_PLUGIN_PORT}");
-        tokio::spawn(async {
-            axum::serve(listener, app)
-                .with_graceful_shutdown(async move {
-                    _ = close_rx.await;
-                })
-                .await
-                .unwrap();
-        })
-    } else {
-        tracing::info!("This MCP instance will use proxy since port is busy");
-        tokio::spawn(async move {
-            dud_proxy_loop(server_state_clone, close_rx).await;
-        })
-    };
+    axum::serve(listener, app).await?;
 
-    let router = tools::build_router::<RBXStudioServer>(Arc::clone(&server_state));
-    let service = RBXStudioServer::new(router)
-        .serve(rmcp::transport::stdio())
-        .await
-        .inspect_err(|e| {
-            tracing::error!("serving error: {:?}", e);
-        })?;
-    service.waiting().await?;
-
-    close_tx.send(()).ok();
-    tracing::info!("Waiting for web server to gracefully shutdown");
-    server_handle.await.ok();
-    tracing::info!("Bye!");
     Ok(())
 }

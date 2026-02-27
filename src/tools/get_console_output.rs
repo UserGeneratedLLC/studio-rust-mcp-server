@@ -1,6 +1,7 @@
 use crate::server_state::{dispatch, PackedState};
+use http::request::Parts;
 use rmcp::{
-    handler::server::{router::tool::ToolRoute, wrapper::Parameters},
+    handler::server::{router::tool::ToolRoute, tool::Extension, wrapper::Parameters},
     model::Tool,
     schemars,
 };
@@ -17,15 +18,20 @@ pub fn route<S: Send + Sync + 'static>(state: PackedState) -> ToolRoute<S> {
     )
     .with_input_schema::<Args>();
 
-    ToolRoute::new(tool, move |Parameters(args): Parameters<Args>| {
-        let state = state.clone();
-        async move {
-            dispatch(
-                &state,
-                "GetConsoleOutput",
-                serde_json::to_value(args).unwrap(),
-            )
-            .await
-        }
-    })
+    ToolRoute::new(
+        tool,
+        move |Extension(parts): Extension<Parts>, Parameters(args): Parameters<Args>| {
+            let state = state.clone();
+            async move {
+                let session = super::resolve_session(&state, &parts).await;
+                dispatch(
+                    &state,
+                    &session,
+                    "GetConsoleOutput",
+                    serde_json::to_value(args).unwrap(),
+                )
+                .await
+            }
+        },
+    )
 }

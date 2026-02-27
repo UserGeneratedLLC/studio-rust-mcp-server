@@ -1,22 +1,18 @@
-use crate::error::{Report, Result};
-use crate::server_state::{value_to_mcp_string, PackedState, RunCommandResponse, ToolArguments};
-use axum::body::Bytes;
+use crate::server_state::{
+    value_to_mcp_string, PackedState, RegistrationMessage, RunCommandResponse, StudioConnection,
+};
+use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::State;
-use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use color_eyre::eyre::{eyre, Error, OptionExt};
+use futures_util::{SinkExt, StreamExt};
 use rmcp::{
     handler::server::router::tool::ToolRouter,
     model::{Implementation, ProtocolVersion, ServerCapabilities, ServerInfo},
     tool_handler, ServerHandler,
 };
-use rmpv::Value as MsgpackValue;
-use tokio::sync::oneshot::Receiver;
+use uuid::Uuid;
 
 pub const STUDIO_PLUGIN_PORT: u16 = 44755;
-const LONG_POLL_DURATION: tokio::time::Duration = tokio::time::Duration::from_secs(15);
-
-const MSGPACK_CONTENT_TYPE: &str = "application/msgpack";
 
 #[derive(Clone)]
 pub struct RBXStudioServer {
@@ -44,144 +40,156 @@ impl ServerHandler for RBXStudioServer {
                 website_url: None,
             },
             instructions: Some(
-                "You must aware of current studio mode before using any tools, infer the mode from conversation context or get_studio_mode.
-User run_code to query data from Roblox Studio place or to change it
+                "You must be aware of current studio mode before using any tools.
+Use run_code to query data from Roblox Studio or make changes.
+Prefer start_stop_play over run_script_in_play_mode.
 After calling run_script_in_play_mode, the datamodel status will be reset to stop mode.
-Prefer using start_stop_play tool instead run_script_in_play_mode, Only used run_script_in_play_mode to run one time unit test code on server datamodel.
-"
-                .to_string(),
+
+MULTI-STUDIO: Multiple studios may be connected. Each agent session is isolated.
+- Call list_studios to see all connected studios with their studio_id and metadata.
+- Call get_studio to check which studio your session is currently targeting.
+- Call set_studio(studio_id=X) to bind your session to a studio.
+- All subsequent calls route to the selected studio automatically.
+- For cross-studio operations, call set_studio to switch before each action.
+- When exactly one studio is connected, selection is automatic.
+- Studios are identified by studio_id (server-assigned UUID per WebSocket connection). A reconnecting studio gets a new studio_id.
+- If get_studio returns nothing, the selected studio disconnected -- use list_studios and set_studio to pick a new one."
+                    .to_string(),
             ),
         }
     }
 }
 
-fn to_msgpack_response(value: &impl serde::Serialize) -> Result<impl IntoResponse> {
-    let bytes = rmp_serde::to_vec_named(value)
-        .map_err(|e| color_eyre::eyre::eyre!("msgpack serialize error: {e}"))?;
-    Ok((
-        [(axum::http::header::CONTENT_TYPE, MSGPACK_CONTENT_TYPE)],
-        bytes,
-    ))
+pub async fn ws_handler(
+    ws: WebSocketUpgrade,
+    State(state): State<PackedState>,
+) -> impl IntoResponse {
+    ws.on_upgrade(move |socket| handle_studio_connection(socket, state))
 }
 
-fn from_msgpack_bytes<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T> {
-    rmp_serde::from_slice(bytes)
-        .map_err(|e| color_eyre::eyre::eyre!("msgpack deserialize error: {e}").into())
-}
+async fn handle_studio_connection(socket: WebSocket, state: PackedState) {
+    let (mut ws_sender, mut ws_receiver) = socket.split();
 
-pub async fn request_handler(State(state): State<PackedState>) -> Result<axum::response::Response> {
-    let timeout = tokio::time::timeout(LONG_POLL_DURATION, async {
-        let mut waiter = { state.lock().await.waiter.clone() };
-        loop {
-            {
-                let mut s = state.lock().await;
-                if let Some(task) = s.process_queue.pop_front() {
-                    return Ok::<ToolArguments, Error>(task);
+    let registration = match ws_receiver.next().await {
+        Some(Ok(Message::Binary(data))) => {
+            match rmp_serde::from_slice::<RegistrationMessage>(&data) {
+                Ok(reg) => reg,
+                Err(e) => {
+                    tracing::error!("Invalid registration message: {e}");
+                    return;
                 }
             }
-            waiter.changed().await?
         }
-    })
-    .await;
-    match timeout {
-        Ok(result) => Ok(to_msgpack_response(&result?)?.into_response()),
-        _ => Ok((StatusCode::LOCKED, String::new()).into_response()),
-    }
-}
-
-pub async fn response_handler(
-    State(state): State<PackedState>,
-    body: Bytes,
-) -> Result<impl IntoResponse> {
-    let payload: RunCommandResponse = from_msgpack_bytes(&body)?;
-    tracing::debug!("Received reply from studio {payload:?}");
-    let mut s = state.lock().await;
-    let tx = s.output_map.remove(&payload.id).ok_or_eyre("Unknown ID")?;
-    let result: Result<String, Report> = if payload.success {
-        Ok(value_to_mcp_string(payload.response))
-    } else {
-        Err(Report::from(eyre!(value_to_mcp_string(payload.response))))
+        other => {
+            tracing::error!("Expected binary registration message, got: {other:?}");
+            return;
+        }
     };
-    Ok(tx.send(result)?)
-}
 
-pub async fn proxy_handler(
-    State(state): State<PackedState>,
-    body: Bytes,
-) -> Result<impl IntoResponse> {
-    let command: ToolArguments = from_msgpack_bytes(&body)?;
-    let id = command.id.ok_or_eyre("Got proxy command with no id")?;
-    tracing::debug!("Received request to proxy {command:?}");
-    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+    let studio_id = Uuid::new_v4();
+    tracing::info!(
+        "Studio connected: {} (place_id={}, place_name={})",
+        studio_id,
+        registration.place_id,
+        registration.place_name
+    );
+
+    let ack = rmp_serde::to_vec_named(&serde_json::json!({
+        "type": "registered",
+        "studio_id": studio_id.to_string()
+    }));
+    if let Ok(ack_bytes) = ack {
+        if ws_sender
+            .send(Message::Binary(ack_bytes.into()))
+            .await
+            .is_err()
+        {
+            tracing::error!("Failed to send registration ack to studio {studio_id}");
+            return;
+        }
+    }
+
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Vec<u8>>();
+
     {
         let mut s = state.lock().await;
-        s.process_queue.push_back(command);
-        s.output_map.insert(id, tx);
+        s.connections.insert(
+            studio_id,
+            StudioConnection {
+                sender: tx,
+                place_id: registration.place_id,
+                place_name: registration.place_name,
+                game_id: registration.game_id,
+                job_id: registration.job_id,
+                place_version: registration.place_version,
+                creator_id: registration.creator_id,
+                creator_type: registration.creator_type,
+                connected_at: chrono::Utc::now(),
+            },
+        );
     }
-    let result = rx.recv().await.ok_or_eyre("Couldn't receive response")?;
-    {
-        let mut s = state.lock().await;
-        s.output_map.remove_entry(&id);
-    }
-    let (success, response_str) = match result {
-        Ok(s) => (true, s),
-        Err(e) => (false, e.to_string()),
-    };
-    tracing::debug!("Sending back to dud: success={success}, response={response_str:?}");
-    let response = RunCommandResponse {
-        success,
-        response: MsgpackValue::String(response_str.into()),
-        id,
-    };
-    to_msgpack_response(&response)
-}
 
-pub async fn dud_proxy_loop(state: PackedState, exit: Receiver<()>) {
-    let client = reqwest::Client::new();
-    let mut waiter = { state.lock().await.waiter.clone() };
-    while exit.is_empty() {
-        let entry = { state.lock().await.process_queue.pop_front() };
-        if let Some(entry) = entry {
-            let body = match rmp_serde::to_vec_named(&entry) {
-                Ok(b) => b,
-                Err(e) => {
-                    tracing::error!("Failed to serialize proxy entry: {e}");
-                    continue;
-                }
-            };
-            let res = client
-                .post(format!("http://127.0.0.1:{STUDIO_PLUGIN_PORT}/proxy"))
-                .header(reqwest::header::CONTENT_TYPE, MSGPACK_CONTENT_TYPE)
-                .body(body)
-                .send()
-                .await;
-            if let Ok(res) = res {
-                let tx = {
-                    state
-                        .lock()
-                        .await
-                        .output_map
-                        .remove(&entry.id.unwrap())
-                        .unwrap()
-                };
-                let res = res
-                    .bytes()
-                    .await
-                    .map_err(Into::into)
-                    .and_then(|b| from_msgpack_bytes::<RunCommandResponse>(&b))
-                    .and_then(|r| {
-                        if r.success {
-                            Ok(value_to_mcp_string(r.response))
+    let state_for_sender = state.clone();
+    let sender_task = tokio::spawn(async move {
+        while let Some(bytes) = rx.recv().await {
+            if ws_sender.send(Message::Binary(bytes.into())).await.is_err() {
+                break;
+            }
+        }
+        let _ = state_for_sender; // prevent drop before sender finishes
+    });
+
+    while let Some(msg) = ws_receiver.next().await {
+        match msg {
+            Ok(Message::Binary(data)) => match rmp_serde::from_slice::<RunCommandResponse>(&data) {
+                Ok(response) => {
+                    let mut s = state.lock().await;
+                    if let Some(pending) = s.output_map.remove(&response.id) {
+                        let result = if response.success {
+                            Ok(value_to_mcp_string(response.response))
                         } else {
-                            Err(Report::from(eyre!(value_to_mcp_string(r.response))))
-                        }
-                    });
-                tx.send(res).unwrap();
-            } else {
-                tracing::error!("Failed to proxy: {res:?}");
-            };
-        } else {
-            waiter.changed().await.unwrap();
+                            Err(
+                                color_eyre::eyre::eyre!(value_to_mcp_string(response.response))
+                                    .into(),
+                            )
+                        };
+                        let _ = pending.sender.send(result);
+                    } else {
+                        tracing::warn!("Received response for unknown request ID: {}", response.id);
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!("Failed to decode studio message: {e}");
+                }
+            },
+            Ok(Message::Close(_)) => break,
+            Err(e) => {
+                tracing::warn!("WebSocket error from studio {studio_id}: {e}");
+                break;
+            }
+            _ => {}
         }
     }
+
+    // Cleanup: remove connection and fail pending requests
+    {
+        let mut s = state.lock().await;
+        s.connections.remove(&studio_id);
+        let pending_ids: Vec<Uuid> = s
+            .output_map
+            .iter()
+            .filter(|(_, req)| req.connection_id == studio_id)
+            .map(|(id, _)| *id)
+            .collect();
+        for id in pending_ids {
+            if let Some(pending) = s.output_map.remove(&id) {
+                let _ = pending
+                    .sender
+                    .send(Err(color_eyre::eyre::eyre!("Studio disconnected").into()));
+            }
+        }
+    }
+
+    sender_task.abort();
+    tracing::info!("Studio disconnected: {studio_id}");
 }

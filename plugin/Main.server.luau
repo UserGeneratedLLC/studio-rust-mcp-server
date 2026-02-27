@@ -1,19 +1,18 @@
 --!strict
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
+local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local StudioService = game:GetService("StudioService")
 
 local ConsoleOutput = require("./Utils/ConsoleOutput")
 local DataModelType = require("./Utils/DataModelType")
 local GameStopUtil = require("./Utils/GameStopUtil")
-local MockWebSocketService = require("./MockWebSocketService")
 local PluginUtils = require("./Utils/PluginUtils")
 local ToolDispatcher = require("./Utils/ToolDispatcher")
+local msgpack = require("./msgpack")
 
-local URI = "http://localhost:44755"
-local RECEIVE_ENDPOINT = "/request"
-local SEND_ENDPOINT = "/response"
+local WS_URI = "ws://localhost:44755/ws"
 local PLUGIN_DISABLED_SETTING_KEY = "Disabled-MCP-plugin-setting"
 
 PluginUtils.plugin = plugin
@@ -40,23 +39,43 @@ local function log(...)
   end
 end
 
-local function connectWebSocket(): MockWebSocketService.MockWebSocketClient
-  local client = MockWebSocketService:CreateClient(URI)
-  client:SetReceiveEndpoint(RECEIVE_ENDPOINT)
-  client:SetSendEndpoint(SEND_ENDPOINT)
+local function connectToServer(): any
+  local client = HttpService:CreateWebStreamClient(Enum.WebStreamClientType.WebSocket, {
+    Url = WS_URI,
+  })
 
-  client.Opened:Once(function()
-    log("[MCP] Connection opened")
+  client.Opened:Connect(function(_statusCode, _headers)
+    log("[MCP] Connection opened, sending registration")
+    client:Send(msgpack.encode({
+      type = "register",
+      place_id = game.PlaceId,
+      place_name = game.Name,
+      game_id = game.GameId,
+      job_id = game.JobId,
+      place_version = game.PlaceVersion,
+      creator_id = game.CreatorId,
+      creator_type = tostring(game.CreatorType),
+    }))
   end)
 
-  client.Closed:Once(function()
+  client.Closed:Connect(function()
     log("[MCP] Connection closed")
   end)
 
-  client.MessageReceived:Connect(function(message)
+  client.Error:Connect(function(statusCode, errorMessage)
+    warn("[MCP] Connection error:", statusCode, errorMessage)
+  end)
+
+  client.MessageReceived:Connect(function(message: string)
     log("[MCP] Message received")
 
-    local body = message
+    local body = msgpack.decode(message)
+
+    if body and body.type == "registered" then
+      log("[MCP] Registered with studio_id:", body.studio_id)
+      return
+    end
+
     assert(body and body.id and body.tool and body.args, "Invalid message received")
 
     local id: string = body.id
@@ -65,11 +84,11 @@ local function connectWebSocket(): MockWebSocketService.MockWebSocketClient
       if not responseSent then
         log("[MCP] Sending response:", response)
         responseSent = true
-        client:Send({
+        client:Send(msgpack.encode({
           id = id,
           success = success,
           response = response,
-        })
+        }))
       end
     end
 
@@ -98,10 +117,10 @@ local toggleButton =
   toolbar:CreateButton("Toggle MCP", "Toggle connection to the server", getButtonImage())
 toggleButton.ClickableWhenViewportHidden = true
 
-local currentClient: MockWebSocketService.MockWebSocketClient?
+local currentClient: any = nil
 
 if not plugin:GetSetting(PLUGIN_DISABLED_SETTING_KEY) then
-  currentClient = connectWebSocket()
+  currentClient = connectToServer()
   print("The MCP Studio plugin is ready for prompts.")
 end
 
@@ -109,7 +128,7 @@ toggleButton:SetActive(currentClient ~= nil)
 
 toggleButton.Click:Connect(function()
   if not currentClient then
-    currentClient = connectWebSocket()
+    currentClient = connectToServer()
     print("The MCP Studio plugin is ready for prompts.")
   else
     currentClient:Close()
