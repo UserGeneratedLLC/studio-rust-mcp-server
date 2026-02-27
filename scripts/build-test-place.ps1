@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 rojo sourcemap test-place.project.json -o sourcemap.json
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-darklua process --config .darklua-tests.json plugin plugin-build
+darklua process --config .darklua.json plugin plugin-build
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 rojo build test-place-build.project.json -o TestPlace.rbxl

@@ -6,5 +6,5 @@
 set -e
 
 rojo sourcemap test-place.project.json -o sourcemap.json
-darklua process --config .darklua-tests.json plugin plugin-build
+darklua process --config .darklua.json plugin plugin-build
 rojo build test-place-build.project.json -o TestPlace.rbxl

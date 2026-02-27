@@ -37,6 +37,7 @@ pub fn route<S: Send + Sync + 'static>(state: PackedState) -> ToolRoute<S> {
 
                 let studio_id = match session.selected_studio_id {
                     Some(id) => id,
+                    None if s.connections.len() == 1 => *s.connections.keys().next().unwrap(),
                     None => {
                         return Ok(CallToolResult::success(vec![Content::text(
                             "No studio selected.",
