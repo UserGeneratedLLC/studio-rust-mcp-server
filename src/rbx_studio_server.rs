@@ -12,7 +12,7 @@ use rmcp::{
 };
 use uuid::Uuid;
 
-pub const STUDIO_PLUGIN_PORT: u16 = 44755;
+pub const STUDIO_PLUGIN_PORT: u16 = 44756;
 
 #[derive(Clone)]
 pub struct RBXStudioServer {

@@ -16,6 +16,28 @@ mod rbx_studio_server;
 mod server_state;
 mod tools;
 
+fn install_plugin() {
+    let plugin_bytes = include_bytes!(concat!(env!("OUT_DIR"), "/MCPStudioPlugin.rbxm"));
+    let studio = match roblox_install::RobloxStudio::locate() {
+        Ok(s) => s,
+        Err(e) => {
+            tracing::warn!("Could not locate Roblox Studio: {e}");
+            return;
+        }
+    };
+    let plugins = studio.plugins_path();
+    if let Err(e) = std::fs::create_dir_all(plugins) {
+        tracing::warn!("Could not create plugins directory: {e}");
+        return;
+    }
+    let output = plugins.join("MCPStudioPlugin.rbxm");
+    if let Err(e) = std::fs::write(&output, plugin_bytes) {
+        tracing::warn!("Could not write plugin: {e}");
+        return;
+    }
+    tracing::info!("Installed plugin to {}", output.display());
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
@@ -24,6 +46,8 @@ async fn main() -> Result<()> {
         .with_target(false)
         .with_thread_ids(true)
         .init();
+
+    install_plugin();
 
     let app_state = Arc::new(Mutex::new(AppState::new()));
 

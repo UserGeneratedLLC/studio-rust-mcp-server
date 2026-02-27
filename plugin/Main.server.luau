@@ -12,7 +12,7 @@ local PluginUtils = require("./Utils/PluginUtils")
 local ToolDispatcher = require("./Utils/ToolDispatcher")
 local msgpack = require("./msgpack")
 
-local WS_URI = "ws://localhost:44755/ws"
+local WS_URI = "ws://localhost:44756/ws"
 local PLUGIN_DISABLED_SETTING_KEY = "Disabled-MCP-plugin-setting"
 
 PluginUtils.plugin = plugin

@@ -207,23 +207,19 @@ pub async fn dispatch(
 ) -> std::result::Result<CallToolResult, ErrorData> {
     let (command, id) = ToolArguments::new_with_id(tool, args);
     tracing::debug!("Running command: {:?}", command);
+
+    let bytes = rmp_serde::to_vec_named(&command)
+        .map_err(|e| ErrorData::internal_error(format!("msgpack serialize error: {e}"), None))?;
+
     let (tx, mut rx) = mpsc::unbounded_channel::<Result<String>>();
 
     let sender = {
-        let s = state.lock().await;
+        let mut s = state.lock().await;
         let studio_id = resolve_studio_id(&s, session)?;
         let conn = s.connections.get(&studio_id).ok_or_else(|| {
             ErrorData::internal_error("Studio disconnected during dispatch", None)
         })?;
-        conn.sender.clone()
-    };
-
-    {
-        let studio_id = {
-            let s = state.lock().await;
-            resolve_studio_id(&s, session)?
-        };
-        let mut s = state.lock().await;
+        let sender = conn.sender.clone();
         s.output_map.insert(
             id,
             PendingRequest {
@@ -231,14 +227,17 @@ pub async fn dispatch(
                 connection_id: studio_id,
             },
         );
+        sender
+    };
+
+    if let Err(e) = sender.send(bytes) {
+        let mut s = state.lock().await;
+        s.output_map.remove(&id);
+        return Err(ErrorData::internal_error(
+            format!("Failed to send to studio (disconnected): {e}"),
+            None,
+        ));
     }
-
-    let bytes = rmp_serde::to_vec_named(&command)
-        .map_err(|e| ErrorData::internal_error(format!("msgpack serialize error: {e}"), None))?;
-
-    sender
-        .send(bytes)
-        .map_err(|_| ErrorData::internal_error("Failed to send to studio (disconnected)", None))?;
 
     let result = rx
         .recv()

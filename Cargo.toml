@@ -20,6 +20,10 @@ color-eyre = "0.6"
 chrono = { version = "0.4", features = ["serde"] }
 http = "1.4.0"
 futures-util = "0.3.32"
+roblox_install = "1.0.0"
+
+[build-dependencies]
+rojo = "7.6.1"
 
 [profile.release]
 debug = "line-tables-only"
