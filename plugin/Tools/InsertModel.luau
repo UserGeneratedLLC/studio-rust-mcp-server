@@ -81,7 +81,7 @@ local function collapseObjectsIntoContainer(objects: { Instance }): Instance?
 end
 
 local function loadAsset(assetId: number): Instance?
-  local objects = game:GetObjects("rbxassetid://" .. assetId)
+  local objects = game:GetObjects(`rbxassetid://{assetId}`)
   return collapseObjectsIntoContainer(objects)
 end
 

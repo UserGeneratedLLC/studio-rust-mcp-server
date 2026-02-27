@@ -123,7 +123,7 @@ local function runScriptInPlayMode(args: Args): string?
   removeTestScript()
 
   if not success then
-    error("Failed to run script in play mode: " .. result)
+    error(`Failed to run script in play mode: {result}`)
   end
 
   return result
