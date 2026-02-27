@@ -41,29 +41,6 @@ local function log(...)
   end
 end
 
-local function toolCallHandler(args: any): string
-  local toolName = next(args)
-  if not toolName then
-    error("No tool name found in request")
-  end
-
-  local toolArgs = args[toolName]
-  if not toolArgs or type(toolArgs) ~= "table" then
-    error("Invalid tool args found for tool name: " .. toolName)
-  end
-
-  local recording = ChangeHistoryService:TryBeginRecording("StudioMCP")
-  local success, response = pcall(ToolDispatcher.dispatchTool, toolName, toolArgs)
-  if recording then
-    ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
-  end
-
-  if success then
-    return response or ""
-  end
-  error("Error handling request: " .. tostring(response))
-end
-
 local function connectWebSocket()
   local client = MockWebSocketService:CreateClient(URI)
   client:SetReceiveEndpoint(RECEIVE_ENDPOINT)
@@ -81,7 +58,7 @@ local function connectWebSocket()
     log("[MCP] Message received")
 
     local body = HttpService:JSONDecode(message)
-    assert(body and body.id and body.args, "Invalid message received")
+    assert(body and body.id and body.tool and body.args, "Invalid message received")
 
     local id: string = body.id
     local responseSent = false
@@ -97,10 +74,12 @@ local function connectWebSocket()
       end
     end
 
-    local args = body.args
-
-    local success, response = pcall(toolCallHandler, args)
-    sendResponseOnce(success, response)
+    local recording = ChangeHistoryService:TryBeginRecording("StudioMCP")
+    local success, response = pcall(ToolDispatcher.dispatchTool, body.tool, body.args)
+    if recording then
+      ChangeHistoryService:FinishRecording(recording, Enum.FinishRecordingOperation.Commit)
+    end
+    sendResponseOnce(success, response or "")
 
     log("[MCP] Successfully handled request")
   end)

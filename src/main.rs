@@ -1,8 +1,12 @@
 use axum::routing::{get, post};
 use clap::Parser;
 use color_eyre::eyre::Result;
-use rbx_studio_server::*;
+use rbx_studio_server::{
+    dud_proxy_loop, proxy_handler, request_handler, response_handler, RBXStudioServer,
+    STUDIO_PLUGIN_PORT,
+};
 use rmcp::ServiceExt;
+use server_state::AppState;
 use std::io;
 use std::net::Ipv4Addr;
 use std::sync::Arc;
@@ -11,6 +15,8 @@ use tracing_subscriber::{self, EnvFilter};
 mod error;
 mod install;
 mod rbx_studio_server;
+mod server_state;
+mod tools;
 
 /// Simple MCP proxy for Roblox Studio
 /// Run without arguments to install the plugin
@@ -69,8 +75,8 @@ async fn main() -> Result<()> {
         })
     };
 
-    // Create an instance of our counter router
-    let service = RBXStudioServer::new(Arc::clone(&server_state))
+    let router = tools::build_router::<RBXStudioServer>(Arc::clone(&server_state));
+    let service = RBXStudioServer::new(router)
         .serve(rmcp::transport::stdio())
         .await
         .inspect_err(|e| {

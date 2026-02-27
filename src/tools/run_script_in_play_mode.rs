@@ -1,0 +1,43 @@
+use crate::server_state::{dispatch, PackedState};
+use rmcp::{
+    handler::server::{router::tool::ToolRoute, wrapper::Parameters},
+    model::Tool,
+    schemars,
+};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize, schemars::JsonSchema, Clone)]
+pub struct Args {
+    #[schemars(description = "Code to run")]
+    pub code: String,
+    #[schemars(description = "Timeout in seconds, defaults to 100 seconds")]
+    pub timeout: Option<u32>,
+    #[schemars(description = "Mode to run in, must be start_play or run_server")]
+    pub mode: String,
+}
+
+pub fn route<S: Send + Sync + 'static>(state: PackedState) -> ToolRoute<S> {
+    let tool = Tool::new(
+        "run_script_in_play_mode",
+        "Run a script in play mode and automatically stop play after script finishes or timeout. \
+        Returns the output of the script. \
+        Result format: { success: boolean, value: string, error: string, logs: { level: string, message: string, ts: number }[], errors: { level: string, message: string, ts: number }[], duration: number, isTimeout: boolean }. \
+        Prefer using start_stop_play tool instead. \
+        After calling, the datamodel status will be reset to stop mode. \
+        If it returns `StudioTestService: Previous call to start play session has not been completed`, call start_stop_play to stop first then try again.",
+        serde_json::Map::new(),
+    )
+    .with_input_schema::<Args>();
+
+    ToolRoute::new(tool, move |Parameters(args): Parameters<Args>| {
+        let state = state.clone();
+        async move {
+            dispatch(
+                &state,
+                "RunScriptInPlayMode",
+                serde_json::to_value(args).unwrap(),
+            )
+            .await
+        }
+    })
+}
