@@ -5,6 +5,7 @@
 
 set -e
 
+mkdir -p Packages
 rojo sourcemap test-place.project.json -o sourcemap.json
 rm -rf plugin-build
 darklua process --config .darklua.json plugin plugin-build

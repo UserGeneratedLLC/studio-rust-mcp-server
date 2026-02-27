@@ -36,7 +36,7 @@ jobs:
         uses: CompeyDev/setup-rokit@v0.1.2
 
       - name: Install Wally packages
-        run: wally install
+        run: wally install && mkdir -p Packages
 
       - name: Generate sourcemap
         run: rojo sourcemap plugin.project.json -o sourcemap.json

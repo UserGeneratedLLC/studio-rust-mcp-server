@@ -4,6 +4,7 @@
 
 $ErrorActionPreference = "Stop"
 
+if (-not (Test-Path "Packages")) { New-Item -ItemType Directory -Path "Packages" | Out-Null }
 rojo sourcemap test-place.project.json -o sourcemap.json
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
