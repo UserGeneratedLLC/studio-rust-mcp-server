@@ -70,7 +70,7 @@ jobs:
         run: lune run upload-plugin MCPStudioPlugin.rbxm
 
   build:
-    needs: ["create-release"]
+    needs: ["create-release", "build-plugin"]
     strategy:
       fail-fast: false
       matrix:
@@ -79,6 +79,11 @@ jobs:
             os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             label: linux-x86_64
+
+          - host: linux
+            os: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            label: linux-aarch64
 
           - host: windows
             os: windows-latest
@@ -107,11 +112,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Rokit
-        uses: CompeyDev/setup-rokit@v0.1.2
-
-      - name: Install Wally packages
-        run: wally install
+      - name: Download Pre-built Plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: MCPStudioPlugin.rbxm
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -133,6 +137,8 @@ jobs:
           cargo set-version --workspace "${{ env.VERSION }}"
 
       - name: Build Release
+        env:
+          PREBUILT_PLUGIN: ${{ github.workspace }}/MCPStudioPlugin.rbxm
         run: cargo build --release --verbose --target ${{ matrix.target }}
 
       - name: Save Rust Cache

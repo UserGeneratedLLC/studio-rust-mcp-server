@@ -12,6 +12,13 @@ fn main() {
     let out_dir = std::env::var_os("OUT_DIR").unwrap();
     let dest_path = std::path::PathBuf::from(&out_dir).join("MCPStudioPlugin.rbxm");
 
+    if let Ok(prebuilt) = std::env::var("PREBUILT_PLUGIN") {
+        println!("cargo:rerun-if-env-changed=PREBUILT_PLUGIN");
+        std::fs::copy(&prebuilt, &dest_path)
+            .unwrap_or_else(|e| panic!("Failed to copy prebuilt plugin from `{prebuilt}`: {e}"));
+        return;
+    }
+
     std::fs::create_dir_all("Packages").ok();
     std::fs::remove_dir_all("plugin-build").ok();
 
