@@ -1,12 +1,10 @@
+--!strict
 --!native
 --!optimize 2
---!strict
 
 local EncodingService = game:GetService("EncodingService")
 
 local Null = newproxy(false) :: any
-
-local sharedBuf = buffer.create(0x1000)
 
 local Extension = {}
 export type ExtensionType = { _msgpackType: typeof(Extension), type: number, data: buffer }
@@ -18,6 +16,7 @@ local function newExtension(extensionType: number, blob: buffer): ExtensionType
   }
 end
 Extension.new = newExtension
+table.freeze(Extension)
 
 local Int64 = {}
 export type Int64Type = {
@@ -33,6 +32,7 @@ local function newInt64(mostSignificantPart: number, leastSignificantPart: numbe
   }
 end
 Int64.new = newInt64
+table.freeze(Int64)
 
 local UInt64 = {}
 export type UInt64Type = {
@@ -48,6 +48,7 @@ local function newUInt64(mostSignificantPart: number, leastSignificantPart: numb
   }
 end
 UInt64.new = newUInt64
+table.freeze(UInt64)
 
 local function byteswap16(value: number): number
   local v = bit32.band(value, 0xFFFF)
@@ -624,15 +625,17 @@ local function decodeData(message: string): any
   return result
 end
 
+local encodeBuf = buffer.create(0x1000)
+
 local function encodeData(data: any): string
-  local buf, offset = encode(sharedBuf, 0, data, {})
-  sharedBuf = buf
+  local buf, offset = encode(encodeBuf, 0, data, {})
+  encodeBuf = buf
   return buffer.readstring(buf, 0, offset)
 end
 
 local function encodeb64(data: any): string
-  local buf, offset = encode(sharedBuf, 0, data, {})
-  sharedBuf = buf
+  local buf, offset = encode(encodeBuf, 0, data, {})
+  encodeBuf = buf
   local region = buffer.create(offset)
   buffer.copy(region, 0, buf, 0, offset)
   return buffer.tostring(EncodingService:Base64Encode(region))
@@ -643,7 +646,7 @@ local function decodeb64(b64: string): any
   return parse(decoded, 0)
 end
 
-return {
+return table.freeze({
   Null = Null,
   Int64 = Int64,
   UInt64 = UInt64,
@@ -654,7 +657,7 @@ return {
   encode = encodeData,
   encodeb64 = encodeb64,
   decodeb64 = decodeb64,
-}
+})
 
 --[[
 MIT License
