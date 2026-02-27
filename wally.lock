@@ -3,11 +3,6 @@
 registry = "test"
 
 [[package]]
-name = "cipharius/msgpack-luau"
-version = "0.3.0"
-dependencies = []
-
-[[package]]
 name = "jsdotlua/boolean"
 version = "1.2.7"
 dependencies = [["number", "jsdotlua/number@1.2.7"]]
@@ -250,4 +245,4 @@ dependencies = [["collections", "jsdotlua/collections@1.2.7"]]
 [[package]]
 name = "usergenerated/mcp-studio-plugin"
 version = "0.1.0"
-dependencies = [["msgpack-luau", "cipharius/msgpack-luau@0.3.0"], ["Jest", "jsdotlua/jest@3.10.0"], ["JestGlobals", "jsdotlua/jest-globals@3.10.0"]]
+dependencies = [["Jest", "jsdotlua/jest@3.10.0"], ["JestGlobals", "jsdotlua/jest-globals@3.10.0"]]
