@@ -5,7 +5,7 @@ local InsertService = game:GetService("InsertService")
 local ReflectionService = game:GetService("ReflectionService")
 
 local Paths = require("./Paths")
-local msgpack = require("../msgpack")
+local msgpack = require("./msgpack")
 
 export type EncodedInstance = {
   Name: string,
@@ -834,5 +834,5 @@ return table.freeze({
   EncodeInstance = EncodeInstance,
   -- Sentinel representing a msgpack/JSON null value. Use instead of nil when
   -- you need to store "no value" in a table (nil table values are invisible in Lua).
-  NULL = msgpack.NULL,
+  Null = msgpack.Null,
 })

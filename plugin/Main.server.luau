@@ -1,20 +1,20 @@
 --!strict
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
+local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local StudioService = game:GetService("StudioService")
 
 local ConsoleOutput = require("./Utils/ConsoleOutput")
 local DataModelType = require("./Utils/DataModelType")
 local GameStopUtil = require("./Utils/GameStopUtil")
-local MockWebSocketService = require("./MockWebSocketService")
 local PluginUtils = require("./Utils/PluginUtils")
 local ToolDispatcher = require("./Utils/ToolDispatcher")
+local msgpack = require("./Utils/msgpack")
 
-local URI = "http://localhost:44755"
-local RECEIVE_ENDPOINT = "/request"
-local SEND_ENDPOINT = "/response"
+local WS_URI = "ws://localhost:44756/ws"
 local PLUGIN_DISABLED_SETTING_KEY = "Disabled-MCP-plugin-setting"
+local RECONNECT_INTERVAL = 5
 
 PluginUtils.plugin = plugin
 
@@ -40,23 +40,48 @@ local function log(...)
   end
 end
 
-local function connectWebSocket(): MockWebSocketService.MockWebSocketClient
-  local client = MockWebSocketService:CreateClient(URI)
-  client:SetReceiveEndpoint(RECEIVE_ENDPOINT)
-  client:SetSendEndpoint(SEND_ENDPOINT)
+local function connectToServer(): (any, BindableEvent)
+  local disconnectEvent = Instance.new("BindableEvent")
 
-  client.Opened:Once(function()
-    log("[MCP] Connection opened")
+  local client = HttpService:CreateWebStreamClient(Enum.WebStreamClientType.WebSocket, {
+    Url = WS_URI,
+    Compress = Enum.HttpCompression.Gzip,
+  })
+
+  client.Opened:Connect(function(_statusCode, _headers)
+    log("[MCP] Connection opened, sending registration")
+    client:Send(msgpack.encodeb64({
+      type = "register",
+      place_id = msgpack.uint64(game.PlaceId),
+      place_name = game.Name,
+      game_id = msgpack.uint64(game.GameId),
+      job_id = game.JobId,
+      place_version = msgpack.uint64(game.PlaceVersion),
+      creator_id = msgpack.uint64(game.CreatorId),
+      creator_type = game.CreatorType.Name,
+    }))
+    print("[MCP] Connected to server.")
   end)
 
-  client.Closed:Once(function()
+  client.Closed:Connect(function()
     log("[MCP] Connection closed")
+    disconnectEvent:Fire()
   end)
 
-  client.MessageReceived:Connect(function(message)
+  client.Error:Connect(function(_statusCode, _errorMessage)
+    disconnectEvent:Fire()
+  end)
+
+  client.MessageReceived:Connect(function(message: string)
     log("[MCP] Message received")
 
-    local body = message
+    local body = msgpack.decodeb64(message)
+
+    if body and body.type == "registered" then
+      log("[MCP] Registered with studio_id:", body.studio_id)
+      return
+    end
+
     assert(body and body.id and body.tool and body.args, "Invalid message received")
 
     local id: string = body.id
@@ -65,11 +90,11 @@ local function connectWebSocket(): MockWebSocketService.MockWebSocketClient
       if not responseSent then
         log("[MCP] Sending response:", response)
         responseSent = true
-        client:Send({
+        client:Send(msgpack.encodeb64({
           id = id,
           success = success,
           response = response,
-        })
+        }))
       end
     end
 
@@ -83,7 +108,7 @@ local function connectWebSocket(): MockWebSocketService.MockWebSocketClient
     log("[MCP] Successfully handled request")
   end)
 
-  return client
+  return client, disconnectEvent
 end
 
 local function getButtonImage(): string
@@ -98,24 +123,52 @@ local toggleButton =
   toolbar:CreateButton("Toggle MCP", "Toggle connection to the server", getButtonImage())
 toggleButton.ClickableWhenViewportHidden = true
 
-local currentClient: MockWebSocketService.MockWebSocketClient?
+local connectionLoop: thread? = nil
+local currentClient: any = nil
 
-if not plugin:GetSetting(PLUGIN_DISABLED_SETTING_KEY) then
-  currentClient = connectWebSocket()
-  print("The MCP Studio plugin is ready for prompts.")
+local function startConnectionLoop()
+  connectionLoop = task.spawn(function()
+    while true do
+      local client, disconnectEvent = connectToServer()
+      currentClient = client
+      disconnectEvent.Event:Wait()
+      currentClient = nil
+      warn("[MCP] Disconnected from server. Reconnecting in " .. RECONNECT_INTERVAL .. "s...")
+      pcall(function()
+        client:Close()
+      end)
+      task.wait(RECONNECT_INTERVAL)
+    end
+  end)
 end
 
-toggleButton:SetActive(currentClient ~= nil)
+local function stopConnectionLoop()
+  if connectionLoop then
+    task.cancel(connectionLoop)
+    connectionLoop = nil
+  end
+  if currentClient then
+    pcall(function()
+      currentClient:Close()
+    end)
+    currentClient = nil
+  end
+end
+
+if not plugin:GetSetting(PLUGIN_DISABLED_SETTING_KEY) then
+  startConnectionLoop()
+end
+
+toggleButton:SetActive(connectionLoop ~= nil)
 
 toggleButton.Click:Connect(function()
-  if not currentClient then
-    currentClient = connectWebSocket()
-    print("The MCP Studio plugin is ready for prompts.")
+  if not connectionLoop then
+    startConnectionLoop()
+    print("The MCP Studio plugin is enabled.")
   else
-    currentClient:Close()
-    currentClient = nil
+    stopConnectionLoop()
     print("The MCP Studio plugin is stopped.")
   end
-  toggleButton:SetActive(currentClient ~= nil)
-  plugin:SetSetting(PLUGIN_DISABLED_SETTING_KEY, currentClient == nil)
+  toggleButton:SetActive(connectionLoop ~= nil)
+  plugin:SetSetting(PLUGIN_DISABLED_SETTING_KEY, connectionLoop == nil)
 end)

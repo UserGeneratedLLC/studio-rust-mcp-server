@@ -19,6 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Install Wally packages
+        run: wally install
+        continue-on-error: true
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -69,6 +76,9 @@ jobs:
       - name: Setup Rokit
         uses: CompeyDev/setup-rokit@v0.1.2
 
+      - name: Install Wally packages
+        run: wally install
+
       - name: Stylua
         run: stylua --check plugin
 
@@ -103,13 +113,13 @@ jobs:
         uses: CompeyDev/setup-rokit@v0.1.2
 
       - name: Install Wally packages
-        run: wally install
+        run: wally install && mkdir -p Packages
 
       - name: Generate sourcemap
         run: rojo sourcemap test-place.project.json -o sourcemap.json
 
       - name: Process requires with darklua
-        run: darklua process --config .darklua-tests.json plugin plugin-build
+        run: rm -rf plugin-build && darklua process --config .darklua.json plugin plugin-build
 
       - name: Build test place
         run: rojo build test-place-build.project.json -o TestPlace.rbxl

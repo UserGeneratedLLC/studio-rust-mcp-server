@@ -35,8 +35,17 @@ jobs:
       - name: Setup Rokit
         uses: CompeyDev/setup-rokit@v0.1.2
 
+      - name: Install Wally packages
+        run: wally install && mkdir -p Packages
+
+      - name: Generate sourcemap
+        run: rojo sourcemap plugin.project.json -o sourcemap.json
+
+      - name: Process requires with darklua
+        run: rm -rf plugin-build && darklua process --config .darklua.json plugin plugin-build
+
       - name: Build Plugin
-        run: rojo build plugin.project.json --output MCPStudioPlugin.rbxm
+        run: rojo build plugin-build.project.json --output MCPStudioPlugin.rbxm
 
       - name: Upload Plugin to Release
         env:
@@ -99,6 +108,12 @@ jobs:
       BIN: rbx-studio-mcp
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Install Wally packages
+        run: wally install
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

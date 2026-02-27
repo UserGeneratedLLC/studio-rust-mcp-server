@@ -1,13 +1,28 @@
 [App]
+* Rename the project to something better
+* Cleanup latent project files from the original github
+* Update README.md
 * Auto install as a service
 * Auto-install to the mcp.json with the http mode
 * Auto-install the plugin automatically
 * Auto-update
 * Add proper rust logging lib like we had on Atlas D:\UserGenerated\rojo
+ - replace all eprint's and print's with this logging.
+ - ensure correct log levels for everything
+ - make sure console colors work as expected
+ - add logging on join/leave of roblox studio instances
+ - add logging for what is being run
+ - add logging for agent session create/quit
+* Add proper logging fron the plugin
+ - add a centralized logging module
+ - log operations that are happening
+* Update and improve the ServerInfo data
+ - We should probably move this to a file instead? See what other big MCPs do. An icon would be nice, too.
+* Server metrics
+ - Tool execution counts, durations, error rates
 
 [OpenCloud APIs MCP]
 Use env to get API KEY
-Allow ENV to configure: GroupId, ExperienceId, and maybe PlaceId
 Start hooking up all known open cloud APIs
 Endpoints:
 * upload_asset file [name] [assetid for replacing]
@@ -16,12 +31,25 @@ Endpoints:
 * "place configurations"
 * "experience configurations"
 * "luau code execution"
+* search toolbox/group for assets of interest with screenshots
+* datastore_get key [scope]
+ - Reads a value from a DataStore
+* datastore_set key value [scope]
+ - Writes a value to a DataStore
+* ordered_datastore_list datastore [scope] [pageSize] [order]
+ - Lists entries from an OrderedDataStore (leaderboards)
+* ordered_datastore_set datastore key value [scope]
+* ordered_datastore_increment datastore key amount [scope]
+* ordered_datastore_delete datastore key [scope]
+* messaging_publish topic message
+ - Publishes a message to MessagingService across servers
+* restart_servers universeId
+* get_universe universeId
+ - Returns universe/game metadata
 
 [Studio Plugin MCP]
-* Ensure that every function definition has typed parameters and typed results. you can ignore functions which have no return value, those are fine.
-* Utilize ChangeHistoryService
-* Upgrade to msgpack for rust<->plugin comms
-* Should utilize msgpack for encoding scheme
+* rename tools to match the rust side exactly, e.g. "InsertModel.luau" should be "insert_model.luau" for simplicity and reduced constants.
+* For "set_studio(studio_id=X)", can we just make it "set_studio(id=X)" for simplicity? or even just "set_studio(x)" if prudent.
 * Handle inf/nan values somehow
 Endpoints:
 * run_code command [DONE]
@@ -74,6 +102,12 @@ Endpoints:
  - returns paths
 * get_script_source paths
 * set_script_source paths source
+* edit_script_lines paths startLine endLine newContent
+ - Replace a range of lines by line number (1-indexed, inclusive)
+* insert_script_lines paths afterLine newContent
+ - Insert lines at a position (0 = beginning)
+* delete_script_lines paths startLine endLine
+ - Delete a range of lines (1-indexed, inclusive)
 * search_script_source filter [includes] [excludes]
  - model after grep
 * query query [parents]
@@ -107,10 +141,59 @@ Endpoints:
 * undo via ChangeHistoryService
 * redo via ChangeHistoryService
 * history via ChangeHistoryService
-* get_script_history
+* get_script_history path
+ - returns a version history for a given script
+* read_script_history path <timestamp or whatever>
+ - returns a historical version of a script that the agent could have found via get_script_history
 * open_place placeid
 * TODO: csg building
 * TODO: get_linter_errors / get_script_analysis
+* TODO: luau_analyze paths [mode]
+ - Runs luau-analyze for type checking and linting (--mode=strict, --annotate)
+* TODO: luau_compile paths [mode]
+ - Runs luau-compile for bytecode analysis (--text, --remarks, --codegen with --record-stats)
+* TODO: stylua_format paths
+ - Formats scripts with StyLua
+* TODO: selene_check paths
+ - Runs Selene linter on scripts
+* query_bounds paths
+ - Returns bounding box of Parts/Models, useful for spatial reasoning
+* set_relative_property paths property operation value
+ - Math operations on properties (e.g. Position += Vector3)
+* health_check
+ - Returns whether the Studio plugin is connected and responsive
+* insert_r15_rig [parent]
+ - Inserts a complete R15 humanoid rig
+* get_size paths
+ - Returns Size property of Parts/Models
+* fill_terrain material minX minY minZ maxX maxY maxZ
+* clear_terrain
+* read_terrain_voxels region
+* write_terrain_voxels region data
+* paint_terrain region material
+* smooth_terrain region
+* search_assets assetType [query] [sortBy] [maxResults] [verifiedCreatorsOnly]
+ - Search Creator Store by type (Audio/Model/Decal/Plugin/MeshPart/Video/FontFamily)
+ - Sort options: Relevance, Trending, Top, CreateTime, UpdatedTime, Ratings
+* get_asset_details assetId
+ - Marketplace metadata: creator info, votes, description, pricing
+* get_asset_thumbnail assetId [size]
+ - Thumbnail as base64 PNG for vision LLMs
+* insert_asset assetId [parentPath] [position]
+ - Insert by asset ID with optional position
+* preview_asset assetId [maxDepth]
+ - Load asset, inspect hierarchy tree + stats, then destroy (peek without committing)
+* create_constraint type attachment0Path attachment1Path [properties]
+ - Create physics constraints. Maybe just a Skill that uses create_instance instead?
+* click_button paths
+ - Simulate clicking a TextButton/ImageButton during play mode
+* type_text paths text
+ - Simulate typing into a TextBox during play mode
+* TODO: new studio instance?
+ - Launches a PlaceId or blank place or something
+* TODO: download & open historical place version from the place version history
+* wally_install packages
+ - Fetches Wally packages into the Roblox project
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie
@@ -136,3 +219,179 @@ Endpoints:
 [Merging]
 we need to do a cursor style code merging/accept UI in roblox studio when we do this
 this would eliminate needing cursor at all, and you would just be using Claude desktop app + roblox studio.
+
+[Footnotes: Existing Roblox Studio MCP Projects]
+As of Feb 2026, nobody has built the full vision above. Here's what exists:
+
+1. boshyxd/robloxstudio-mcp (TypeScript, 223 stars, 39 tools)
+   https://github.com/boshyxd/robloxstudio-mcp
+   Monorepo: packages/core (shared tools), packages/robloxstudio-mcp (full), packages/robloxstudio-mcp-inspector (read-only 21 tools).
+   Studio plugin built with roblox-ts, distributed as .rbxmx.
+   Tool categories (from definitions.ts, 1347 lines):
+   - Instance browsing: get_file_tree, search_files (by name/type/content), get_services,
+     search_objects (by name/class/property), get_instance_properties, get_instance_children,
+     search_by_property, get_class_info, get_project_structure (with maxDepth + scriptsOnly)
+   - Properties: set_property, mass_set_property, mass_get_property
+   - Creation: create_object (with optional properties), mass_create_objects, delete_object
+   - Duplication: smart_duplicate (naming patterns {n}, cumulative position/rotation/scale
+     offsets per copy, property variations, different parents per copy), mass_duplicate
+   - Calculated properties: set_calculated_property (formula expressions like "index * 50"),
+     set_relative_property (add/subtract/multiply/divide/power with Vector3/UDim2 components)
+   - Script editing: get_script_source (with startLine/endLine for large scripts),
+     set_script_source, edit_script_lines, insert_script_lines, delete_script_lines
+   - Attributes: get_attribute, set_attribute (with valueType hint), get_attributes, delete_attribute
+   - Tags: get_tags, add_tag, remove_tag, get_tagged (reverse lookup by tag)
+   - Selection: get_selection
+   - Execution: execute_luau (plugin context, captures return value)
+   - Script search: grep_scripts (ripgrep-inspired: case sensitivity, Lua patterns, context lines,
+     maxResults, maxResultsPerScript, filesOnly mode, path scoping, classFilter)
+   - Playtest: start_playtest (play/run), stop_playtest, get_playtest_output (polling)
+   - Undo/Redo: undo, redo (via ChangeHistoryService)
+   - Build Library: export_build (serialize to compact JSON with palette + normalized positions),
+     create_build (from compact part arrays), generate_build (procedural JS code with primitives:
+     room, roof, stairs, column, arch, fence, wall, floor, fill, beam, row, grid — max 10000 parts),
+     import_build, import_scene (full scene layout with model refs + positioning),
+     list_library, get_build, search_materials (MaterialVariant lookup in MaterialService)
+   - Assets: search_assets (Creator Store by type: Audio/Model/Decal/Plugin/MeshPart/Video/
+     FontFamily, with sort/filter), get_asset_details (creator, votes, pricing),
+     get_asset_thumbnail (base64 PNG for vision LLMs), insert_asset (by ID with position),
+     preview_asset (load, inspect hierarchy tree, destroy — peek without committing)
+   What they have that we don't: smart_duplicate, set_calculated_property, Build Library system,
+   preview_asset. Everything else is in our TODO or covered by our broader tools.
+
+2. CoderDayton/roblox-bridge-mcp (TypeScript/Bun, 2 stars, 99 operations)
+   https://github.com/CoderDayton/roblox-bridge-mcp
+   Architecture: FastMCP + Bun runtime. Single unified `roblox` tool with method dispatch
+   (roblox-tools.ts, 212 lines). All 99 ops go through one tool with {method, params}.
+   Bridge: HTTP long-polling + WebSocket. Auto port discovery (tries 8081-8090).
+   Plugin: Lua with auto-discovery, bearer token auth, exponential backoff reconnect.
+   Operations by category (from source):
+   - Instance: CreateInstance, DeleteInstance, CloneInstance, RenameInstance
+   - Discovery: GetFullName, GetParent, IsA, GetClassName, WaitForChild
+   - Properties: SetProperty, GetProperty
+   - Hierarchy: GetChildren, GetDescendants, FindFirstChild, GetService
+   - Transforms: MoveTo, SetPosition, GetPosition, SetRotation, GetRotation,
+     SetSize, GetSize, PivotTo, GetPivot
+   - Appearance: SetColor, SetTransparency, SetMaterial
+   - Physics: SetAnchored, SetCanCollide, CreateConstraint, SetPhysicalProperties, GetMass
+   - Scripting: CreateScript, GetScriptSource, SetScriptSource, AppendToScript,
+     ReplaceScriptLines, InsertScriptLines, RunConsoleCommand
+   - Selection: GetSelection, SetSelection, ClearSelection, AddToSelection,
+     GroupSelection, UngroupModel
+   - Lighting: SetTimeOfDay, SetBrightness, SetAtmosphereDensity, CreateLight
+   - Attributes/Tags: SetAttribute, GetAttribute, GetAttributes, AddTag, RemoveTag,
+     GetTags, HasTag
+   - Players: GetPlayers, GetPlayerPosition, TeleportPlayer, KickPlayer
+   - Place: SavePlace, GetPlaceInfo
+   - Audio: PlaySound, StopSound
+   - Terrain: FillTerrain, ClearTerrain
+   - Camera: SetCameraPosition, SetCameraFocus, GetCameraPosition
+   - Utilities: GetDistance, HighlightObject, Chat
+   - History: Undo, Redo
+   What they have that we don't: GroupSelection/UngroupModel, lighting suite, player interaction
+   (teleport/kick), audio (PlaySound/StopSound), camera control, HighlightObject, GetDistance,
+   Chat, SavePlace. Their terrain is basic (fill/clear only). No Open Cloud, no asset search,
+   no line-level script editing, no build library, no CSG, no clipboard.
+
+3. Roblox/studio-rust-mcp-server (Rust, 365 stars, 6 tools)
+   https://github.com/Roblox/studio-rust-mcp-server
+   Our fork base. Rust + axum web server + rmcp stdio transport. Plugin long-polls.
+   Only 6 tools: run_code, insert_model, get_console_output, start_stop_play,
+   run_script_in_play_mode, get_studio_mode. Clean architecture, auto-setup for
+   Claude Desktop and Cursor. Plugin is plain Lua (not roblox-ts).
+
+4. notpoiu/roblox-executor-mcp (TypeScript, 4 stars)
+   https://github.com/notpoiu/roblox-executor-mcp
+   Game CLIENT bridge (not Studio). index.ts is 3025 lines — everything in one file.
+   Requires a Roblox executor with loadstring + request + WebSocket support.
+   Tools (from source):
+   - Execution: execute (run Lua), execute-file (run local .luau), get-data-by-code (run + return)
+   - Scripts: get-script-content (decompile), search-scripts-sources
+   - Introspection: list-clients, get-console-output, search-instances (CSS-like selectors
+     via QueryDescendants), get-descendants-tree, get-game-info
+   - Remote Spy: ensure-remote-spy (loads Cobalt), get-remote-spy-logs, clear-remote-spy-logs,
+     block-remote, ignore-remote — intercept/log/block RemoteEvent/RemoteFunction traffic
+   - Screenshot: list-roblox-windows, screenshot-window (by PID, Windows only)
+   - GUI: click-button (simulate TextButton/ImageButton click), type-text-box
+   - Multi-client: connect multiple Roblox clients simultaneously, target by clientId.
+     Primary/secondary mode with auto-promotion. Cross-machine via --baseurl.
+   What's interesting for us: remote spy concept for debugging during playtesting,
+   GUI interaction (click_button, type_text) for automated testing, multi-client architecture,
+   cross-machine support. Most exploiter-specific features (decompile, executor requirement)
+   are not relevant.
+
+5. christopher-buss/roblox-docs-mcp (TypeScript)
+   https://glama.ai/mcp/servers/@christopher-buss/roblox-docs-mcp
+   Roblox documentation semantic search. ChromaDB + OpenAI text-embedding-3-large.
+   Auto-pulls from Roblox/creator-docs via git. Redis caching. Configurable chunk size
+   (default 1000 chars) with 200 char overlap.
+   Tools: searchRobloxDocs, getRobloxApiReference, findRobloxTutorials, getRobloxGuides.
+   Not a Studio interaction tool — purely for giving AI agents Roblox knowledge.
+   We accomplish this via .cursor/rules/roblox/ docs instead.
+
+6. quanticsoul4772/mcp-roblox (Rust, 1 star, claims 47 tools)
+   https://github.com/quanticsoul4772/mcp-roblox
+   Rust MCP with bearer token auth. Claims 920+ unit tests.
+   Categories: Filesystem (8), Studio (14), Open Cloud (11), Toolchain (9), AI (4), Monitoring (1).
+   Open Cloud tools: publish_place, upload_asset, datastore get/set, ordered_datastore CRUD,
+   get_universe, restart_servers, messaging_publish.
+   Toolchain: StyLua, Selene, Rojo build/sourcemap, Wally, Moonwave, Lune, luau-lsp.
+   AI: Voyage AI embeddings + Neo4j knowledge graph for semantic code search.
+   Reads heavily AI-generated (Claude/ChatGPT style). CLAUDE.md + knowledge.md + multiple
+   guide markdown files committed to repo. No community adoption. Could be useful as
+   reference for Open Cloud API integration patterns.
+
+7. dmae97/roblex-studio-mcp-server (TypeScript, 6 stars)
+   https://github.com/dmae97/roblex-studio-mcp-server
+   Mostly scaffolding. npx install, Open Cloud API key wiring, Claude Desktop integration docs.
+   Has node_modules committed to git. Not much real functionality.
+
+8. Bbasche/roblox-ai (Python, 2 stars)
+   https://github.com/Bbasche/roblox-ai
+   Python MCP + FastAPI bridge on port 8765. Claude Code with --dangerously-skip-permissions.
+   Simple architecture: MCP server exposes tools -> bridge queues commands -> plugin polls.
+   Includes load_reference_image for vision-based building. Marketed toward non-coders.
+
+9. Alexpoopy1/roblox-studio-mcp-server-V1 (TypeScript, 2 stars)
+   https://github.com/Alexpoopy1/roblox-studio-mcp-server-V1
+   Bare-bones. Node on port 8081 + Lua plugin in ServerScriptService.
+   Requires play mode (F5) to function. Plugin polls server.
+
+10. Rxuser2/Roblox-MCP-Unified (JavaScript/Node, 0 stars)
+    https://github.com/Rxuser2/Roblox-MCP-Unified
+    8 tools for Lua/Luau script CRUD with SQLite storage. Express 4.x + Helmet.js.
+    Web dashboard with dark/light theme, charts, responsive design.
+    Docker + Railway deployment ready. HMAC auth + rate limiting.
+    Does NOT connect to Studio — manages script files on disk only.
+    Written in Indonesian/English mix. AI-generated.
+
+11. majidmanzarpour/vibe-blocks-mcp (Python/FastAPI, 66 stars per Glama)
+    https://github.com/majidmanzarpour/vibe-blocks-mcp
+    Was listed on Glama/playbooks with Open Cloud DataStore, asset upload, place publish.
+    Repo returns 404 as of Feb 2026. May be deleted or private.
+
+Deleted/404 repos also found: Sxf0z/RoMCP, 0xXrer/mcp.
+Also found on Glama: code-and-relax (enhanced boshyxd fork, 37+ tools, long polling).
+
+[Footnotes: Features Others Ship That We Don't Plan To Add]
+- Build Library system (boshyxd) — export_build, create_build, generate_build (procedural JS
+  code with room/roof/stairs/column/arch/fence primitives), import_build, import_scene,
+  list_library, get_build, search_materials. Full local build asset pipeline.
+- smart_duplicate (boshyxd) — duplicate with naming patterns ({n}), cumulative position/rotation/
+  scale offsets per copy, property variations per copy, different target parents per copy.
+  Also mass_duplicate for batching.
+- set_calculated_property (boshyxd) — set properties via formula expressions ("index * 50")
+  with custom variables. Different from our set_relative_property which is just += style ops.
+- Lighting suite (CoderDayton) — SetTimeOfDay, SetBrightness, SetAtmosphereDensity, CreateLight
+- Camera control (CoderDayton) — SetCameraPosition, SetCameraFocus, GetCameraPosition
+- Audio (CoderDayton) — PlaySound, StopSound
+- Player interaction (CoderDayton) — GetPlayers, GetPlayerPosition, TeleportPlayer, KickPlayer
+- GroupSelection / UngroupModel (CoderDayton)
+- SavePlace (CoderDayton)
+- HighlightObject (CoderDayton) — visual highlight with color and duration
+- GetDistance (CoderDayton) — distance between two objects
+- Chat (CoderDayton) — send system message to TextChatService
+- Remote spy (notpoiu) — intercept/log/block RemoteEvent/RemoteFunction traffic via Cobalt.
+  Exploiter-specific but debugging concept is interesting.
+- Docs semantic search (christopher-buss) — ChromaDB + OpenAI embeddings over Roblox creator-docs.
+  We handle this via .cursor/rules/roblox/ instead.
