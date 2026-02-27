@@ -8,7 +8,7 @@ local ConsoleOutput = {
   outputMessage = "",
 }
 
-function ConsoleOutput.startListener()
+function ConsoleOutput.startListener(): RBXScriptConnection
   local connMessageOut = LogService.MessageOut:Connect(
     function(message: string, _: Enum.MessageType)
       if #ConsoleOutput.outputMessage + #message <= DEBUG_TOOL_MAX_OUTPUT then

@@ -20,10 +20,10 @@ local deep1, deep2, deep3, deep4
 local orphan, orphanChild
 local basePath
 
-local function id(inst)
+local function id(inst: Instance): string
   return Paths.GetDebugId(inst)
 end
-local function esc(name)
+local function esc(name: string): string
   return Paths.EscapeName(name)
 end
 

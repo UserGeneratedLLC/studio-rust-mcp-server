@@ -105,7 +105,7 @@ local function injectTestScript(args: Args)
   testScript.Source = source
 end
 
-local function runScriptInPlayMode(args: Args): any
+local function runScriptInPlayMode(args: Args): string?
   injectTestScript(args)
 
   ConsoleOutput.outputMessage = ""
@@ -129,7 +129,7 @@ local function runScriptInPlayMode(args: Args): any
   return result
 end
 
-local function handleRunScriptInPlayMode(args: Args): any
+local function handleRunScriptInPlayMode(args: Args): string?
   assert(type(args.code) == "string" and args.code ~= "", "Missing code in RunScriptInPlayMode")
   assert(
     args.timeout == nil or (type(args.timeout) == "number" and args.timeout >= 0),

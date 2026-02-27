@@ -40,7 +40,7 @@ local function log(...)
   end
 end
 
-local function connectWebSocket()
+local function connectWebSocket(): MockWebSocketService.MockWebSocketClient
   local client = MockWebSocketService:CreateClient(URI)
   client:SetReceiveEndpoint(RECEIVE_ENDPOINT)
   client:SetSendEndpoint(SEND_ENDPOINT)
@@ -86,7 +86,7 @@ local function connectWebSocket()
   return client
 end
 
-local function getButtonImage()
+local function getButtonImage(): string
   local ok, response = pcall(function()
     return StudioService:GetClassIcon("PackageLink").Image
   end)

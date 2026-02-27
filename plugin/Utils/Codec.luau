@@ -826,6 +826,8 @@ local function DecodeInstance(data: EncodedInstance, nilReference: any, parent: 
   return inst
 end
 
+-- TODO(high): Serialization support
+
 -- TODO(medium): UpdateInstance: service detection if parent==game, overwrite with defaults optionally (see: ResetPropertyToDefault)
 
 return table.freeze({

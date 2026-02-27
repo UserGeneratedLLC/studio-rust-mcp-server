@@ -10,7 +10,7 @@ type Args = {
 local INSERT_MAX_SEARCH_DEPTH = 2048
 local INSERT_MAX_DISTANCE_AWAY = 20
 
-local function getInsertPosition()
+local function getInsertPosition(): Vector3
   local camera = workspace.CurrentCamera
   local viewportPoint = camera.ViewportSize / 2
   local unitRay = camera:ViewportPointToRay(viewportPoint.X, viewportPoint.Y, 0)
@@ -44,7 +44,7 @@ type GetFreeModelsResponse = {
 }
 
 local function toTitleCase(str: string): string
-  local function titleCase(first: string, rest: string)
+  local function titleCase(first: string, rest: string): string
     return first:upper() .. rest:lower()
   end
 

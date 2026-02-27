@@ -16,10 +16,10 @@ local Paths = require("./Paths")
 local EncodeInstance = Codec.EncodeInstance
 local NIL = "__NIL__"
 
-local function id(inst)
+local function id(inst: Instance): string
   return Paths.GetDebugId(inst)
 end
-local function esc(name)
+local function esc(name: string): string
   return Paths.EscapeName(name)
 end
 
@@ -489,7 +489,7 @@ describe("depth recursion", function()
   it("depth=math.huge encodes entire subtree fully, no shallow anywhere", function()
     local result = EncodeInstance(parentFolder, math.huge, NIL)
 
-    local function assertNoShallow(encoded, path: string)
+    local function assertNoShallow(encoded: Codec.EncodedInstance, path: string)
       if encoded.Shallow then
         error(`Found Shallow=true at {path}`)
       end

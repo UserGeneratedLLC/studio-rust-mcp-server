@@ -47,7 +47,7 @@ end
 local function runCodeWithOutput(command: string): string
   local output = ""
 
-  local function getTableType(arg)
+  local function getTableType(arg: { [any]: any }): (boolean, boolean)
     local hasArray = false
     local hasTable = false
     for key, _value in arg do
@@ -63,7 +63,7 @@ local function runCodeWithOutput(command: string): string
     return hasArray, hasTable
   end
 
-  local function serializeTable(arg): any
+  local function serializeTable(arg: any): any
     if typeof(arg) == "table" then
       local _, isTable = getTableType(arg)
 
@@ -94,7 +94,7 @@ local function runCodeWithOutput(command: string): string
     output ..= header .. " " .. table.concat(strResults, "\t") .. "\n"
   end
 
-  local function executeCode()
+  local function executeCode(): { any }
     local chunk = loadstring(command) :: any
     local chunkfenv = getfenv(chunk)
 

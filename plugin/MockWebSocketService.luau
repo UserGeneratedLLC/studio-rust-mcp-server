@@ -21,6 +21,14 @@ local CloseableStates = {
 
 local POLL_WAIT_TIME = 1
 
+type HttpResponse = {
+  Success: boolean,
+  StatusCode: number,
+  StatusMessage: string,
+  Headers: { [string]: string },
+  Body: string?,
+}
+
 export type MockWebSocketClient = {
   Send: (self: MockWebSocketClient, data: any) -> (),
   Close: (self: MockWebSocketClient) -> (),
@@ -68,7 +76,7 @@ function MockWebSocketClient.new(uri: string): MockWebSocketClient
   return self
 end
 
-local function doRequest(url: string, method: "GET" | "POST", body: any)
+local function doRequest(url: string, method: "GET" | "POST", body: any): HttpResponse?
   local ok, response = pcall(function()
     return HttpService:RequestAsync({
       Url = url,
@@ -121,7 +129,7 @@ function MockWebSocketClient.Close(self: MockWebSocketClientPrivate)
 
     if self._pollTask and coroutine.status(self._pollTask) == "running" then
       task.cancel(self._pollTask)
-      self._pollTask = nil :: any
+      self._pollTask = nil
     end
 
     self.ConnectionState = EnumWebSocketState.Closed
@@ -146,7 +154,10 @@ type MockWebSocketService = {
   CreateClient: (self: MockWebSocketService, uri: string) -> MockWebSocketClient,
 }
 
-function MockWebSocketService.CreateClient(_: MockWebSocketService, uri: string)
+function MockWebSocketService.CreateClient(
+  _: MockWebSocketService,
+  uri: string
+): MockWebSocketClient
   return MockWebSocketClient.new(uri)
 end
 
