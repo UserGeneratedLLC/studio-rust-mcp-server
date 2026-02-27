@@ -9,7 +9,6 @@
   "files.encoding": "utf8",
   "files.autoGuessEncoding": false,
 
-  // "luau-lsp.types.definitionFiles": ["testez.d.luau"], // undesired, cuases issue with non-test files
   "luau-lsp.sourcemap.rojoProjectFile": "test-place.project.json",
   "luau-lsp.plugin.maximumRequestBodySize": "500mb",
   "luau-lsp.plugin.enabled": true,
