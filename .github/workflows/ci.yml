@@ -24,6 +24,7 @@ jobs:
 
       - name: Install Wally packages
         run: wally install
+        continue-on-error: true
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
