@@ -1,16 +1,16 @@
-local Main = script:FindFirstAncestor("MCPStudioPlugin")
-local ConsoleOutput = require(Main.Utils.ConsoleOutput)
-local DataModelType = require(Main.Utils.DataModelType)
-local GameStopUtil = require(Main.Utils.GameStopUtil)
-local MockWebSocketService = require(Main.MockWebSocketService)
-local PluginUtils = require(Main.Utils.PluginUtils)
-local ToolDispatcher = require(Main.Utils.ToolDispatcher)
-local Types = require(Main.Types)
+--!strict
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local StudioService = game:GetService("StudioService")
+
+local ConsoleOutput = require(script.Parent.Utils.ConsoleOutput)
+local DataModelType = require(script.Parent.Utils.DataModelType)
+local GameStopUtil = require(script.Parent.Utils.GameStopUtil)
+local MockWebSocketService = require(script.Parent.MockWebSocketService)
+local PluginUtils = require(script.Parent.Utils.PluginUtils)
+local ToolDispatcher = require(script.Parent.Utils.ToolDispatcher)
 
 local URI = "http://localhost:44755"
 local RECEIVE_ENDPOINT = "/request"
@@ -41,7 +41,7 @@ local function log(...)
   end
 end
 
-local function toolCallHandler(args: Types.ToolArgs): string
+local function toolCallHandler(args: any): string
   local toolName = next(args)
   if not toolName then
     error("No tool name found in request")
@@ -97,7 +97,7 @@ local function connectWebSocket()
       end
     end
 
-    local args: Types.ToolArgs = body.args
+    local args = body.args
 
     local success, response = pcall(toolCallHandler, args)
     sendResponseOnce(success, response)

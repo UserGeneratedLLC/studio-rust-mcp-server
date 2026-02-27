@@ -1,12 +1,18 @@
-local Main = script:FindFirstAncestor("MCPStudioPlugin")
-local ConsoleOutput = require(Main.Utils.ConsoleOutput)
-local GlobalVariables = require(Main.Utils.GlobalVariables)
-local StartStopPlay = require(Main.Tools.StartStopPlay)
-local Types = require(Main.Types)
+--!strict
 
 local HttpService = game:GetService("HttpService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local StudioTestService = game:GetService("StudioTestService")
+
+local ConsoleOutput = require(script.Parent.Parent.Utils.ConsoleOutput)
+local GlobalVariables = require(script.Parent.Parent.Utils.GlobalVariables)
+local StartStopPlay = require(script.Parent.StartStopPlay)
+
+type Args = {
+  code: string,
+  timeout: number?,
+  mode: GlobalVariables.TestMode,
+}
 
 local TEST_SCRIPT_NAME = "AssistantTestScript"
 
@@ -90,7 +96,7 @@ local function removeTestScript()
   end
 end
 
-local function injectTestScript(args: Types.RunScriptInPlayModeArgs)
+local function injectTestScript(args: Args)
   removeTestScript()
 
   local source = buildTestRunnerSource(args.code, args.timeout or 1_000_000)
@@ -100,7 +106,7 @@ local function injectTestScript(args: Types.RunScriptInPlayModeArgs)
   testScript.Source = source
 end
 
-local function runScriptInPlayMode(args: Types.RunScriptInPlayModeArgs): string?
+local function runScriptInPlayMode(args: Args): string?
   injectTestScript(args)
 
   ConsoleOutput.outputMessage = ""
@@ -125,23 +131,17 @@ local function runScriptInPlayMode(args: Types.RunScriptInPlayModeArgs): string?
   return resultStr
 end
 
-local function handleRunScriptInPlayMode(
-  runScriptInPlayModeArgs: Types.RunScriptInPlayModeArgs
-): string?
-  if type(runScriptInPlayModeArgs.code) ~= "string" or runScriptInPlayModeArgs.code == "" then
-    error("Missing code in RunScriptInPlayMode")
-  end
-
-  if runScriptInPlayModeArgs.timeout ~= nil then
-    if type(runScriptInPlayModeArgs.timeout) ~= "number" or runScriptInPlayModeArgs.timeout < 0 then
-      error("Timeout must be a number greater than 0 in RunScriptInPlayMode")
-    end
-  end
+local function handleRunScriptInPlayMode(args: Args): string?
+  assert(type(args.code) == "string" and args.code ~= "", "Missing code in RunScriptInPlayMode")
+  assert(
+    args.timeout == nil or (type(args.timeout) == "number" and args.timeout >= 0),
+    "Timeout must be a number greater than 0 in RunScriptInPlayMode"
+  )
 
   StartStopPlay({ mode = "stop" })
   task.wait(0.2)
 
-  return runScriptInPlayMode(runScriptInPlayModeArgs)
+  return runScriptInPlayMode(args)
 end
 
-return handleRunScriptInPlayMode :: Types.ToolFunction
+return handleRunScriptInPlayMode

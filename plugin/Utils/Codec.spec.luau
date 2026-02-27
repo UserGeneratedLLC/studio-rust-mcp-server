@@ -1,3 +1,5 @@
+--!nocheck
+
 return function()
   local Codec = require(script.Parent.Codec)
   local Paths = require(script.Parent.Paths)

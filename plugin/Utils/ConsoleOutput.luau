@@ -1,3 +1,5 @@
+--!strict
+
 local LogService = game:GetService("LogService")
 
 local DEBUG_TOOL_MAX_OUTPUT = 10000

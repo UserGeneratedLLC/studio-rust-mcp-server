@@ -113,8 +113,6 @@ Endpoints:
  - Output to agent as base64
 * get_selections
 * set_selections paths
-* get_performance_stats
- - FPS, instance count, etc...
 * get_place_info
  - UniverseID, PlaceId, PlaceName, time info, StudioService, etc...
 * undo [times]
@@ -129,7 +127,7 @@ Endpoints:
  - SEE: https://create.roblox.com/docs/reference/engine/classes/Instance#QueryDescendants
 * publish_place <target placeid, defaults to our placeid>
 * docs ClassNames
- - returns roblox docs given a classname
+ - returns roblox docs given a classname https://github.com/Roblox/creator-docs/tree/main/content/en-us/reference/engine/classes
  - we could probably just include this as a Skill on how to browse the roblox docs git
 * schema ClassNames
  - includes property info with inheritence info, defaults, enum options, hierarchy

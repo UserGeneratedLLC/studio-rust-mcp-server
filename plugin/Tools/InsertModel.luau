@@ -1,5 +1,10 @@
-local Main = script:FindFirstAncestor("MCPStudioPlugin")
-local Types = require(Main.Types)
+--!strict
+
+local InsertService = game:GetService("InsertService")
+
+type Args = {
+  query: string,
+}
 
 local INSERT_MAX_SEARCH_DEPTH = 2048
 local INSERT_MAX_DISTANCE_AWAY = 20
@@ -21,8 +26,6 @@ local function getInsertPosition()
     return camera.CFrame.Position + unitRay.Direction * INSERT_MAX_DISTANCE_AWAY
   end
 end
-
-local InsertService = game:GetService("InsertService")
 
 type GetFreeModelsResponse = {
   [number]: {
@@ -122,12 +125,10 @@ local function insertFromMarketplace(query: string): string
   return name
 end
 
-local function handleInsertModel(insertModelArgs: Types.InsertModelArgs): string?
-  if type(insertModelArgs.query) ~= "string" then
-    error("Missing query in InsertModel")
-  end
+local function handleInsertModel(args: Args): string?
+  assert(type(args.query) == "string", "Missing query in InsertModel")
 
-  return insertFromMarketplace(insertModelArgs.query)
+  return insertFromMarketplace(args.query)
 end
 
-return handleInsertModel :: Types.ToolFunction
+return handleInsertModel

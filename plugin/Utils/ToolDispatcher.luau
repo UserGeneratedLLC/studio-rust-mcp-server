@@ -1,21 +1,22 @@
-local Main = script:FindFirstAncestor("MCPStudioPlugin")
-local Types = require(Main.Types)
+--!strict
 
-local tools: { [string]: Types.ToolFunction } = {
-  ["GetConsoleOutput"] = require(Main.Tools.GetConsoleOutput),
-  ["GetStudioMode"] = require(Main.Tools.GetStudioMode),
-  ["InsertModel"] = require(Main.Tools.InsertModel),
-  ["RunCode"] = require(Main.Tools.RunCode),
-  ["RunScriptInPlayMode"] = require(Main.Tools.RunScriptInPlayMode),
-  ["StartStopPlay"] = require(Main.Tools.StartStopPlay),
-}
+export type ToolFunction = (any) -> string?
 
-local function dispatchTool(toolName: string, args: Types.ToolArgs): string?
-  local toolFunction = tools[toolName]
-  if not toolFunction then
-    error("Tool " .. toolName .. " not found")
+local tools: { [string]: ToolFunction } = {}
+for _, child in script.Parent.Parent.Tools:GetChildren() do
+  if child:IsA("ModuleScript") and child:GetAttribute("Enabled") ~= false then
+    local tool = require(child) :: any
+    assert(type(tool) == "function", `{child.Name} must return a function`)
+    tools[child.Name] = tool
   end
+end
+table.freeze(tools)
 
+local function dispatchTool(toolName: string, args: any): string?
+  local toolFunction: ToolFunction = tools[toolName]
+  if not toolFunction then
+    error(`Tool "{toolName}" not found`)
+  end
   return toolFunction(args)
 end
 

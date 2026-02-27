@@ -1,7 +1,12 @@
-local Main = script:FindFirstAncestor("MCPStudioPlugin")
-local Types = require(Main.Types)
+--!strict
 
 local HttpService = game:GetService("HttpService")
+
+local DeepCopy = require(script.Parent.Parent.Utils.DeepCopy)
+
+type Args = {
+  command: string,
+}
 
 local function runCodeWithOutput(command: string): string
   local output = ""
@@ -38,32 +43,8 @@ local function runCodeWithOutput(command: string): string
     return arg
   end
 
-  local function deepClone(t, cache)
-    local clone = {}
-    for key, value in t do
-      local newKey = key
-      if typeof(key) == "table" then
-        if not cache[key] then
-          cache[key] = deepClone(key, cache)
-        end
-        newKey = cache[key]
-      end
-
-      local newValue = value
-      if typeof(value) == "table" then
-        if not cache[value] then
-          cache[value] = deepClone(value, cache)
-        end
-        newValue = cache[value]
-      end
-
-      clone[newKey] = newValue
-    end
-    return clone
-  end
-
   local function toStrTable(t: { any }): { string }
-    local clonedTable = deepClone(t, {})
+    local clonedTable = DeepCopy(t)
     local strTable = table.create(#clonedTable)
     for i, arg in clonedTable do
       local serializedArg = serializeTable(arg)
@@ -117,12 +98,10 @@ local function runCodeWithOutput(command: string): string
   return output
 end
 
-local function handleRunCode(runCodeArgs: Types.RunCodeArgs): string?
-  if type(runCodeArgs.command) ~= "string" then
-    error("Missing command in RunCode")
-  end
+local function handleRunCode(args: Args): string?
+  assert(type(args.command) == "string", "Missing command in RunCode")
 
-  return runCodeWithOutput(runCodeArgs.command)
+  return runCodeWithOutput(args.command)
 end
 
-return handleRunCode :: Types.ToolFunction
+return handleRunCode

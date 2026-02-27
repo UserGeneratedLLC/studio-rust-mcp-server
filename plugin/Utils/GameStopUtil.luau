@@ -1,6 +1,8 @@
-local Main = script:FindFirstAncestor("MCPStudioPlugin")
-local PluginUtils = require(Main.Utils.PluginUtils)
+--!strict
+
 local StudioTestService = game:GetService("StudioTestService")
+
+local PluginUtils = require(script.Parent.PluginUtils)
 
 local MCP_STOP_PLAY_MESSAGE_KEY = "MCP_STOP_PLAY_MESSAGE"
 

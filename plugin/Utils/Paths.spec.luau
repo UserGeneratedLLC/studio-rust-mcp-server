@@ -1,3 +1,5 @@
+--!nocheck
+
 return function()
   local Paths = require(script.Parent.Paths)
   local RS = game:GetService("ReplicatedStorage")

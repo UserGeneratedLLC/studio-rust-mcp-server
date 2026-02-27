@@ -1,13 +1,22 @@
-local Main = script:FindFirstAncestor("MCPStudioPlugin")
-local Types = require(Main.Types)
+--!strict
+
 local StudioTestService = game:GetService("StudioTestService")
-local ConsoleOutput = require(Main.Utils.ConsoleOutput)
-local GameStopUtil = require(Main.Utils.GameStopUtil)
-local GlobalVariables = require(Main.Utils.GlobalVariables)
+
+local ConsoleOutput = require(script.Parent.Parent.Utils.ConsoleOutput)
+local GameStopUtil = require(script.Parent.Parent.Utils.GameStopUtil)
+local GlobalVariables = require(script.Parent.Parent.Utils.GlobalVariables)
+
+type Args = {
+  mode: GlobalVariables.StartStopPlayMode,
+}
 
 -- If callback finishes before timeout, returns callback result, otherwise returns timeoutResult
 -- StudioTestService:ExecutePlayModeAsync({}) may error "Previous call to start play session has not been completed" immediately(still yielding) or yield until stop.
-local function callWithTimeout(callback: () -> any, timeout: number, timeoutResult: string): string?
+local function callWithTimeout(
+  callback: () -> any,
+  timeout: number,
+  timeoutResult: string
+): (string?, boolean)
   local BindableEvent = Instance.new("BindableEvent")
   local isDone = false
   local _success = true
@@ -68,20 +77,18 @@ local function runServer(): string?
   return result
 end
 
-local function handleStartStopPlay(startStopPlayArgs: Types.StartStopPlayArgs): string?
-  if type(startStopPlayArgs.mode) ~= "string" then
-    error("Missing mode in StartStopPlay")
-  end
+local function handleStartStopPlay(args: Args): string?
+  assert(type(args.mode) == "string", "Missing mode in StartStopPlay")
 
-  if startStopPlayArgs.mode == "start_play" then
+  if args.mode == "start_play" then
     return startPlay()
-  elseif startStopPlayArgs.mode == "stop" then
+  elseif args.mode == "stop" then
     return stop()
-  elseif startStopPlayArgs.mode == "run_server" then
+  elseif args.mode == "run_server" then
     return runServer()
   end
 
   error("Invalid mode in StartStopPlay, must be start_play, stop, or run_server")
 end
 
-return handleStartStopPlay :: Types.ToolFunction
+return handleStartStopPlay

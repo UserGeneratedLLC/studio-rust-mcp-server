@@ -1,3 +1,5 @@
+--!strict
+
 return function(TestEZ)
   local MCPPlugin = script.Parent
 
