@@ -13,6 +13,7 @@ fn main() {
     let dest_path = std::path::PathBuf::from(&out_dir).join("MCPStudioPlugin.rbxm");
 
     std::fs::create_dir_all("Packages").ok();
+    std::fs::remove_dir_all("plugin-build").ok();
 
     run(
         "rojo",
