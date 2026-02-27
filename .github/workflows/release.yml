@@ -44,6 +44,9 @@ jobs:
       - name: Process requires with darklua
         run: rm -rf plugin-build && darklua process --config .darklua.json plugin plugin-build
 
+      - name: Copy non-Luau assets to plugin-build
+        run: cp plugin/UploadDetails.json plugin-build/UploadDetails.json
+
       - name: Build Plugin
         run: rojo build plugin-build.project.json --output MCPStudioPlugin.rbxm
 
