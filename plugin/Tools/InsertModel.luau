@@ -1,4 +1,5 @@
 --!strict
+--!nolint DeprecatedApi
 
 local InsertService = game:GetService("InsertService")
 

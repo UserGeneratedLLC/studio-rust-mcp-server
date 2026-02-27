@@ -98,7 +98,7 @@ function MockWebSocketClient._OpenImpl(self: MockWebSocketClientPrivate)
       local response = doRequest(self._uri .. self._receiveEndpoint, "GET")
 
       if response then
-        if response.StatusCode == 200 and response.Success then
+        if response.StatusCode == 200 and response.Success and response.Body then
           self._MessageReceivedEvent:Fire(msgpack.decode(response.Body))
           continue
         elseif response.StatusCode == 423 then

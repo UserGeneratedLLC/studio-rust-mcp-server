@@ -30,6 +30,7 @@
   "luau-lsp.fflags.enableNewSolver": false,
   "luau-lsp.index.maxFiles": 100000,
   "luau-lsp.plugin.port": 3669,
+  "luau-lsp.ignoreGlobs": ["plugin-build/**", ".lune/**", "Packages/**", "DevPackages/**"],
 
   "stylua.targetReleaseVersion": "latest",
   "[lua]": {
