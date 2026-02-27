@@ -1299,7 +1299,8 @@ methods:
     description: |
       Returns true if the user with the given `Class.Player.UserId|UserId` owns
       the [pass](../../../production/monetization/passes.md) with the given
-      `gamePassId` (not to be confused with an asset ID).
+      `gamePassId` (not to be confused with an asset ID). You can use this
+      method on both the client and the server.
 
       #### Caching Behavior
 

@@ -101,7 +101,7 @@ You can filter by the following metrics:
   <tr>
     <td>Platform spender status</td>
     <td>Active, other</td>
-    <td>Fixed value, not percentile-based. **Active** includes users who've spent $9.99 or more anywhere on Roblox in the last 60 days. **Other** includes all other users.<br /><br />This definition is consistent with the [Creator Rewards program](../../creator-rewards.md), so you can better understand the behavior of players who earn you Daily Engagement Rewards.</td>
+    <td>Fixed value, not percentile-based. **Active** includes users who've spent $9.99 or more anywhere on Roblox in the last 60 days. **Other** includes all other users.<br /><br />This definition is consistent with the [Creator Rewards program](../../creator-rewards.md), so you can better understand the behavior of players who earn you Daily Engagement Rewards.[^1]</td>
   </tr>
   <tr>
     <td>Platform</td>
@@ -237,7 +237,7 @@ You can apply a breakdown to analyze each chart in a more specific category by c
   <tr>
     <td>Platform spender status</td>
     <td>Active, other</td>
-    <td>Fixed value, not percentile-based. **Active** includes users who've spent $9.99 or more anywhere on Roblox in the last 60 days. **Other** includes all other users.<br /><br />This definition is consistent with the [Creator Rewards program](../../creator-rewards.md), so you can better understand the behavior of players who earn you Daily Engagement Rewards.</td>
+    <td>Fixed value, not percentile-based. **Active** includes users who've spent $9.99 or more anywhere on Roblox in the last 60 days. **Other** includes all other users.<br /><br />This definition is consistent with the [Creator Rewards program](../../creator-rewards.md), so you can better understand the behavior of players who earn you Daily Engagement Rewards.[^1]</td>
   </tr>
 </tbody>
 </table>
@@ -291,3 +291,5 @@ On the `.csv` sales data sheet, each sold item has the following attributes and 
 | Hold Status        | The status of whether Robux from this sale have been released to you or are still in a hold.                                                                                                                            | `Released`, `Held`, `Cancelled`       |
 | Revenue            | The amount of Robux you receive for the purchase, which is the item listing price excluding any [Marketplace fees](../../marketplace/marketplace-fees-and-commissions.md), Affiliate Fees, and Recurring Group Payouts. | `50`                                  |
 | Price              | The item listing price, which is the amount of Robux that the buyer paid for the purchase.                                                                                                                              | `10`                                  |
+
+[^1]: Daily Engagement Rewards have additional eligibility requirements; the number of players with a Platform Spender Status of active is always greater than or equal to the number of rewarded active spenders.

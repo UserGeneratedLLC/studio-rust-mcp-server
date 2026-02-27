@@ -13266,160 +13266,6 @@
         }
       }
     },
-    "/v2/alias/{alias}": {
-      "get": {
-        "tags": ["Assets"],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "alias",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "pattern": "^[0-9]+\\/.+"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept-Encoding",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-Place-Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetType",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetFormat",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-AssetFormat",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "skipSigningScripts",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "in": "query",
-            "name": "clientInsert",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "scriptinsert",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "modulePlaceId",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "serverplaceid",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "expectedAssetType",
-            "schema": {
-              "type": "string",
-              "default": ""
-            }
-          },
-          {
-            "in": "query",
-            "name": "accessContext",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV2"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV2"
-                }
-              }
-            }
-          }
-        },
-        "servers": [
-          {
-            "url": "https://assetdelivery.roblox.com"
-          }
-        ],
-        "x-roblox-engine-usability": {
-          "apiKeyWithHttpService": false
-        },
-        "security": [
-          {},
-          {
-            "roblox-legacy-cookie": []
-          }
-        ],
-        "externalDocs": {
-          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v2_alias__alias_"
-        }
-      }
-    },
     "/v2/asset": {
       "get": {
         "tags": ["Assets"],
@@ -14249,169 +14095,6 @@
         "externalDocs": {
           "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_post_v2_assets_batch"
         }
-      }
-    },
-    "/v1/alias/{alias}": {
-      "get": {
-        "tags": ["Assets"],
-        "summary": "Retrieves an asset by its alias (universeID/name)",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "alias",
-            "description": "The alias of the asset to retrieve.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "pattern": "^[0-9]+\\/.+"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept-Encoding",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-Place-Id",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetType",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Accept",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "AssetFormat",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "header",
-            "name": "Roblox-AssetFormat",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "skipSigningScripts",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "in": "query",
-            "name": "clientInsert",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "scriptinsert",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "in": "query",
-            "name": "modulePlaceId",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "serverplaceid",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          },
-          {
-            "in": "query",
-            "name": "expectedAssetType",
-            "schema": {
-              "type": "string",
-              "default": ""
-            }
-          },
-          {
-            "in": "query",
-            "name": "accessContext",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Roblox.Web.Assets.AssetResponseItemV1"
-                }
-              }
-            }
-          }
-        },
-        "servers": [
-          {
-            "url": "https://assetdelivery.roblox.com"
-          }
-        ],
-        "x-roblox-engine-usability": {
-          "apiKeyWithHttpService": false
-        },
-        "security": [
-          {},
-          {
-            "roblox-legacy-cookie": []
-          }
-        ],
-        "externalDocs": {
-          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v1_alias__alias_"
-        },
-        "x-roblox-recommended-alternatives": [
-          {
-            "url": "https://assetdelivery.roblox.com/v2/alias/{alias}",
-            "httpMethod": "GET",
-            "documentationUrl": "https://create.roblox.com/docs/cloud/reference/features/assets#assetdelivery_get_v2_alias__alias_"
-          }
-        ]
       }
     },
     "/v1/asset": {
@@ -60323,6 +60006,436 @@
         }
       }
     },
+    "/toolbox-service/v2/assets:search": {
+      "get": {
+        "tags": ["Assets", "Creator Store"],
+        "summary": "Search Creator Store Assets",
+        "description": "Search Creator Store for assets.",
+        "parameters": [
+          {
+            "name": "searchCategoryType",
+            "in": "query",
+            "description": "The asset type to search within.",
+            "required": true,
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SearchCategoryType"
+                }
+              ],
+              "description": "This represents a \"subset\" of Toolbox.Service.CategoryType options and represent the full set\r\nof \"categories\" (or asset types) that can be searched upon from the toolbox search API.",
+              "x-enumNames": [
+                "Audio",
+                "Model",
+                "Decal",
+                "Plugin",
+                "MeshPart",
+                "Video",
+                "FontFamily"
+              ],
+              "x-enum-varnames": [
+                "Audio",
+                "Model",
+                "Decal",
+                "Plugin",
+                "MeshPart",
+                "Video",
+                "FontFamily"
+              ]
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "description": "The search terms used to filter the results.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "modelSubTypes",
+            "in": "query",
+            "description": "When searching for models, the subtypes associated with the search results.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ModelSubType"
+              },
+              "nullable": true
+            }
+          },
+          {
+            "name": "excludedModelSubTypes",
+            "in": "query",
+            "description": "When searching for models, the subtypes not associated with the search results.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ModelSubType"
+              },
+              "nullable": true
+            }
+          },
+          {
+            "name": "creator",
+            "in": "query",
+            "description": "Deprecated: Please refer to the 'userId' and 'groupId' properties instead. The creator type and ID. E.g. \"user/123\" or \"group/456\"",
+            "schema": {
+              "pattern": "^(user|group)/\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "The User ID of the creator. Only one of 'userId' and 'groupId' can be present in a query.",
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "query",
+            "description": "The Group ID of the creator. Only one of 'userId' and 'groupId' can be present in a query.",
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "description": "The identifier for the desired search results page. Only one of 'pageNumber' and 'pageToken' can be present in a query.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "The page number to retrieve, starting from 0. Only one of 'pageNumber' and 'pageToken' can be present in a query.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "maxPageSize",
+            "in": "query",
+            "description": "The number of assets to be returned. Cannot be larger than 100.",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          },
+          {
+            "name": "sortDirection",
+            "in": "query",
+            "description": "The sort direction of the search results.",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortDirection"
+                }
+              ],
+              "description": "Represents the direction in which to sort the results",
+              "default": "None",
+              "x-enumNames": ["None", "Ascending", "Descending"],
+              "x-enum-varnames": ["None", "Ascending", "Descending"]
+            }
+          },
+          {
+            "name": "sortCategory",
+            "in": "query",
+            "description": "The category to sort the search results by.",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SortCategory"
+                }
+              ],
+              "description": "The category to sort the search results by.",
+              "default": "Relevance",
+              "x-enumNames": [
+                "Relevance",
+                "Trending",
+                "Top",
+                "AudioDuration",
+                "CreateTime",
+                "UpdatedTime",
+                "Ratings"
+              ],
+              "x-enum-varnames": [
+                "Relevance",
+                "Trending",
+                "Top",
+                "AudioDuration",
+                "CreateTime",
+                "UpdatedTime",
+                "Ratings"
+              ]
+            }
+          },
+          {
+            "name": "audioMinDurationSeconds",
+            "in": "query",
+            "description": "When searching for audio, the minimum duration of the audio assets. If included, must be greater than or equal to 0.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "audioMaxDurationSeconds",
+            "in": "query",
+            "description": "When searching for audio, the maximum duration of the audio assets. If included, must be greater than or equal to 0.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            }
+          },
+          {
+            "name": "audioArtist",
+            "in": "query",
+            "description": "When searching for audio, the artist name of the audio assets.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "audioAlbum",
+            "in": "query",
+            "description": "When searching for audio, the album name of the audio assets.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeTopCharts",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "nullable": true
+            }
+          },
+          {
+            "name": "audioTypes",
+            "in": "query",
+            "description": "When searching for audio, the type of the audio assets.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SearchAudioTypeModel"
+              },
+              "nullable": true
+            }
+          },
+          {
+            "name": "includedInstanceTypes",
+            "in": "query",
+            "description": "When searching for models, this filters that the following [Instance](https://create.roblox.com/docs/reference/engine/classes/Instance) types are included in the model.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ModelInstanceType"
+              },
+              "nullable": true
+            }
+          },
+          {
+            "name": "includeOnlyVerifiedCreators",
+            "in": "query",
+            "description": "Whether the results should only include assets created by verified creators.",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "minPriceCents",
+            "in": "query",
+            "description": "The minimum price of the asset in cents. If included, must be greater than or equal to 0.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64",
+              "default": 0
+            }
+          },
+          {
+            "name": "maxPriceCents",
+            "in": "query",
+            "description": "The maximum price of the asset in cents. If included, must be greater than or equal to 0.",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int64",
+              "nullable": true
+            }
+          },
+          {
+            "name": "facets",
+            "in": "query",
+            "description": "Additional keywords to query by.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          },
+          {
+            "name": "categoryPath",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "searchView",
+            "in": "query",
+            "description": "Indicates which fields will be populated in the response.",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/SearchView"
+                }
+              ],
+              "description": "This view controls which fields are populated in the search response. A lighter\r\nview will result in faster response times and higher reliability.",
+              "default": "Core",
+              "x-enumNames": ["IDs", "Core", "Full"],
+              "x-enum-varnames": ["IDs", "Core", "Full"]
+            }
+          },
+          {
+            "name": "musicChartType",
+            "in": "query",
+            "description": "Indicates which music charts to filter from.",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/MusicChartType"
+                }
+              ],
+              "description": "Represents which music chart to pull entries from, if any",
+              "default": "None",
+              "x-enumNames": ["None", "Current", "Week", "Month", "Year"],
+              "x-enum-varnames": ["None", "Current", "Week", "Month", "Year"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchCreatorStoreAssetsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ProblemDetails"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                    }
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        },
+        "x-roblox-recommended-alternatives": [
+          {
+            "url": "https://apis.roblox.com/toolbox/v2/assets:search",
+            "httpMethod": "POST",
+            "description": "This endpoint is being deprecated in favor of using POST which has the same functionality but with better structured data & support for image-based search."
+          }
+        ],
+        "x-roblox-engine-usability": {
+          "apiKeyWithHttpService": true
+        },
+        "x-roblox-stability": "BETA",
+        "x-roblox-rate-limits": {
+          "perApiKeyOwner": {
+            "period": "MINUTE",
+            "maxInPeriod": 1000
+          },
+          "perOauth2Authorization": {
+            "period": "MINUTE",
+            "maxInPeriod": 1000
+          }
+        },
+        "x-roblox-scopes": [
+          {
+            "name": "creator-store-product:read"
+          }
+        ],
+        "security": [
+          {},
+          {
+            "roblox-legacy-cookie": []
+          },
+          {
+            "roblox-api-key": []
+          }
+        ],
+        "externalDocs": {
+          "url": "https://create.roblox.com/docs/cloud/reference/features/assets#get_toolbox_service_v2_assets_search"
+        }
+      }
+    },
     "/toolbox-service/v2/assets/{id}": {
       "get": {
         "tags": ["Assets", "Creator Store"],
@@ -64444,7 +64557,8 @@
     "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/full": {
       "get": {
         "tags": ["Configs"],
-        "summary": "Gets full config with metadata",
+        "summary": "Gets full config with metadata.",
+        "description": "Returns the full config including metadata (version, descriptions, last modified/accessed times).",
         "operationId": "CreatorConfigsPublicApi_GetConfigRepositoryFull",
         "parameters": [
           {
@@ -64572,7 +64686,8 @@
     "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}": {
       "get": {
         "tags": ["Configs"],
-        "summary": "Gets the latest published config values without metadata and decorators.\r\nThis response can be used as a direct copy-and-paste to the draft update endpoints.",
+        "summary": "Gets published config values without metadata.",
+        "description": "Returns the latest published config values without metadata and decorators.\r\nThis response can be used as a direct copy-and-paste to the draft update endpoints.",
         "operationId": "CreatorConfigsPublicApi_GetConfigRepositoryValues",
         "parameters": [
           {
@@ -64700,7 +64815,8 @@
     "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/draft": {
       "get": {
         "tags": ["Configs"],
-        "summary": "Gets the current draft changes for a configuration repository.",
+        "summary": "Gets the current draft.",
+        "description": "Returns the current draft changes for the configuration repository.",
         "operationId": "CreatorConfigsPublicApi_GetConfigRepositoryDraft",
         "parameters": [
           {
@@ -64826,7 +64942,8 @@
       },
       "delete": {
         "tags": ["Configs"],
-        "summary": "Resets the current draft area. If draftHash is provided, this call will fail if the hash doesn't match.",
+        "summary": "Resets (deletes) the current draft.",
+        "description": "Resets the current draft area. If draftHash is provided, this call will fail if the hash doesn't match.",
         "operationId": "CreatorConfigsPublicApi_DeleteDraft",
         "parameters": [
           {
@@ -64997,7 +65114,8 @@
       },
       "patch": {
         "tags": ["Configs"],
-        "summary": "Updates the draft changes treating the payload as a partial changeset.\r\nIf draftHash is provided, this call will fail if the hash doesn't match.\r\nA key not included will not be changed. To indicate deletion, set key to null.\r\nTo discard a change, set key to its currently published value.",
+        "summary": "Partially updates the draft.",
+        "description": "Updates the draft treating the payload as a partial changeset.\r\nIf draftHash is provided, this call will fail if the hash doesn't match.\r\nA key not included will not be changed. To indicate deletion, set key to null.\r\nTo discard a change, set key to its currently published value.",
         "operationId": "CreatorConfigsPublicApi_UpdateDraft",
         "parameters": [
           {
@@ -65170,7 +65288,8 @@
     "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/draft:overwrite": {
       "put": {
         "tags": ["Configs"],
-        "summary": "Full overwrite of current draft. The payload is the expected final state after publish.\r\nIf a key is not included, it is interpreted as removed.\r\nIf draftHash is provided, this call will fail if the hash doesn't match.",
+        "summary": "Overwrites the entire draft with the request payload.",
+        "description": "Full overwrite of current draft. The payload is the expected final state after publish.\r\nIf a key is not included, it is interpreted as removed.\r\nIf draftHash is provided, this call will fail if the hash doesn't match.",
         "operationId": "CreatorConfigsPublicApi_OverwriteDraft",
         "parameters": [
           {
@@ -65344,6 +65463,7 @@
       "post": {
         "tags": ["Configs"],
         "summary": "Publishes draft changes.",
+        "description": "Applies the current draft to the published config. Requires a draft hash and optional message and deployment strategy.",
         "operationId": "CreatorConfigsPublicApi_PublishDraft",
         "parameters": [
           {
@@ -65516,7 +65636,8 @@
     "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/revisions": {
       "get": {
         "tags": ["Configs"],
-        "summary": "Gets the list of previous revisions to the repository.",
+        "summary": "Lists revision history.",
+        "description": "Returns the list of previous revisions to the repository. Supports optional start/end time and pagination.",
         "operationId": "CreatorConfigsPublicApi_ListRevisions",
         "parameters": [
           {
@@ -65700,7 +65821,8 @@
     "/creator-configs-public-api/v1/configs/universes/{universeId}/repositories/{repositoryType}/revisions/{revisionId}/restore": {
       "post": {
         "tags": ["Configs"],
-        "summary": "Attempts to restore configs to the provided revision. This will clear the staging and stage a revert commit.\r\nNote that you will need to publish for the revert to take place.",
+        "summary": "Stages a revert to a previous revision.",
+        "description": "Attempts to restore configs to the provided revision. This will clear the staging and stage a revert commit.\r\nYou must call publish for the revert to take effect.",
         "operationId": "CreatorConfigsPublicApi_RestoreRevision",
         "parameters": [
           {
@@ -71157,6 +71279,9 @@
           },
           "fidelity": {
             "type": "string"
+          },
+          "skipGenerationIfNotExist": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -77352,6 +77477,10 @@
             "format": "double",
             "description": "Carousel sort score",
             "type": "number"
+          },
+          "loggingJoinKey": {
+            "description": "Logging join key",
+            "type": "string"
           },
           "id": {
             "format": "int64",
@@ -87350,6 +87479,27 @@
         "description": "Representation of a model asset.",
         "nullable": true
       },
+      "ModelInstanceType": {
+        "enum": ["Script", "MeshPart", "Decal", "Animation", "Audio", "Tool"],
+        "type": "string",
+        "description": "A list of model instance types. See Toolbox.Service.Models.Internal.InstanceCounts and [Instance](https://create.roblox.com/docs/reference/engine/classes/Instance) for more details.",
+        "x-enumNames": [
+          "Script",
+          "MeshPart",
+          "Decal",
+          "Animation",
+          "Audio",
+          "Tool"
+        ],
+        "x-enum-varnames": [
+          "Script",
+          "MeshPart",
+          "Decal",
+          "Animation",
+          "Audio",
+          "Tool"
+        ]
+      },
       "ModelSubType": {
         "enum": ["Ad", "MaterialPack", "Package"],
         "type": "string",
@@ -87398,6 +87548,13 @@
         "additionalProperties": false,
         "description": "Representation of a music asset.",
         "nullable": true
+      },
+      "MusicChartType": {
+        "enum": ["None", "Current", "Week", "Month", "Year"],
+        "type": "string",
+        "description": "Represents which music chart to pull entries from, if any",
+        "x-enumNames": ["None", "Current", "Week", "Month", "Year"],
+        "x-enum-varnames": ["None", "Current", "Week", "Month", "Year"]
       },
       "ObjectMeshSummary": {
         "type": "object",
@@ -87495,6 +87652,30 @@
         },
         "nullable": true
       },
+      "QueryFacets": {
+        "type": "object",
+        "properties": {
+          "appliedFacets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Facets that are already applied to the search.",
+            "nullable": true
+          },
+          "availableFacets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The unused and still available facets.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "The facets of a query.",
+        "nullable": true
+      },
       "SavesSortCategory": {
         "enum": [
           "Name",
@@ -87564,6 +87745,53 @@
           "FontFamily"
         ]
       },
+      "SearchCreatorStoreAssetsResponse": {
+        "type": "object",
+        "properties": {
+          "nextPageToken": {
+            "type": "string",
+            "description": "The page token to view the next page of results.",
+            "nullable": true
+          },
+          "queryFacets": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QueryFacets"
+              }
+            ],
+            "description": "The applied and available facets of a query.",
+            "nullable": true
+          },
+          "creatorStoreAssets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatorStoreAsset"
+            },
+            "description": "The list of creator store assets returned by the search query.",
+            "nullable": true
+          },
+          "totalResults": {
+            "type": "integer",
+            "description": "The total number of results for the given search query.",
+            "format": "int64"
+          },
+          "filteredKeyword": {
+            "type": "string",
+            "description": "The filtered keyword that was used to search for assets, if applicable.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "The response for the SearchCreatorStoreAssets endpoint.",
+        "nullable": true
+      },
+      "SearchView": {
+        "enum": ["IDs", "Core", "Full"],
+        "type": "string",
+        "description": "This view controls which fields are populated in the search response. A lighter\r\nview will result in faster response times and higher reliability.",
+        "x-enumNames": ["IDs", "Core", "Full"],
+        "x-enum-varnames": ["IDs", "Core", "Full"]
+      },
       "SocialLinkModel": {
         "type": "object",
         "properties": {
@@ -87615,6 +87843,37 @@
         "additionalProperties": false,
         "description": "Model for a Social Link.",
         "nullable": true
+      },
+      "SortCategory": {
+        "enum": [
+          "Relevance",
+          "Trending",
+          "Top",
+          "AudioDuration",
+          "CreateTime",
+          "UpdatedTime",
+          "Ratings"
+        ],
+        "type": "string",
+        "description": "The category to sort the search results by.",
+        "x-enumNames": [
+          "Relevance",
+          "Trending",
+          "Top",
+          "AudioDuration",
+          "CreateTime",
+          "UpdatedTime",
+          "Ratings"
+        ],
+        "x-enum-varnames": [
+          "Relevance",
+          "Trending",
+          "Top",
+          "AudioDuration",
+          "CreateTime",
+          "UpdatedTime",
+          "Ratings"
+        ]
       },
       "SortDirection": {
         "enum": ["None", "Ascending", "Descending"],
@@ -91422,9 +91681,9 @@
           "post_legacy_publish_v1_badges__badgeId__icon",
           "publish_post_v1_badges__badgeId__icon",
           "badges_post_v1_badges__badgeId__icon",
+          "get_toolbox_service_v2_assets_search",
           "get_toolbox_service_v2_assets__id_",
           "patch_asset_permissions_api_v1_assets_permissions",
-          "assetdelivery_get_v1_alias__alias_",
           "assetdelivery_get_v1_asset",
           "get_asset_delivery_api_v1_assetId__assetId_",
           "assetdelivery_get_v1_assetId__assetId_",
@@ -91432,7 +91691,6 @@
           "assetdelivery_get_v1_assetId__assetId__version__versionNumber_",
           "assetdelivery_post_v1_assets_batch",
           "assetdelivery_get_v1_marAssetHash__marAssetHash__marCheckSum__marCheckSum_",
-          "assetdelivery_get_v2_alias__alias_",
           "assetdelivery_get_v2_asset",
           "assetdelivery_get_v2_assetId__assetId_",
           "assetdelivery_get_v2_assetId__assetId__version__versionNumber_",
@@ -91646,6 +91904,7 @@
           "Cloud_CreateCreatorStoreProduct",
           "Cloud_GetCreatorStoreProduct",
           "Cloud_UpdateCreatorStoreProduct",
+          "get_toolbox_service_v2_assets_search",
           "get_toolbox_service_v2_assets__id_",
           "get_toolbox_service_v1_saves",
           "post_toolbox_service_v1_saves",

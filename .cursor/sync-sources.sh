@@ -100,5 +100,21 @@ sync_repo "luau-lang" "site" "master" "src/content/docs" "rules/luau"
 sync_repo "Roblox" "creator-docs" "main" "content" "rules/roblox"
 sync_repo "centau" "vide" "main" "docs" "rules/vide"
 
+# Download single files
+download_file "https://raw.githubusercontent.com/UserGeneratedLLC/rojo/refs/heads/master/.cursor/rules/atlas-project.mdc" "rules/atlas-project.mdc"
+
+# Roblox Full API Dump (dynamic: resolve latest build GUID first)
+echo ""
+echo -e "${YELLOW}Processing: Full-API-Dump.json${NC}"
+latest_meta=$(curl -sL "https://raw.githubusercontent.com/RobloxAPI/build-archive/master/data/production/latest.json")
+guid=$(echo "$latest_meta" | grep -o '"GUID":"[^"]*"' | cut -d'"' -f4)
+version=$(echo "$latest_meta" | grep -o '"Version":"[^"]*"' | cut -d'"' -f4)
+echo "  GUID: $guid  Version: $version"
+dump_url="https://raw.githubusercontent.com/RobloxAPI/build-archive/master/data/production/builds/$guid/Full-API-Dump.json"
+dump_target="$SCRIPT_DIR/rules/roblox-api/Full-API-Dump.json"
+mkdir -p "$(dirname "$dump_target")"
+curl -sL "$dump_url" -o "$dump_target"
+echo -e "${GREEN}  Done!${NC}"
+
 echo ""
 echo -e "${GREEN}Sync completed successfully!${NC}"
