@@ -1,6 +1,6 @@
 --!strict
 
-local DeepCopy = require(script.Parent.Parent.Utils.DeepCopy)
+local DeepCopy = require("../Utils/DeepCopy")
 
 type Args = {
   command: string,

@@ -1,6 +1,6 @@
 --!strict
 
-local ConsoleOutput = require(script.Parent.Parent.Utils.ConsoleOutput)
+local ConsoleOutput = require("../Utils/ConsoleOutput")
 
 local function handleGetConsoleOutput(): string?
   local result = ConsoleOutput.outputMessage or ""

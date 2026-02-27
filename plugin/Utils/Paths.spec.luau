@@ -1,15 +1,15 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local JestGlobals = require(ReplicatedStorage.DevPackages.JestGlobals)
+
+local JestGlobals = require("../../DevPackages/JestGlobals")
 local describe = JestGlobals.describe
 local it = JestGlobals.it
 local expect = JestGlobals.expect
 local beforeAll = JestGlobals.beforeAll
 local afterAll = JestGlobals.afterAll
 
-local Paths = require(script.Parent.Paths)
-local RS = game:GetService("ReplicatedStorage")
+local Paths = require("./Paths")
 
 local root
 local alpha, beta, gamma, delta
@@ -108,8 +108,8 @@ beforeAll(function()
   orphanChild.Name = "OrphanChild"
   orphanChild.Parent = orphan
 
-  root.Parent = RS
-  basePath = "@game/" .. esc(RS.Name) .. "/" .. esc(root.Name)
+  root.Parent = ReplicatedStorage
+  basePath = "@game/" .. esc(ReplicatedStorage.Name) .. "/" .. esc(root.Name)
 end)
 
 afterAll(function()
@@ -272,7 +272,9 @@ describe("GetRelativePath", function()
     end)
 
     it("should return @game/ServiceName for a service", function()
-      expect(Paths.GetRelativePath(RS)).toEqual("@game/" .. esc(RS.Name))
+      expect(Paths.GetRelativePath(ReplicatedStorage)).toEqual(
+        "@game/" .. esc(ReplicatedStorage.Name)
+      )
     end)
 
     it("should return full path for direct child of test root", function()
@@ -344,7 +346,7 @@ describe("GetRelativePath", function()
     end)
 
     it("should return @self path from service to deep child", function()
-      expect(Paths.GetRelativePath(gamma, RS)).toEqual(
+      expect(Paths.GetRelativePath(gamma, ReplicatedStorage)).toEqual(
         "@self/" .. esc(root.Name) .. "/Alpha/Beta/Gamma"
       )
     end)
@@ -396,7 +398,7 @@ describe("GetRelativePath", function()
     end)
 
     it("should return ../../.. for 4 levels up", function()
-      expect(Paths.GetRelativePath(RS, gamma)).toEqual("../../..")
+      expect(Paths.GetRelativePath(ReplicatedStorage, gamma)).toEqual("../../..")
     end)
 
     it("should not add debugId to bare .. paths", function()
@@ -525,7 +527,9 @@ describe("FromRelativePath", function()
     end)
 
     it("should resolve @game/ServiceName to service", function()
-      expect(Paths.FromRelativePath("@game/" .. esc(RS.Name))).toEqual(RS)
+      expect(Paths.FromRelativePath("@game/" .. esc(ReplicatedStorage.Name))).toEqual(
+        ReplicatedStorage
+      )
     end)
 
     it("should resolve deep @game path", function()
@@ -699,7 +703,11 @@ describe("FromRelativePath", function()
     end)
 
     it("should resolve @game/Service/../Service back to service", function()
-      expect(Paths.FromRelativePath("@game/" .. esc(RS.Name) .. "/../" .. esc(RS.Name))).toEqual(RS)
+      expect(
+        Paths.FromRelativePath(
+          "@game/" .. esc(ReplicatedStorage.Name) .. "/../" .. esc(ReplicatedStorage.Name)
+        )
+      ).toEqual(ReplicatedStorage)
     end)
   end)
 
@@ -709,7 +717,9 @@ describe("FromRelativePath", function()
     end)
 
     it("should treat . as no-op in @game path", function()
-      expect(Paths.FromRelativePath("@game/./" .. esc(RS.Name))).toEqual(RS)
+      expect(Paths.FromRelativePath("@game/./" .. esc(ReplicatedStorage.Name))).toEqual(
+        ReplicatedStorage
+      )
     end)
 
     it("should handle multiple consecutive . segments", function()
@@ -1032,8 +1042,8 @@ describe("round-trip: GetRelativePath -> FromRelativePath", function()
   end)
 
   it("should round-trip service", function()
-    local path = Paths.GetRelativePath(RS)
-    expect(Paths.FromRelativePath(path)).toEqual(RS)
+    local path = Paths.GetRelativePath(ReplicatedStorage)
+    expect(Paths.FromRelativePath(path)).toEqual(ReplicatedStorage)
   end)
 
   it("should round-trip test root", function()
@@ -1087,8 +1097,8 @@ describe("round-trip: GetRelativePath -> FromRelativePath", function()
   end)
 
   it("should round-trip 4 levels up (../../..)", function()
-    local path = Paths.GetRelativePath(RS, gamma)
-    expect(Paths.FromRelativePath(path, gamma)).toEqual(RS)
+    local path = Paths.GetRelativePath(ReplicatedStorage, gamma)
+    expect(Paths.FromRelativePath(path, gamma)).toEqual(ReplicatedStorage)
   end)
 
   it("should round-trip each special-char instance", function()

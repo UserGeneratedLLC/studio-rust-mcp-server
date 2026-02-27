@@ -3,14 +3,14 @@
 local ServerScriptService = game:GetService("ServerScriptService")
 local StudioTestService = game:GetService("StudioTestService")
 
-local ConsoleOutput = require(script.Parent.Parent.Utils.ConsoleOutput)
-local GlobalVariables = require(script.Parent.Parent.Utils.GlobalVariables)
-local StartStopPlay = require(script.Parent.StartStopPlay)
+local ConsoleOutput = require("../Utils/ConsoleOutput")
+local StartStopPlay = require("./StartStopPlay")
+local StudioModeState = require("../Utils/StudioModeState")
 
 type Args = {
   code: string,
   timeout: number?,
-  mode: GlobalVariables.TestMode,
+  mode: StudioModeState.TestMode,
 }
 
 local TEST_SCRIPT_NAME = "AssistantTestScript"
@@ -111,15 +111,15 @@ local function runScriptInPlayMode(args: Args): any
   ConsoleOutput.outputMessage = ""
   local success, result = pcall(function()
     if args.mode == "start_play" then
-      GlobalVariables.studioMode = "start_play"
+      StudioModeState.studioMode = "start_play"
       return StudioTestService:ExecutePlayModeAsync({})
     else
-      GlobalVariables.studioMode = "run_server"
+      StudioModeState.studioMode = "run_server"
       return StudioTestService:ExecuteRunModeAsync({})
     end
   end)
 
-  GlobalVariables.studioMode = "stop"
+  StudioModeState.studioMode = "stop"
   removeTestScript()
 
   if not success then

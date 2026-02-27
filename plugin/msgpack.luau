@@ -1,6 +1,6 @@
 --!strict
 
-local msgpack = require(script.Parent.Packages["msgpack-luau"])
+local msgpack = require("../Packages/msgpack-luau")
 
 -- Sentinel value representing msgpack null. Use this in tables instead of nil,
 -- since Lua cannot store nil as a table value. Pass it as a direct value to

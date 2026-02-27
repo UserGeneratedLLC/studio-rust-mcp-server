@@ -149,6 +149,10 @@ Endpoints:
 * statistics
  - instance count, performance, etc
 * access to profiler?
+* undo via ChangeHistoryService
+* redo via ChangeHistoryService
+* history via ChangeHistoryService
+* get_script_history
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie

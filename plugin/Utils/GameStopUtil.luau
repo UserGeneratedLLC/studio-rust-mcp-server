@@ -2,7 +2,7 @@
 
 local StudioTestService = game:GetService("StudioTestService")
 
-local PluginUtils = require(script.Parent.PluginUtils)
+local PluginUtils = require("./PluginUtils")
 
 local MCP_STOP_PLAY_MESSAGE_KEY = "MCP_STOP_PLAY_MESSAGE"
 

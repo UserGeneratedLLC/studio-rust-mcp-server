@@ -1,18 +1,18 @@
 --!strict
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local JestGlobals = require(ReplicatedStorage.DevPackages.JestGlobals)
+
+local JestGlobals = require("../../DevPackages/JestGlobals")
 local describe = JestGlobals.describe
 local it = JestGlobals.it
 local expect = JestGlobals.expect
 local beforeAll = JestGlobals.beforeAll
 local afterAll = JestGlobals.afterAll
 
-local Codec = require(script.Parent.Codec)
-local DeepEquals = require(script.Parent.DeepEquals)
-local Paths = require(script.Parent.Paths)
+local Codec = require("./Codec")
+local DeepEquals = require("./DeepEquals")
+local Paths = require("./Paths")
 
-local RS = game:GetService("ReplicatedStorage")
 local EncodeInstance = Codec.EncodeInstance
 local NIL = "__NIL__"
 
@@ -253,7 +253,7 @@ beforeAll(function()
   particleEmitter.Lifetime = NumberRange.new(1, 5)
   particleEmitter.Parent = root
 
-  root.Parent = RS
+  root.Parent = ReplicatedStorage
 end)
 
 afterAll(function()

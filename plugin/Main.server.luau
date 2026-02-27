@@ -4,12 +4,12 @@ local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local RunService = game:GetService("RunService")
 local StudioService = game:GetService("StudioService")
 
-local ConsoleOutput = require(script.Parent.Utils.ConsoleOutput)
-local DataModelType = require(script.Parent.Utils.DataModelType)
-local GameStopUtil = require(script.Parent.Utils.GameStopUtil)
-local MockWebSocketService = require(script.Parent.MockWebSocketService)
-local PluginUtils = require(script.Parent.Utils.PluginUtils)
-local ToolDispatcher = require(script.Parent.Utils.ToolDispatcher)
+local ConsoleOutput = require("./Utils/ConsoleOutput")
+local DataModelType = require("./Utils/DataModelType")
+local GameStopUtil = require("./Utils/GameStopUtil")
+local MockWebSocketService = require("./MockWebSocketService")
+local PluginUtils = require("./Utils/PluginUtils")
+local ToolDispatcher = require("./Utils/ToolDispatcher")
 
 local URI = "http://localhost:44755"
 local RECEIVE_ENDPOINT = "/request"

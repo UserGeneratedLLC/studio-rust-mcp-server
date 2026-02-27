@@ -2,12 +2,12 @@
 
 local StudioTestService = game:GetService("StudioTestService")
 
-local ConsoleOutput = require(script.Parent.Parent.Utils.ConsoleOutput)
-local GameStopUtil = require(script.Parent.Parent.Utils.GameStopUtil)
-local GlobalVariables = require(script.Parent.Parent.Utils.GlobalVariables)
+local ConsoleOutput = require("../Utils/ConsoleOutput")
+local GameStopUtil = require("../Utils/GameStopUtil")
+local StudioModeState = require("../Utils/StudioModeState")
 
 type Args = {
-  mode: GlobalVariables.StartStopPlayMode,
+  mode: StudioModeState.StartStopPlayMode,
 }
 
 -- If callback finishes before timeout, returns callback result, otherwise returns timeoutResult
@@ -49,7 +49,7 @@ end
 
 local function startPlay(): string?
   ConsoleOutput.outputMessage = ""
-  GlobalVariables.studioMode = "start_play"
+  StudioModeState.studioMode = "start_play"
   local result, isTimeout = callWithTimeout(function()
     return StudioTestService:ExecutePlayModeAsync({})
   end, 0.1, "Started play")
@@ -62,12 +62,12 @@ end
 local function stop(): string?
   GameStopUtil.stopPlay()
   task.wait(1)
-  GlobalVariables.studioMode = "stop"
+  StudioModeState.studioMode = "stop"
   return "Stopped"
 end
 
 local function runServer(): string?
-  GlobalVariables.studioMode = "run_server"
+  StudioModeState.studioMode = "run_server"
   local result, isTimeout = callWithTimeout(function()
     return StudioTestService:ExecuteRunModeAsync({})
   end, 0.1, "Ran server")

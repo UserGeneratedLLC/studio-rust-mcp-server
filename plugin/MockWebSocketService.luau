@@ -2,7 +2,7 @@
 
 local HttpService = game:GetService("HttpService")
 
-local msgpack = require(script.Parent.msgpack)
+local msgpack = require("./msgpack")
 
 local MockWebSocketClient = {}
 MockWebSocketClient.__index = MockWebSocketClient

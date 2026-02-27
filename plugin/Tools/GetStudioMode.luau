@@ -1,9 +1,9 @@
 --!strict
 
-local GlobalVariables = require(script.Parent.Parent.Utils.GlobalVariables)
+local StudioModeState = require("../Utils/StudioModeState")
 
 local function handleGetStudioMode(): string?
-  local result = GlobalVariables.studioMode
+  local result = StudioModeState.studioMode
   return result
 end
 
