@@ -632,6 +632,77 @@ describe("Null sentinel", function()
   end)
 end)
 
+describe("uint64 / int64 helpers", function()
+  it("uint64 encodes zero", function()
+    local v = msgpack.uint64(0)
+    expect(v._msgpackType).toEqual(msgpack.UInt64)
+    expect(v.mostSignificantPart).toEqual(0)
+    expect(v.leastSignificantPart).toEqual(0)
+    expect(hex(msgpack.encode(v))).toEqual("CF 00 00 00 00 00 00 00 00")
+  end)
+
+  it("uint64 encodes a value that fits in 32 bits", function()
+    local v = msgpack.uint64(0xDEADBEEF)
+    expect(v.mostSignificantPart).toEqual(0)
+    expect(v.leastSignificantPart).toEqual(0xDEADBEEF)
+    expect(hex(msgpack.encode(v))).toEqual("CF 00 00 00 00 DE AD BE EF")
+  end)
+
+  it("uint64 encodes a value that spans both 32-bit halves", function()
+    -- 9806322696 = 0x000000024880009C08 -> hi=0x00000002, lo=0x48809C08
+    local v = msgpack.uint64(9806322696)
+    expect(v.mostSignificantPart).toEqual(2)
+    expect(v.leastSignificantPart).toEqual(0x48809C08)
+    expect(hex(msgpack.encode(v))).toEqual("CF 00 00 00 02 48 80 9C 08")
+  end)
+
+  it("uint64 encodes max safe integer", function()
+    -- 2^53 - 1 = 0x001FFFFFFFFFFFFF
+    local v = msgpack.uint64(2 ^ 53 - 1)
+    expect(v.mostSignificantPart).toEqual(0x001FFFFF)
+    expect(v.leastSignificantPart).toEqual(0xFFFFFFFF)
+    expect(hex(msgpack.encode(v))).toEqual("CF 00 1F FF FF FF FF FF FF")
+  end)
+
+  it("int64 encodes zero", function()
+    local v = msgpack.int64(0)
+    expect(v._msgpackType).toEqual(msgpack.Int64)
+    expect(v.mostSignificantPart).toEqual(0)
+    expect(v.leastSignificantPart).toEqual(0)
+    expect(hex(msgpack.encode(v))).toEqual("D3 00 00 00 00 00 00 00 00")
+  end)
+
+  it("int64 encodes a positive value", function()
+    local v = msgpack.int64(0xDEADBEEF)
+    expect(v.mostSignificantPart).toEqual(0)
+    expect(v.leastSignificantPart).toEqual(0xDEADBEEF)
+    expect(hex(msgpack.encode(v))).toEqual("D3 00 00 00 00 DE AD BE EF")
+  end)
+
+  it("int64 encodes -1 as two's complement", function()
+    local v = msgpack.int64(-1)
+    expect(v.mostSignificantPart).toEqual(0xFFFFFFFF)
+    expect(v.leastSignificantPart).toEqual(0xFFFFFFFF)
+    expect(hex(msgpack.encode(v))).toEqual("D3 FF FF FF FF FF FF FF FF")
+  end)
+
+  it("int64 encodes -2147483648 (min int32)", function()
+    -- 0xFFFFFFFF80000000
+    local v = msgpack.int64(-2147483648)
+    expect(v.mostSignificantPart).toEqual(0xFFFFFFFF)
+    expect(v.leastSignificantPart).toEqual(0x80000000)
+    expect(hex(msgpack.encode(v))).toEqual("D3 FF FF FF FF 80 00 00 00")
+  end)
+
+  it("int64 encodes a large negative spanning both halves", function()
+    -- -(2^53 - 1) = 0xFFE0000000000001
+    local v = msgpack.int64(-(2 ^ 53 - 1))
+    expect(v.mostSignificantPart).toEqual(0xFFE00000)
+    expect(v.leastSignificantPart).toEqual(0x00000001)
+    expect(hex(msgpack.encode(v))).toEqual("D3 FF E0 00 00 00 00 00 01")
+  end)
+end)
+
 describe("encodeb64 / decodeb64", function()
   it("round-trips simple values", function()
     local values = { 42, "hello", true, false, { 1, 2, 3 }, { a = "b" } }

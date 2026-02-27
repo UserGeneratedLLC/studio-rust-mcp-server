@@ -646,11 +646,31 @@ local function decodeb64(b64: string): any
   return parse(decoded, 0)
 end
 
+local function unpack64(x: number): (number, number)
+  if x < 0 then
+    local z = -1 - x
+    return bit32.bnot(z // 0x100000000), bit32.bnot(z)
+  end
+  return bit32.bor(x // 0x100000000, 0), bit32.bor(x, 0)
+end
+
+local function uint64(n: number): UInt64Type
+  local hi, lo = unpack64(n)
+  return newUInt64(hi, lo)
+end
+
+local function int64(n: number): Int64Type
+  local hi, lo = unpack64(n)
+  return newInt64(hi, lo)
+end
+
 return table.freeze({
   Null = Null,
   Int64 = Int64,
   UInt64 = UInt64,
   Extension = Extension,
+  uint64 = uint64,
+  int64 = int64,
   utf8Encode = utf8Encode,
   utf8Decode = utf8Decode,
   decode = decodeData,

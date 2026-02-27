@@ -52,13 +52,13 @@ local function connectToServer(): (any, BindableEvent)
     log("[MCP] Connection opened, sending registration")
     client:Send(msgpack.encodeb64({
       type = "register",
-      place_id = game.PlaceId,
+      place_id = msgpack.uint64(game.PlaceId),
       place_name = game.Name,
-      game_id = game.GameId,
+      game_id = msgpack.uint64(game.GameId),
       job_id = game.JobId,
-      place_version = game.PlaceVersion,
-      creator_id = game.CreatorId,
-      creator_type = tostring(game.CreatorType),
+      place_version = msgpack.uint64(game.PlaceVersion),
+      creator_id = msgpack.uint64(game.CreatorId),
+      creator_type = game.CreatorType.Name,
     }))
     print("[MCP] Connected to server.")
   end)
