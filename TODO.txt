@@ -1,10 +1,9 @@
-[Comms]
-We probably need to upgrade to msgpack so we can support nulls/infs
-
-[General]
-Endpoints:
-* trim_transparency file
-* resize_image file out-file [mode]
+[App]
+* Auto install as a service
+* Auto-install to the mcp.json with the http mode
+* Auto-install the plugin automatically
+* Auto-update
+* Add proper rust logging lib like we had on Atlas D:\UserGenerated\rojo
 
 [OpenCloud APIs MCP]
 Use env to get API KEY
@@ -17,50 +16,6 @@ Endpoints:
 * "place configurations"
 * "experience configurations"
 * "luau code execution"
-
-[Reference Paths]
-During a session we can utilize an auxilary instance ref uuid via GetDebugId(0)
-This string can accompany paths with a format like (its not always a number tmk):
-ReplicatedStorage/SomeInstance~1523
-These are only stable per studio session, so they should be included in metadata responses about instances
-This is helpful for editing instance trees with duplicated children/ambiguous paths
-
-[Instance codec]
-Need to develop codec for transmitting instances
-Use msgpack for transmission
-Duplicate paths handled by naming `{inst.Name}~{inst.GetDebugId(0)}`
-Grab MaximumADHD's reflection json via github. use in Rust+Plugin. create luau/rust types for it.
-{
-  "Name": "InstanceName",
-  "ClassName": "Part",
-  "UniqueId": "GetDebugId(0) output, e.g. 1234af",
-  "Properties": {
-    "Text": "Hello",
-    "Shape": {"Enum.PartType": "Block"},
-    "Anchored": true,
-    "Size": {"Vector3": [4, 1, 2]},
-    "Color": {"Color3": [0.5, 0.7, 0.0]},
-    "CFrame": {"CFrame": [[0,5,0], [1,0,0,0,1,0,0,0,1]]},
-    "Material": {"Enum.Material": "SmoothPlastic"},
-    "Attachment0": {"Reference": "Some/Path[~123]"},
-    "Attachment1": null,
-    "Health": 37,
-    "ViewDistance": {"number": "inf"}
-  },
-  "Attributes": {
-    // Same semantics as Properties with what Attributes actually support
-  },
-  "Tags": [ "Tag" ],
-  "Children": {
-    // If any children share a name, ALL of that name get ~ suffix
-    "Handle~a1b2": {
-      // ...
-    },
-    "Handle~f31a": {
-      // ...
-    }
-  }
-}
 
 [Studio Plugin MCP]
 * Ensure that every function definition has typed parameters and typed results. you can ignore functions which have no return value, those are fine.
@@ -154,6 +109,8 @@ Endpoints:
 * history via ChangeHistoryService
 * get_script_history
 * open_place placeid
+* TODO: csg building
+* TODO: get_linter_errors / get_script_analysis
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie
@@ -171,29 +128,11 @@ Endpoints:
 * search toolbox
 * toolbox assets
 
-[Luau Code Execution]
-We can use OpenCloud to perform remote luau code execution
-This can be helpful for uploading assets which OpenCloud doesnt support directly
-or even running code in roblox games in a headless mode.
+[Other]
+Endpoints:
+* trim_transparency file
+* resize_image file out-file [mode]
 
-[CI]
-Setup automated testing of rust code
-Setup automated TestEZ for the Lua code
-Setup automated selene checking for the lua code
-Setup automatic building of the plugin
-
-[websocket]
-Swap to websockets for lower latency, perform tasks async so it can have like 10+ queries going at the same time
-
-[merging]
+[Merging]
 we need to do a cursor style code merging/accept UI in roblox studio when we do this
 this would eliminate needing cursor at all, and you would just be using Claude desktop app + roblox studio.
-
-[CSG]
-We will want to support CSG in some way
-
-[Multi-studio support]
-How are we going to accomplish this?
-
-[linter errors]
-how in the world are we going to do linter errors? those are needed context.
