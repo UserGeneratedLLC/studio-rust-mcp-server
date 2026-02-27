@@ -1,6 +1,9 @@
 {
   "name": "MCPStudioPlugin",
   "tree": {
-    "$path": "plugin"
+    "$path": "plugin",
+    "Packages": {
+      "$path": "Packages"
+    }
   }
 }

@@ -1,7 +1,6 @@
 --!strict
 
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local StudioService = game:GetService("StudioService")
 
@@ -57,7 +56,7 @@ local function connectWebSocket()
   client.MessageReceived:Connect(function(message)
     log("[MCP] Message received")
 
-    local body = HttpService:JSONDecode(message)
+    local body = message
     assert(body and body.id and body.tool and body.args, "Invalid message received")
 
     local id: string = body.id

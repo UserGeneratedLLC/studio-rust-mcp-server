@@ -1,6 +1,5 @@
 --!strict
 
-local HttpService = game:GetService("HttpService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local StudioTestService = game:GetService("StudioTestService")
 
@@ -106,7 +105,7 @@ local function injectTestScript(args: Args)
   testScript.Source = source
 end
 
-local function runScriptInPlayMode(args: Args): string?
+local function runScriptInPlayMode(args: Args): any
   injectTestScript(args)
 
   ConsoleOutput.outputMessage = ""
@@ -127,11 +126,10 @@ local function runScriptInPlayMode(args: Args): string?
     error("Failed to run script in play mode: " .. result)
   end
 
-  local resultStr = HttpService:JSONEncode(result)
-  return resultStr
+  return result
 end
 
-local function handleRunScriptInPlayMode(args: Args): string?
+local function handleRunScriptInPlayMode(args: Args): any
   assert(type(args.code) == "string" and args.code ~= "", "Missing code in RunScriptInPlayMode")
   assert(
     args.timeout == nil or (type(args.timeout) == "number" and args.timeout >= 0),

@@ -2,6 +2,8 @@
 
 local HttpService = game:GetService("HttpService")
 
+local msgpack = require(script.Parent.msgpack)
+
 local MockWebSocketClient = {}
 MockWebSocketClient.__index = MockWebSocketClient
 
@@ -72,9 +74,9 @@ local function doRequest(url: string, method: "GET" | "POST", body: any)
       Url = url,
       Method = method,
       Headers = {
-        ["Content-Type"] = "application/json",
+        ["Content-Type"] = "application/msgpack",
       },
-      Body = if body then HttpService:JSONEncode(body) else nil,
+      Body = if body then msgpack.encode(body) else nil,
       Compress = Enum.HttpCompression.None,
     })
   end)
@@ -97,7 +99,7 @@ function MockWebSocketClient._OpenImpl(self: MockWebSocketClientPrivate)
 
       if response then
         if response.StatusCode == 200 and response.Success then
-          self._MessageReceivedEvent:Fire(response.Body)
+          self._MessageReceivedEvent:Fire(msgpack.decode(response.Body))
           continue
         elseif response.StatusCode == 423 then
           continue

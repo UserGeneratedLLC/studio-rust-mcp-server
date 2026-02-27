@@ -4,7 +4,10 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "MCPPlugin": {
-        "$path": "plugin"
+        "$path": "plugin",
+        "Packages": {
+          "$path": "Packages"
+        }
       },
       "DevPackages": {
         "$path": "DevPackages"

@@ -1,18 +1,22 @@
 use crate::error::{Report, Result};
-use crate::server_state::{PackedState, RunCommandResponse, ToolArguments};
+use crate::server_state::{value_to_mcp_string, PackedState, RunCommandResponse, ToolArguments};
+use axum::body::Bytes;
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::{extract::State, Json};
 use color_eyre::eyre::{eyre, Error, OptionExt};
 use rmcp::{
     handler::server::router::tool::ToolRouter,
     model::{Implementation, ProtocolVersion, ServerCapabilities, ServerInfo},
     tool_handler, ServerHandler,
 };
+use rmpv::Value as MsgpackValue;
 use tokio::sync::oneshot::Receiver;
 
 pub const STUDIO_PLUGIN_PORT: u16 = 44755;
 const LONG_POLL_DURATION: tokio::time::Duration = tokio::time::Duration::from_secs(15);
+
+const MSGPACK_CONTENT_TYPE: &str = "application/msgpack";
 
 #[derive(Clone)]
 pub struct RBXStudioServer {
@@ -51,7 +55,21 @@ Prefer using start_stop_play tool instead run_script_in_play_mode, Only used run
     }
 }
 
-pub async fn request_handler(State(state): State<PackedState>) -> Result<impl IntoResponse> {
+fn to_msgpack_response(value: &impl serde::Serialize) -> Result<impl IntoResponse> {
+    let bytes = rmp_serde::to_vec_named(value)
+        .map_err(|e| color_eyre::eyre::eyre!("msgpack serialize error: {e}"))?;
+    Ok((
+        [(axum::http::header::CONTENT_TYPE, MSGPACK_CONTENT_TYPE)],
+        bytes,
+    ))
+}
+
+fn from_msgpack_bytes<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T> {
+    rmp_serde::from_slice(bytes)
+        .map_err(|e| color_eyre::eyre::eyre!("msgpack deserialize error: {e}").into())
+}
+
+pub async fn request_handler(State(state): State<PackedState>) -> Result<axum::response::Response> {
     let timeout = tokio::time::timeout(LONG_POLL_DURATION, async {
         let mut waiter = { state.lock().await.waiter.clone() };
         loop {
@@ -66,30 +84,32 @@ pub async fn request_handler(State(state): State<PackedState>) -> Result<impl In
     })
     .await;
     match timeout {
-        Ok(result) => Ok(Json(result?).into_response()),
+        Ok(result) => Ok(to_msgpack_response(&result?)?.into_response()),
         _ => Ok((StatusCode::LOCKED, String::new()).into_response()),
     }
 }
 
 pub async fn response_handler(
     State(state): State<PackedState>,
-    Json(payload): Json<RunCommandResponse>,
+    body: Bytes,
 ) -> Result<impl IntoResponse> {
+    let payload: RunCommandResponse = from_msgpack_bytes(&body)?;
     tracing::debug!("Received reply from studio {payload:?}");
     let mut s = state.lock().await;
     let tx = s.output_map.remove(&payload.id).ok_or_eyre("Unknown ID")?;
     let result: Result<String, Report> = if payload.success {
-        Ok(payload.response)
+        Ok(value_to_mcp_string(payload.response))
     } else {
-        Err(Report::from(eyre!(payload.response)))
+        Err(Report::from(eyre!(value_to_mcp_string(payload.response))))
     };
     Ok(tx.send(result)?)
 }
 
 pub async fn proxy_handler(
     State(state): State<PackedState>,
-    Json(command): Json<ToolArguments>,
+    body: Bytes,
 ) -> Result<impl IntoResponse> {
+    let command: ToolArguments = from_msgpack_bytes(&body)?;
     let id = command.id.ok_or_eyre("Got proxy command with no id")?;
     tracing::debug!("Received request to proxy {command:?}");
     let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
@@ -103,16 +123,17 @@ pub async fn proxy_handler(
         let mut s = state.lock().await;
         s.output_map.remove_entry(&id);
     }
-    let (success, response) = match result {
+    let (success, response_str) = match result {
         Ok(s) => (true, s),
         Err(e) => (false, e.to_string()),
     };
-    tracing::debug!("Sending back to dud: success={success}, response={response:?}");
-    Ok(Json(RunCommandResponse {
+    tracing::debug!("Sending back to dud: success={success}, response={response_str:?}");
+    let response = RunCommandResponse {
         success,
-        response,
+        response: MsgpackValue::String(response_str.into()),
         id,
-    }))
+    };
+    to_msgpack_response(&response)
 }
 
 pub async fn dud_proxy_loop(state: PackedState, exit: Receiver<()>) {
@@ -121,9 +142,17 @@ pub async fn dud_proxy_loop(state: PackedState, exit: Receiver<()>) {
     while exit.is_empty() {
         let entry = { state.lock().await.process_queue.pop_front() };
         if let Some(entry) = entry {
+            let body = match rmp_serde::to_vec_named(&entry) {
+                Ok(b) => b,
+                Err(e) => {
+                    tracing::error!("Failed to serialize proxy entry: {e}");
+                    continue;
+                }
+            };
             let res = client
                 .post(format!("http://127.0.0.1:{STUDIO_PLUGIN_PORT}/proxy"))
-                .json(&entry)
+                .header(reqwest::header::CONTENT_TYPE, MSGPACK_CONTENT_TYPE)
+                .body(body)
                 .send()
                 .await;
             if let Ok(res) = res {
@@ -136,14 +165,15 @@ pub async fn dud_proxy_loop(state: PackedState, exit: Receiver<()>) {
                         .unwrap()
                 };
                 let res = res
-                    .json::<RunCommandResponse>()
+                    .bytes()
                     .await
                     .map_err(Into::into)
+                    .and_then(|b| from_msgpack_bytes::<RunCommandResponse>(&b))
                     .and_then(|r| {
                         if r.success {
-                            Ok(r.response)
+                            Ok(value_to_mcp_string(r.response))
                         } else {
-                            Err(Report::from(eyre!(r.response)))
+                            Err(Report::from(eyre!(value_to_mcp_string(r.response))))
                         }
                     });
                 tx.send(res).unwrap();

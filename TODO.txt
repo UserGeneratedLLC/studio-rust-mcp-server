@@ -67,6 +67,7 @@ Grab MaximumADHD's reflection json via github. use in Rust+Plugin. create luau/r
 * Utilize ChangeHistoryService
 * Upgrade to msgpack for rust<->plugin comms
 * Should utilize msgpack for encoding scheme
+* Handle inf/nan values somehow
 Endpoints:
 * run_code command [DONE]
  - Runs arbitrary Luau in Studio edit mode, returns print output
