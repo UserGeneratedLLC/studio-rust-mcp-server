@@ -42,4 +42,7 @@ fn main() {
     );
 
     println!("cargo:rerun-if-changed=plugin");
+    println!("cargo:rerun-if-changed=.darklua.json");
+    println!("cargo:rerun-if-changed=plugin.project.json");
+    println!("cargo:rerun-if-changed=plugin-build.project.json");
 }
