@@ -994,6 +994,7 @@ name = "rbx-studio-mcp"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "base64",
  "chrono",
  "color-eyre",
  "futures-util",

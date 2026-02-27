@@ -10,6 +10,12 @@
  - replace all eprint's and print's with this logging.
  - ensure correct log levels for everything
  - make sure console colors work as expected
+ - add logging on join/leave of roblox studio instances
+ - add logging for what is being run
+ - add logging for agent session create/quit
+* Add proper logging fron the plugin
+ - add a centralized logging module
+ - log operations that are happening
 * Update and improve the ServerInfo data
  - We should probably move this to a file instead? See what other big MCPs do. An icon would be nice, too.
 * Server metrics
@@ -366,3 +372,26 @@ As of Feb 2026, nobody has built the full vision above. Here's what exists:
 
 Deleted/404 repos also found: Sxf0z/RoMCP, 0xXrer/mcp.
 Also found on Glama: code-and-relax (enhanced boshyxd fork, 37+ tools, long polling).
+
+[Footnotes: Features Others Ship That We Don't Plan To Add]
+- Build Library system (boshyxd) — export_build, create_build, generate_build (procedural JS
+  code with room/roof/stairs/column/arch/fence primitives), import_build, import_scene,
+  list_library, get_build, search_materials. Full local build asset pipeline.
+- smart_duplicate (boshyxd) — duplicate with naming patterns ({n}), cumulative position/rotation/
+  scale offsets per copy, property variations per copy, different target parents per copy.
+  Also mass_duplicate for batching.
+- set_calculated_property (boshyxd) — set properties via formula expressions ("index * 50")
+  with custom variables. Different from our set_relative_property which is just += style ops.
+- Lighting suite (CoderDayton) — SetTimeOfDay, SetBrightness, SetAtmosphereDensity, CreateLight
+- Camera control (CoderDayton) — SetCameraPosition, SetCameraFocus, GetCameraPosition
+- Audio (CoderDayton) — PlaySound, StopSound
+- Player interaction (CoderDayton) — GetPlayers, GetPlayerPosition, TeleportPlayer, KickPlayer
+- GroupSelection / UngroupModel (CoderDayton)
+- SavePlace (CoderDayton)
+- HighlightObject (CoderDayton) — visual highlight with color and duration
+- GetDistance (CoderDayton) — distance between two objects
+- Chat (CoderDayton) — send system message to TextChatService
+- Remote spy (notpoiu) — intercept/log/block RemoteEvent/RemoteFunction traffic via Cobalt.
+  Exploiter-specific but debugging concept is interesting.
+- Docs semantic search (christopher-buss) — ChromaDB + OpenAI embeddings over Roblox creator-docs.
+  We handle this via .cursor/rules/roblox/ instead.

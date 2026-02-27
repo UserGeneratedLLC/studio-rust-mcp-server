@@ -1,9 +1,11 @@
+use crate::error::Result;
 use crate::server_state::{
     value_to_mcp_string, PackedState, RegistrationMessage, RunCommandResponse, StudioConnection,
 };
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::State;
 use axum::response::IntoResponse;
+use base64::Engine;
 use futures_util::{SinkExt, StreamExt};
 use rmcp::{
     handler::server::router::tool::ToolRouter,
@@ -13,6 +15,19 @@ use rmcp::{
 use uuid::Uuid;
 
 pub const STUDIO_PLUGIN_PORT: u16 = 44756;
+
+const B64: base64::engine::general_purpose::GeneralPurpose =
+    base64::engine::general_purpose::STANDARD;
+
+pub fn ws_encode<T: serde::Serialize>(value: &T) -> Result<String> {
+    let msgpack_bytes = rmp_serde::to_vec_named(value)?;
+    Ok(B64.encode(&msgpack_bytes))
+}
+
+pub fn ws_decode<T: serde::de::DeserializeOwned>(b64_text: &str) -> Result<T> {
+    let bytes = B64.decode(b64_text)?;
+    Ok(rmp_serde::from_slice(&bytes)?)
+}
 
 #[derive(Clone)]
 pub struct RBXStudioServer {
@@ -71,17 +86,15 @@ async fn handle_studio_connection(socket: WebSocket, state: PackedState) {
     let (mut ws_sender, mut ws_receiver) = socket.split();
 
     let registration = match ws_receiver.next().await {
-        Some(Ok(Message::Binary(data))) => {
-            match rmp_serde::from_slice::<RegistrationMessage>(&data) {
-                Ok(reg) => reg,
-                Err(e) => {
-                    tracing::error!("Invalid registration message: {e}");
-                    return;
-                }
+        Some(Ok(Message::Text(text))) => match ws_decode::<RegistrationMessage>(&text) {
+            Ok(reg) => reg,
+            Err(e) => {
+                tracing::error!("Invalid registration message: {e}");
+                return;
             }
-        }
+        },
         other => {
-            tracing::error!("Expected binary registration message, got: {other:?}");
+            tracing::error!("Expected text registration message, got: {other:?}");
             return;
         }
     };
@@ -94,22 +107,28 @@ async fn handle_studio_connection(socket: WebSocket, state: PackedState) {
         registration.place_name
     );
 
-    let ack = rmp_serde::to_vec_named(&serde_json::json!({
+    let ack = ws_encode(&serde_json::json!({
         "type": "registered",
         "studio_id": studio_id.to_string()
     }));
-    if let Ok(ack_bytes) = ack {
-        if ws_sender
-            .send(Message::Binary(ack_bytes.into()))
-            .await
-            .is_err()
-        {
-            tracing::error!("Failed to send registration ack to studio {studio_id}");
+    match ack {
+        Ok(ack_text) => {
+            if ws_sender
+                .send(Message::Text(ack_text.into()))
+                .await
+                .is_err()
+            {
+                tracing::error!("Failed to send registration ack to studio {studio_id}");
+                return;
+            }
+        }
+        Err(e) => {
+            tracing::error!("Failed to encode registration ack: {e}");
             return;
         }
     }
 
-    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<Vec<u8>>();
+    let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<String>();
 
     {
         let mut s = state.lock().await;
@@ -131,17 +150,21 @@ async fn handle_studio_connection(socket: WebSocket, state: PackedState) {
 
     let state_for_sender = state.clone();
     let sender_task = tokio::spawn(async move {
-        while let Some(bytes) = rx.recv().await {
-            if ws_sender.send(Message::Binary(bytes.into())).await.is_err() {
+        while let Some(b64_text) = rx.recv().await {
+            if ws_sender
+                .send(Message::Text(b64_text.into()))
+                .await
+                .is_err()
+            {
                 break;
             }
         }
-        let _ = state_for_sender; // prevent drop before sender finishes
+        let _ = state_for_sender;
     });
 
     while let Some(msg) = ws_receiver.next().await {
         match msg {
-            Ok(Message::Binary(data)) => match rmp_serde::from_slice::<RunCommandResponse>(&data) {
+            Ok(Message::Text(text)) => match ws_decode::<RunCommandResponse>(&text) {
                 Ok(response) => {
                     let mut s = state.lock().await;
                     if let Some(pending) = s.output_map.remove(&response.id) {
@@ -171,7 +194,6 @@ async fn handle_studio_connection(socket: WebSocket, state: PackedState) {
         }
     }
 
-    // Cleanup: remove connection and fail pending requests
     {
         let mut s = state.lock().await;
         s.connections.remove(&studio_id);

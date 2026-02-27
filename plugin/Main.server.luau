@@ -14,6 +14,7 @@ local msgpack = require("./msgpack")
 
 local WS_URI = "ws://localhost:44756/ws"
 local PLUGIN_DISABLED_SETTING_KEY = "Disabled-MCP-plugin-setting"
+local RECONNECT_INTERVAL = 5
 
 PluginUtils.plugin = plugin
 
@@ -39,14 +40,17 @@ local function log(...)
   end
 end
 
-local function connectToServer(): any
+local function connectToServer(): (any, BindableEvent)
+  local disconnectEvent = Instance.new("BindableEvent")
+
   local client = HttpService:CreateWebStreamClient(Enum.WebStreamClientType.WebSocket, {
     Url = WS_URI,
+    Compress = Enum.HttpCompression.Gzip,
   })
 
   client.Opened:Connect(function(_statusCode, _headers)
     log("[MCP] Connection opened, sending registration")
-    client:Send(msgpack.encode({
+    client:Send(msgpack.encodeb64({
       type = "register",
       place_id = game.PlaceId,
       place_name = game.Name,
@@ -56,20 +60,22 @@ local function connectToServer(): any
       creator_id = game.CreatorId,
       creator_type = tostring(game.CreatorType),
     }))
+    print("[MCP] Connected to server.")
   end)
 
   client.Closed:Connect(function()
     log("[MCP] Connection closed")
+    disconnectEvent:Fire()
   end)
 
-  client.Error:Connect(function(statusCode, errorMessage)
-    warn("[MCP] Connection error:", statusCode, errorMessage)
+  client.Error:Connect(function(_statusCode, _errorMessage)
+    disconnectEvent:Fire()
   end)
 
   client.MessageReceived:Connect(function(message: string)
     log("[MCP] Message received")
 
-    local body = msgpack.decode(message)
+    local body = msgpack.decodeb64(message)
 
     if body and body.type == "registered" then
       log("[MCP] Registered with studio_id:", body.studio_id)
@@ -84,7 +90,7 @@ local function connectToServer(): any
       if not responseSent then
         log("[MCP] Sending response:", response)
         responseSent = true
-        client:Send(msgpack.encode({
+        client:Send(msgpack.encodeb64({
           id = id,
           success = success,
           response = response,
@@ -102,7 +108,7 @@ local function connectToServer(): any
     log("[MCP] Successfully handled request")
   end)
 
-  return client
+  return client, disconnectEvent
 end
 
 local function getButtonImage(): string
@@ -117,24 +123,43 @@ local toggleButton =
   toolbar:CreateButton("Toggle MCP", "Toggle connection to the server", getButtonImage())
 toggleButton.ClickableWhenViewportHidden = true
 
-local currentClient: any = nil
+local connectionLoop: thread? = nil
 
-if not plugin:GetSetting(PLUGIN_DISABLED_SETTING_KEY) then
-  currentClient = connectToServer()
-  print("The MCP Studio plugin is ready for prompts.")
+local function startConnectionLoop()
+  connectionLoop = task.spawn(function()
+    while true do
+      local client, disconnectEvent = connectToServer()
+      disconnectEvent.Event:Wait()
+      warn("[MCP] Disconnected from server. Reconnecting in " .. RECONNECT_INTERVAL .. "s...")
+      pcall(function()
+        client:Close()
+      end)
+      task.wait(RECONNECT_INTERVAL)
+    end
+  end)
 end
 
-toggleButton:SetActive(currentClient ~= nil)
+local function stopConnectionLoop()
+  if connectionLoop then
+    task.cancel(connectionLoop)
+    connectionLoop = nil
+  end
+end
+
+if not plugin:GetSetting(PLUGIN_DISABLED_SETTING_KEY) then
+  startConnectionLoop()
+end
+
+toggleButton:SetActive(connectionLoop ~= nil)
 
 toggleButton.Click:Connect(function()
-  if not currentClient then
-    currentClient = connectToServer()
-    print("The MCP Studio plugin is ready for prompts.")
+  if not connectionLoop then
+    startConnectionLoop()
+    print("The MCP Studio plugin is enabled.")
   else
-    currentClient:Close()
-    currentClient = nil
+    stopConnectionLoop()
     print("The MCP Studio plugin is stopped.")
   end
-  toggleButton:SetActive(currentClient ~= nil)
-  plugin:SetSetting(PLUGIN_DISABLED_SETTING_KEY, currentClient == nil)
+  toggleButton:SetActive(connectionLoop ~= nil)
+  plugin:SetSetting(PLUGIN_DISABLED_SETTING_KEY, connectionLoop == nil)
 end)

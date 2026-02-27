@@ -14,7 +14,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Serialize)]
 pub struct StudioConnection {
     #[serde(skip)]
-    pub sender: mpsc::UnboundedSender<Vec<u8>>,
+    pub sender: mpsc::UnboundedSender<String>,
     pub place_id: u64,
     pub place_name: String,
     pub game_id: u64,
@@ -208,8 +208,8 @@ pub async fn dispatch(
     let (command, id) = ToolArguments::new_with_id(tool, args);
     tracing::debug!("Running command: {:?}", command);
 
-    let bytes = rmp_serde::to_vec_named(&command)
-        .map_err(|e| ErrorData::internal_error(format!("msgpack serialize error: {e}"), None))?;
+    let b64_text = crate::rbx_studio_server::ws_encode(&command)
+        .map_err(|e| ErrorData::internal_error(format!("ws_encode error: {e}"), None))?;
 
     let (tx, mut rx) = mpsc::unbounded_channel::<Result<String>>();
 
@@ -230,7 +230,7 @@ pub async fn dispatch(
         sender
     };
 
-    if let Err(e) = sender.send(bytes) {
+    if let Err(e) = sender.send(b64_text) {
         let mut s = state.lock().await;
         s.output_map.remove(&id);
         return Err(ErrorData::internal_error(
