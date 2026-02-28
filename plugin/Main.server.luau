@@ -40,8 +40,9 @@ local function log(...)
   end
 end
 
-local function connectToServer(): (any, BindableEvent)
+local function connectToServer(): (any, BindableEvent, () -> boolean)
   local disconnectEvent = Instance.new("BindableEvent")
+  local connected = false
 
   local client = HttpService:CreateWebStreamClient(Enum.WebStreamClientType.WebSocket, {
     Url = WS_URI,
@@ -49,6 +50,7 @@ local function connectToServer(): (any, BindableEvent)
   })
 
   client.Opened:Connect(function(_statusCode, _headers)
+    connected = true
     log("[MCP] Connection opened, sending registration")
     client:Send(msgpack.encodeb64({
       type = "register",
@@ -108,7 +110,9 @@ local function connectToServer(): (any, BindableEvent)
     log("[MCP] Successfully handled request")
   end)
 
-  return client, disconnectEvent
+  return client, disconnectEvent, function()
+    return connected
+  end
 end
 
 local function getButtonImage(): string
@@ -129,11 +133,13 @@ local currentClient: any = nil
 local function startConnectionLoop()
   connectionLoop = task.spawn(function()
     while true do
-      local client, disconnectEvent = connectToServer()
+      local client, disconnectEvent, wasConnected = connectToServer()
       currentClient = client
       disconnectEvent.Event:Wait()
       currentClient = nil
-      warn("[MCP] Disconnected from server. Reconnecting in " .. RECONNECT_INTERVAL .. "s...")
+      if wasConnected() then
+        warn("[MCP] Disconnected from server. Reconnecting in " .. RECONNECT_INTERVAL .. "s...")
+      end
       pcall(function()
         client:Close()
       end)

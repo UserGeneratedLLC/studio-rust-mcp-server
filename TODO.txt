@@ -1,3 +1,8 @@
+[NOW]
+* Cleanup routes so it's not as verbose/boilerplate. It should still be defined like the original was, where each file has a function - we just need to gather up all of those into one big route.
+ - Investigate modern rust for situations like this
+* Rename all lua plugin routes to match the .rs versions, so snake_case.
+
 [App]
 * Rename the project to something better
 * Cleanup latent project files from the original github
