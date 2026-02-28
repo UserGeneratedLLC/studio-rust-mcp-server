@@ -12,14 +12,17 @@ pub struct RunScriptInPlayModeArgs {
 
 #[tool_router(router = run_script_in_play_mode_route, vis = "pub")]
 impl RBXStudioServer {
-    #[tool(
-        description = "Run a script in play mode and automatically stop play after script finishes or timeout. \
-        Returns the output of the script. \
-        Result format: { success: boolean, value: string, error: string, logs: { level: string, message: string, ts: number }[], errors: { level: string, message: string, ts: number }[], duration: number, isTimeout: boolean }. \
-        Prefer using start_stop_play tool instead. \
-        After calling, the datamodel status will be reset to stop mode. \
-        If it returns `StudioTestService: Previous call to start play session has not been completed`, call start_stop_play to stop first then try again."
-    )]
+    #[doc = include_str!("run_script_in_play_mode.md")]
+    #[tool(annotations(
+        // Tool modifies its environment (e.g. starts/stops play mode)
+        read_only_hint = false,
+        // Tool may perform destructive updates (only meaningful when read_only_hint = false)
+        destructive_hint = false,
+        // Repeated calls with same args may have additional effects (only meaningful when read_only_hint = false)
+        idempotent_hint = true,
+        // Tool interacts with external entities beyond its closed domain
+        open_world_hint = false
+    ))]
     async fn run_script_in_play_mode(
         &self,
         ctx: RequestContext<RoleServer>,

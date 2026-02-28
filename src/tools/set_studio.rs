@@ -10,9 +10,17 @@ pub struct SetStudioArgs {
 
 #[tool_router(router = set_studio_route, vis = "pub")]
 impl RBXStudioServer {
-    #[tool(
-        description = "Bind this session to a specific Roblox Studio instance. All subsequent tool calls will route to the selected studio. Use list_studios to discover available studio_ids."
-    )]
+    #[doc = include_str!("set_studio.md")]
+    #[tool(annotations(
+        // Modifies session routing state
+        read_only_hint = false,
+        // Only changes which studio is targeted, no data loss
+        destructive_hint = false,
+        // Setting the same studio_id twice has the same effect
+        idempotent_hint = true,
+        // Operates on internal session state only
+        open_world_hint = false
+    ))]
     async fn set_studio(
         &self,
         ctx: RequestContext<RoleServer>,

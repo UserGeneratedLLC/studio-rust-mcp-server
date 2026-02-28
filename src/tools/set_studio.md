@@ -1,0 +1,1 @@
+Bind this session to a specific Roblox Studio instance. All subsequent tool calls will route to the selected studio. Use list_studios to discover available studio_ids. Omit studio_id to clear the selection.

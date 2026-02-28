@@ -1,0 +1,1 @@
+Get the currently selected Roblox Studio instance for this session. Returns studio metadata if a studio is selected and still connected, or nothing if no studio is selected or the selected studio disconnected.

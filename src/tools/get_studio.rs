@@ -2,9 +2,13 @@ use super::prelude::*;
 
 #[tool_router(router = get_studio_route, vis = "pub")]
 impl RBXStudioServer {
-    #[tool(
-        description = "Get the currently selected Roblox Studio instance for this session. Returns studio metadata if a studio is selected and still connected, or nothing if no studio is selected or the selected studio disconnected."
-    )]
+    #[doc = include_str!("get_studio.md")]
+    #[tool(annotations(
+        read_only_hint = true,
+        destructive_hint = false,
+        idempotent_hint = true,
+        open_world_hint = false
+    ))]
     async fn get_studio(
         &self,
         ctx: RequestContext<RoleServer>,

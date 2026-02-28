@@ -10,9 +10,17 @@ pub struct StartStopPlayArgs {
 
 #[tool_router(router = start_stop_play_route, vis = "pub")]
 impl RBXStudioServer {
-    #[tool(
-        description = "Start or stop play mode or run the server. Don't enter run_server mode unless you are sure no client/player is needed."
-    )]
+    #[doc = include_str!("start_stop_play.md")]
+    #[tool(annotations(
+        // Starts/stops play mode, modifying Studio state
+        read_only_hint = false,
+        // Starting/stopping play does not permanently destroy data
+        destructive_hint = false,
+        // Starting when already started returns "Already in play mode"
+        idempotent_hint = true,
+        // Operates entirely within the Studio session
+        open_world_hint = false
+    ))]
     async fn start_stop_play(
         &self,
         ctx: RequestContext<RoleServer>,
