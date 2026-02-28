@@ -5,7 +5,6 @@ use rmcp::{
 };
 use rmpv::Value as MsgpackValue;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
@@ -80,11 +79,11 @@ impl AppState {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct ToolArguments {
-    pub tool: String,
-    pub args: Value,
-    pub id: Option<Uuid>,
+#[derive(Serialize)]
+struct WireMessage<'a, T: Serialize> {
+    tool: &'a str,
+    args: &'a T,
+    id: Uuid,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -92,20 +91,6 @@ pub struct RunCommandResponse {
     pub success: bool,
     pub response: MsgpackValue,
     pub id: Uuid,
-}
-
-impl ToolArguments {
-    pub fn new_with_id(tool: impl Into<String>, args: Value) -> (Self, Uuid) {
-        let id = Uuid::new_v4();
-        (
-            Self {
-                tool: tool.into(),
-                args,
-                id: Some(id),
-            },
-            id,
-        )
-    }
 }
 
 pub fn value_to_mcp_string(value: MsgpackValue) -> String {
@@ -199,14 +184,15 @@ fn resolve_studio_id(
     }
 }
 
-pub async fn dispatch(
+pub async fn dispatch<T: Serialize>(
     state: &PackedState,
     session: &SessionState,
     tool: &str,
-    args: Value,
+    args: &T,
 ) -> std::result::Result<CallToolResult, ErrorData> {
-    let (command, id) = ToolArguments::new_with_id(tool, args);
-    tracing::debug!("Running command: {:?}", command);
+    let id = Uuid::new_v4();
+    let command = WireMessage { tool, args, id };
+    tracing::debug!("Running command: {tool} (id={id})");
 
     let b64_text = crate::rbx_studio_server::ws_encode(&command)
         .map_err(|e| ErrorData::internal_error(format!("ws_encode error: {e}"), None))?;

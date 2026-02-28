@@ -72,7 +72,7 @@ local function writei32be(b: buffer, offset: number, value: number): ()
 end
 
 -- selene: allow(unused_variable)
-local function writef32be(b: buffer, offset: number, value: number): ()
+local function _writef32be(b: buffer, offset: number, value: number): ()
   buffer.writef32(b, offset, value)
   buffer.writeu32(b, offset, bit32.byteswap(buffer.readu32(b, offset)))
 end

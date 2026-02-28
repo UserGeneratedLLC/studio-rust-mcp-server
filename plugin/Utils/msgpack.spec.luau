@@ -705,7 +705,7 @@ end)
 
 describe("encodeb64 / decodeb64", function()
   it("round-trips simple values", function()
-    local values = { 42, "hello", true, false, { 1, 2, 3 }, { a = "b" } }
+    local values: { any } = { 42, "hello", true, false, { 1, 2, 3 }, { a = "b" } }
     for _, v in values do
       local encoded = msgpack.encodeb64(v)
       expect(typeof(encoded)).toEqual("string")

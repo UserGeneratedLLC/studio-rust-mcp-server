@@ -31,12 +31,16 @@ pub fn ws_decode<T: serde::de::DeserializeOwned>(b64_text: &str) -> Result<T> {
 
 #[derive(Clone)]
 pub struct RBXStudioServer {
+    pub(crate) state: PackedState,
     tool_router: ToolRouter<Self>,
 }
 
 impl RBXStudioServer {
-    pub fn new(tool_router: ToolRouter<Self>) -> Self {
-        Self { tool_router }
+    pub fn new(state: PackedState) -> Self {
+        Self {
+            state,
+            tool_router: Self::build_tool_router(),
+        }
     }
 }
 

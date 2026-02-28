@@ -1,40 +1,63 @@
-pub mod get_console_output;
-pub mod get_studio;
-pub mod get_studio_mode;
-pub mod insert_model;
-pub mod list_studios;
-pub mod run_code;
-pub mod run_script_in_play_mode;
-pub mod set_studio;
-pub mod start_stop_play;
+mod get_console_output;
+mod get_studio;
+mod get_studio_mode;
+mod insert_model;
+mod list_studios;
+mod run_code;
+mod run_script_in_play_mode;
+mod set_studio;
+mod start_stop_play;
 
-use crate::server_state::{get_or_create_session, PackedState, SessionState};
-use rmcp::handler::server::router::tool::ToolRouter;
-
-pub fn build_router<S: Send + Sync + 'static>(state: PackedState) -> ToolRouter<S> {
-    ToolRouter::new()
-        .with_route(run_code::route::<S>(state.clone()))
-        .with_route(insert_model::route::<S>(state.clone()))
-        .with_route(get_console_output::route::<S>(state.clone()))
-        .with_route(get_studio_mode::route::<S>(state.clone()))
-        .with_route(start_stop_play::route::<S>(state.clone()))
-        .with_route(run_script_in_play_mode::route::<S>(state.clone()))
-        .with_route(set_studio::route::<S>(state.clone()))
-        .with_route(get_studio::route::<S>(state.clone()))
-        .with_route(list_studios::route::<S>(state.clone()))
+pub(crate) mod prelude {
+    pub use crate::rbx_studio_server::RBXStudioServer;
+    pub use crate::server_state::{dispatch, get_or_create_session, SessionState};
+    pub use rmcp::{
+        handler::server::{router::tool::ToolRouter, wrapper::Parameters},
+        model::{CallToolResult, Content},
+        schemars,
+        service::RequestContext,
+        tool, tool_router, ErrorData, RoleServer,
+    };
+    pub use serde::{Deserialize, Serialize};
 }
 
-pub async fn resolve_session(state: &PackedState, parts: &http::request::Parts) -> SessionState {
-    let mcp_session_id = extract_mcp_session_id(parts);
-    let mut s = state.lock().await;
-    get_or_create_session(&mut s, &mcp_session_id)
-}
+use prelude::*;
 
-pub fn extract_mcp_session_id(parts: &http::request::Parts) -> String {
-    parts
-        .headers
-        .get("mcp-session-id")
-        .and_then(|v: &http::HeaderValue| v.to_str().ok())
-        .unwrap_or("unknown")
-        .to_string()
+impl RBXStudioServer {
+    pub(crate) fn build_tool_router() -> ToolRouter<Self> {
+        Self::run_code_route()
+            + Self::insert_model_route()
+            + Self::get_console_output_route()
+            + Self::get_studio_mode_route()
+            + Self::start_stop_play_route()
+            + Self::run_script_in_play_mode_route()
+            + Self::set_studio_route()
+            + Self::get_studio_route()
+            + Self::list_studios_route()
+    }
+
+    pub(crate) async fn dispatch_to_studio<T: Serialize>(
+        &self,
+        ctx: &RequestContext<RoleServer>,
+        tool: &str,
+        args: &T,
+    ) -> Result<CallToolResult, ErrorData> {
+        let session = self.resolve_session(ctx).await;
+        dispatch(&self.state, &session, tool, args).await
+    }
+
+    pub(crate) async fn resolve_session(&self, ctx: &RequestContext<RoleServer>) -> SessionState {
+        let mcp_session_id = Self::extract_mcp_session_id(ctx);
+        let mut s = self.state.lock().await;
+        get_or_create_session(&mut s, &mcp_session_id)
+    }
+
+    pub(crate) fn extract_mcp_session_id(ctx: &RequestContext<RoleServer>) -> String {
+        ctx.extensions
+            .get::<http::request::Parts>()
+            .and_then(|parts| parts.headers.get("mcp-session-id"))
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("unknown")
+            .to_string()
+    }
 }

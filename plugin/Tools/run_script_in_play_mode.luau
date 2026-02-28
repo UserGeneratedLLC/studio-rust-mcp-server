@@ -4,7 +4,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local StudioTestService = game:GetService("StudioTestService")
 
 local ConsoleOutput = require("../Utils/ConsoleOutput")
-local StartStopPlay = require("./StartStopPlay")
+local StartStopPlay = require("./start_stop_play")
 local StudioModeState = require("../Utils/StudioModeState")
 
 type Args = {

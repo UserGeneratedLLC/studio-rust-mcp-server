@@ -53,10 +53,7 @@ async fn main() -> Result<()> {
 
     let mcp_state = app_state.clone();
     let mcp_service = StreamableHttpService::new(
-        move || {
-            let router = tools::build_router::<RBXStudioServer>(mcp_state.clone());
-            Ok(RBXStudioServer::new(router))
-        },
+        move || Ok(RBXStudioServer::new(mcp_state.clone())),
         Arc::new(LocalSessionManager::default()),
         StreamableHttpServerConfig::default(),
     );

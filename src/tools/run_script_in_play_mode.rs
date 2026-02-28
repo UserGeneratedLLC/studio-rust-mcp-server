@@ -1,14 +1,7 @@
-use crate::server_state::{dispatch, PackedState};
-use http::request::Parts;
-use rmcp::{
-    handler::server::{router::tool::ToolRoute, tool::Extension, wrapper::Parameters},
-    model::Tool,
-    schemars,
-};
-use serde::{Deserialize, Serialize};
+use super::prelude::*;
 
-#[derive(Debug, Deserialize, Serialize, schemars::JsonSchema, Clone)]
-pub struct Args {
+#[derive(Debug, Deserialize, Serialize, schemars::JsonSchema)]
+pub struct RunScriptInPlayModeArgs {
     #[schemars(description = "Code to run")]
     pub code: String,
     #[schemars(description = "Timeout in seconds, defaults to 100 seconds")]
@@ -17,33 +10,22 @@ pub struct Args {
     pub mode: String,
 }
 
-pub fn route<S: Send + Sync + 'static>(state: PackedState) -> ToolRoute<S> {
-    let tool = Tool::new(
-        "run_script_in_play_mode",
-        "Run a script in play mode and automatically stop play after script finishes or timeout. \
+#[tool_router(router = run_script_in_play_mode_route, vis = "pub")]
+impl RBXStudioServer {
+    #[tool(
+        description = "Run a script in play mode and automatically stop play after script finishes or timeout. \
         Returns the output of the script. \
         Result format: { success: boolean, value: string, error: string, logs: { level: string, message: string, ts: number }[], errors: { level: string, message: string, ts: number }[], duration: number, isTimeout: boolean }. \
         Prefer using start_stop_play tool instead. \
         After calling, the datamodel status will be reset to stop mode. \
-        If it returns `StudioTestService: Previous call to start play session has not been completed`, call start_stop_play to stop first then try again.",
-        serde_json::Map::new(),
-    )
-    .with_input_schema::<Args>();
-
-    ToolRoute::new(
-        tool,
-        move |Extension(parts): Extension<Parts>, Parameters(args): Parameters<Args>| {
-            let state = state.clone();
-            async move {
-                let session = super::resolve_session(&state, &parts).await;
-                dispatch(
-                    &state,
-                    &session,
-                    "RunScriptInPlayMode",
-                    serde_json::to_value(args).unwrap(),
-                )
-                .await
-            }
-        },
-    )
+        If it returns `StudioTestService: Previous call to start play session has not been completed`, call start_stop_play to stop first then try again."
+    )]
+    async fn run_script_in_play_mode(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(args): Parameters<RunScriptInPlayModeArgs>,
+    ) -> Result<CallToolResult, ErrorData> {
+        self.dispatch_to_studio(&ctx, "run_script_in_play_mode", &args)
+            .await
+    }
 }

@@ -1,40 +1,21 @@
-use crate::server_state::{dispatch, PackedState};
-use http::request::Parts;
-use rmcp::{
-    handler::server::{router::tool::ToolRoute, tool::Extension, wrapper::Parameters},
-    model::Tool,
-    schemars,
-};
-use serde::{Deserialize, Serialize};
+use super::prelude::*;
 
-#[derive(Debug, Deserialize, Serialize, schemars::JsonSchema, Clone)]
-pub struct Args {
+#[derive(Debug, Deserialize, Serialize, schemars::JsonSchema)]
+pub struct RunCodeArgs {
     #[schemars(description = "Code to run")]
     pub command: String,
 }
 
-pub fn route<S: Send + Sync + 'static>(state: PackedState) -> ToolRoute<S> {
-    let tool = Tool::new(
-        "run_code",
-        "Runs a command in Roblox Studio and returns the printed output. Can be used to both make changes and retrieve information",
-        serde_json::Map::new(),
-    )
-    .with_input_schema::<Args>();
-
-    ToolRoute::new(
-        tool,
-        move |Extension(parts): Extension<Parts>, Parameters(args): Parameters<Args>| {
-            let state = state.clone();
-            async move {
-                let session = super::resolve_session(&state, &parts).await;
-                dispatch(
-                    &state,
-                    &session,
-                    "RunCode",
-                    serde_json::to_value(args).unwrap(),
-                )
-                .await
-            }
-        },
-    )
+#[tool_router(router = run_code_route, vis = "pub")]
+impl RBXStudioServer {
+    #[tool(
+        description = "Runs a command in Roblox Studio and returns the printed output. Can be used to both make changes and retrieve information"
+    )]
+    async fn run_code(
+        &self,
+        ctx: RequestContext<RoleServer>,
+        Parameters(args): Parameters<RunCodeArgs>,
+    ) -> Result<CallToolResult, ErrorData> {
+        self.dispatch_to_studio(&ctx, "run_code", &args).await
+    }
 }
