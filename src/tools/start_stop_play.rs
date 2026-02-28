@@ -1,11 +1,19 @@
 use super::prelude::*;
 
 #[derive(Debug, Deserialize, Serialize, schemars::JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum StartStopPlayMode {
+    StartPlay,
+    Stop,
+    RunServer,
+}
+
+#[derive(Debug, Deserialize, Serialize, schemars::JsonSchema)]
 pub struct StartStopPlayArgs {
     #[schemars(
-        description = "Mode to start or stop, must be start_play, stop, or run_server. Don't use run_server unless you are sure no client/player is needed."
+        description = "Don't use `run_server` unless you are sure no client/player is needed."
     )]
-    pub mode: String,
+    pub mode: StartStopPlayMode,
 }
 
 #[tool_router(router = start_stop_play_route, vis = "pub")]

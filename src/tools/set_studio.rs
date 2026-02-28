@@ -45,36 +45,23 @@ impl RBXStudioServer {
                     ErrorData::invalid_params(format!("Invalid studio_id: {id_str}"), None)
                 })?;
 
-                let metadata = {
-                    let conn = s.connections.get(&studio_id).ok_or_else(|| {
+                let conn = match s.connections.get(&studio_id) {
+                    Some(conn) => conn,
+                    None => {
                         let available: Vec<String> = s
                             .connections
                             .iter()
                             .map(|(id, c)| format!("  {} - {}", id, c.place_name))
                             .collect();
-                        ErrorData::invalid_params(
-                            format!(
-                                "No studio with studio_id {}.\nAvailable:\n{}",
-                                studio_id,
-                                available.join("\n")
-                            ),
-                            None,
-                        )
-                    })?;
-
-                    serde_json::to_string_pretty(&serde_json::json!({
-                        "studio_id": studio_id.to_string(),
-                        "place_id": conn.place_id,
-                        "place_name": conn.place_name,
-                        "game_id": conn.game_id,
-                        "job_id": conn.job_id,
-                        "place_version": conn.place_version,
-                        "creator_id": conn.creator_id,
-                        "creator_type": conn.creator_type,
-                        "connected_at": conn.connected_at.to_rfc3339(),
-                    }))
-                    .unwrap_or_default()
+                        return Ok(CallToolResult::error(vec![Content::text(format!(
+                            "No studio with studio_id {studio_id}. Call `list_studios` to see available studios.\nConnected:\n{}",
+                            available.join("\n")
+                        ))]));
+                    }
                 };
+
+                let metadata =
+                    serde_json::to_string_pretty(&conn.to_info(studio_id)).unwrap_or_default();
 
                 let session = s
                     .sessions

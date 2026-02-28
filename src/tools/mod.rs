@@ -10,9 +10,12 @@ mod start_stop_play;
 
 pub(crate) mod prelude {
     pub use crate::rbx_studio_server::RBXStudioServer;
-    pub use crate::server_state::{dispatch, get_or_create_session, SessionState};
+    pub use crate::server_state::{dispatch, get_or_create_session, SessionState, StudioInfo};
     pub use rmcp::{
-        handler::server::{router::tool::ToolRouter, wrapper::Parameters},
+        handler::server::{
+            router::tool::ToolRouter,
+            wrapper::{Json, Parameters},
+        },
         model::{CallToolResult, Content},
         schemars,
         service::RequestContext,

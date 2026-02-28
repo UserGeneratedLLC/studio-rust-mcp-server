@@ -9,28 +9,13 @@ impl RBXStudioServer {
         idempotent_hint = true,
         open_world_hint = false
     ))]
-    async fn list_studios(&self) -> Result<CallToolResult, ErrorData> {
+    async fn list_studios(&self) -> Result<Json<Vec<StudioInfo>>, ErrorData> {
         let s = self.state.lock().await;
-
-        let studios: Vec<serde_json::Value> = s
+        let studios: Vec<StudioInfo> = s
             .connections
             .iter()
-            .map(|(id, conn)| {
-                serde_json::json!({
-                    "studio_id": id.to_string(),
-                    "place_id": conn.place_id,
-                    "place_name": conn.place_name,
-                    "game_id": conn.game_id,
-                    "job_id": conn.job_id,
-                    "place_version": conn.place_version,
-                    "creator_id": conn.creator_id,
-                    "creator_type": conn.creator_type,
-                    "connected_at": conn.connected_at.to_rfc3339(),
-                })
-            })
+            .map(|(id, conn)| conn.to_info(*id))
             .collect();
-
-        let result = serde_json::to_string_pretty(&studios).unwrap_or_else(|_| "[]".to_string());
-        Ok(CallToolResult::success(vec![Content::text(result)]))
+        Ok(Json(studios))
     }
 }

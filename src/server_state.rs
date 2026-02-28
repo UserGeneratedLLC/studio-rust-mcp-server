@@ -1,7 +1,7 @@
 use crate::error::Result;
 use rmcp::{
     model::{CallToolResult, Content},
-    ErrorData,
+    schemars, ErrorData,
 };
 use rmpv::Value as MsgpackValue;
 use serde::{Deserialize, Serialize};
@@ -22,6 +22,44 @@ pub struct StudioConnection {
     pub creator_id: u64,
     pub creator_type: String,
     pub connected_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl StudioConnection {
+    pub fn to_info(&self, studio_id: Uuid) -> StudioInfo {
+        StudioInfo {
+            studio_id: studio_id.to_string(),
+            place_id: self.place_id,
+            place_name: self.place_name.clone(),
+            game_id: self.game_id,
+            job_id: self.job_id.clone(),
+            place_version: self.place_version,
+            creator_id: self.creator_id,
+            creator_type: self.creator_type.clone(),
+            connected_at: self.connected_at.to_rfc3339(),
+        }
+    }
+}
+
+#[derive(Serialize, schemars::JsonSchema)]
+pub struct StudioInfo {
+    #[schemars(description = "Unique studio connection identifier")]
+    pub studio_id: String,
+    #[schemars(description = "Numeric place identifier")]
+    pub place_id: u64,
+    #[schemars(description = "Name of the Roblox place")]
+    pub place_name: String,
+    #[schemars(description = "Numeric game/universe identifier")]
+    pub game_id: u64,
+    #[schemars(description = "Job identifier for this Studio session")]
+    pub job_id: String,
+    #[schemars(description = "Current place version number")]
+    pub place_version: u64,
+    #[schemars(description = "Creator account identifier")]
+    pub creator_id: u64,
+    #[schemars(description = "Creator account type")]
+    pub creator_type: String,
+    #[schemars(description = "ISO 8601 timestamp of when the studio connected")]
+    pub connected_at: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -144,25 +182,21 @@ pub fn get_or_create_session(state: &mut AppState, mcp_session_id: &str) -> Sess
 fn resolve_studio_id(
     state: &AppState,
     session: &SessionState,
-) -> std::result::Result<Uuid, ErrorData> {
+) -> std::result::Result<Uuid, CallToolResult> {
     if let Some(studio_id) = session.selected_studio_id {
         if state.connections.contains_key(&studio_id) {
             return Ok(studio_id);
         }
-        return Err(ErrorData::internal_error(
-            format!(
-                "Selected studio {} is no longer connected. Use list_studios and set_studio to pick a new one.",
-                studio_id
-            ),
-            None,
-        ));
+        return Err(CallToolResult::error(vec![Content::text(format!(
+            "Selected studio {} is no longer connected. Call `list_studios` to see available studios, then `set_studio` to select one.",
+            studio_id
+        ))]));
     }
 
     match state.connections.len() {
-        0 => Err(ErrorData::internal_error(
+        0 => Err(CallToolResult::error(vec![Content::text(
             "No Studio instances connected. Open Roblox Studio with the MCP plugin enabled.",
-            None,
-        )),
+        )])),
         1 => {
             let studio_id = *state.connections.keys().next().unwrap();
             Ok(studio_id)
@@ -173,13 +207,10 @@ fn resolve_studio_id(
                 .iter()
                 .map(|(id, conn)| format!("  {} - {}", id, conn.place_name))
                 .collect();
-            Err(ErrorData::internal_error(
-                format!(
-                    "Multiple studios connected. Call set_studio(studio_id=X) first.\nConnected studios:\n{}",
-                    studios.join("\n")
-                ),
-                None,
-            ))
+            Err(CallToolResult::error(vec![Content::text(format!(
+                "Multiple studios connected. Call `set_studio` with one of these studio_ids first:\n{}",
+                studios.join("\n")
+            ))]))
         }
     }
 }
@@ -201,10 +232,18 @@ pub async fn dispatch<T: Serialize>(
 
     let sender = {
         let mut s = state.lock().await;
-        let studio_id = resolve_studio_id(&s, session)?;
-        let conn = s.connections.get(&studio_id).ok_or_else(|| {
-            ErrorData::internal_error("Studio disconnected during dispatch", None)
-        })?;
+        let studio_id = match resolve_studio_id(&s, session) {
+            Ok(id) => id,
+            Err(error_result) => return Ok(error_result),
+        };
+        let conn = match s.connections.get(&studio_id) {
+            Some(conn) => conn,
+            None => {
+                return Ok(CallToolResult::error(vec![Content::text(
+                    "Studio disconnected during dispatch. Call `list_studios` to see available studios.",
+                )]));
+            }
+        };
         let sender = conn.sender.clone();
         s.output_map.insert(
             id,
@@ -219,21 +258,26 @@ pub async fn dispatch<T: Serialize>(
     if let Err(e) = sender.send(b64_text) {
         let mut s = state.lock().await;
         s.output_map.remove(&id);
-        return Err(ErrorData::internal_error(
-            format!("Failed to send to studio (disconnected): {e}"),
-            None,
-        ));
+        return Ok(CallToolResult::error(vec![Content::text(format!(
+            "Studio disconnected: {e}. Call `list_studios` to see available studios.",
+        ))]));
     }
 
-    let result = rx
-        .recv()
-        .await
-        .ok_or(ErrorData::internal_error("Studio disconnected", None))?;
+    let result = rx.recv().await;
 
     {
         let mut s = state.lock().await;
         s.output_map.remove(&id);
     }
+
+    let result = match result {
+        Some(r) => r,
+        None => {
+            return Ok(CallToolResult::error(vec![Content::text(
+                "Studio disconnected while waiting for response. Call `list_studios` to see available studios.",
+            )]));
+        }
+    };
 
     tracing::debug!("Sending to MCP: {result:?}");
     match result {
