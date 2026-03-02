@@ -1,7 +1,4 @@
 [NOW]
-* Cleanup routes so it's not as verbose/boilerplate. It should still be defined like the original was, where each file has a function - we just need to gather up all of those into one big route.
- - Investigate modern rust for situations like this
-* Rename all lua plugin routes to match the .rs versions, so snake_case.
 
 [App]
 * Rename the project to something better
@@ -51,6 +48,17 @@ Endpoints:
 * restart_servers universeId
 * get_universe universeId
  - Returns universe/game metadata
+* instance editing via opencloud
+ - Start with root -- the special string "root" represents the top of the DataModel (game). You pass it as the instanceId to list the top-level services:
+ - GET https://apis.roblox.com/cloud/v2/universes/{universeId}/places/{placeId}/instances/root:listChildren
+ - The response returns UUIDs for each child instance:
+ - {  "instances": [    {      "path": "universes/123/places/456/instances/b1b2b3b4-b1b2-b1b2-b1b2-b1b2b3b4b5b6",      "hasChildren": true,      "engineInstance": {        "Id": "b1b2b3b4-b1b2-b1b2-b1b2-b1b2b3b4b5b6",        "Parent": "a1a2a3a4-a1a2-a1a2-a1a2-a1a2a3a4a5a6",        "Name": "Workspace",        "Details": {}      }    }  ]}
+ - You walk the tree by calling listChildren on each UUID to drill deeper until you find the script you want.
+ - Get or update a specific instance using its UUID:
+ - GET  https://apis.roblox.com/cloud/v2/universes/{universeId}/places/{placeId}/instances/{uuid}
+ - PATCH https://apis.roblox.com/cloud/v2/universes/{universeId}/places/{placeId}/instances/{uuid}
+ - These UUIDs are internally the same as the UniqueId property on Instance in the API dump (which is at RobloxScriptSecurity read, RobloxEngine write). They're Roblox's internal instance identity system -- stable across sessions within the same place, but not something you'd normally see or construct yourself. You discover them by traversing from root.
+ - The key limitation: this API only supports reading/writing Script, LocalScript, and ModuleScript instances (it's in beta), and it operates on the current state only -- no version parameter, no history. It also requires a collaboration session to be enabled on the experience.
 
 [Studio Plugin MCP]
 * rename tools to match the rust side exactly, e.g. "InsertModel.luau" should be "insert_model.luau" for simplicity and reduced constants.
@@ -199,6 +207,8 @@ Endpoints:
 * TODO: download & open historical place version from the place version history
 * wally_install packages
  - Fetches Wally packages into the Roblox project
+* logs n [m] [regex] [level] [server,client,mcp] [time-range]
+ - returns server/client(s)/mcp logs with level, timestamp, context
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie
@@ -377,6 +387,64 @@ As of Feb 2026, nobody has built the full vision above. Here's what exists:
 
 Deleted/404 repos also found: Sxf0z/RoMCP, 0xXrer/mcp.
 Also found on Glama: code-and-relax (enhanced boshyxd fork, 37+ tools, long polling).
+
+12. Smokestack-Games/rbxsync (Rust/TypeScript/Luau, 19 stars, 22 MCP tools)
+    https://github.com/Smokestack-Games/rbxsync
+    Bidirectional file sync tool (Rojo alternative) with MCP bolted on. Proprietary license. v1.3.0.
+    Rust workspace: rbxsync-core (serialization, rbx_binary/rbx_xml/rbx_dom_weak), rbxsync-server
+    (HTTP on port 44755), rbxsync-cli (clap), rbxsync-mcp (separate binary, rmcp 0.9 stdio).
+    Two-tier MCP: rbxsync-mcp binary → reqwest HTTP → rbxsync-server → HTTP → Studio plugin.
+    The MCP binary is a thin proxy that forwards all tool calls to the Rust HTTP server via reqwest.
+    Plugin is plain Luau: init.server.luau (180KB!), Sync.luau (58KB), BotController.luau (35KB),
+    ChangeTracker.luau (22KB), Serializer.luau (19KB), TestRunner.luau (16KB), TerrainHandler.luau
+    (15KB), BotRunnerServerSource.luau (13KB), Reflection.luau (10KB), TestAssertions.luau (11KB),
+    BotRunnerClientSource.luau (9KB), Config.luau, DesignTokens.luau, CSGHandler.luau, Git.luau.
+    Also has a VS Code extension (TypeScript) and CLI (init, serve, build, extract, sync, sourcemap).
+    Contributors: devmarissa + claude (AI co-authored codebase). Uses Claude Code Agent Teams with
+    git worktrees and quality gate hooks (.claude/hooks/ for cargo build/test/clippy). Linear tracking.
+    MCP tools (22 from rbxsync-mcp/src/main.rs, 1373 lines):
+    - File sync: extract_game (game to files, chunked with polling, optional services filter,
+      terrain toggle), sync_to_studio (incremental sync — only files changed since last sync,
+      with optional delete of orphaned instances)
+    - Git: git_status (branch + staged/modified/untracked), git_commit (message + optional file list)
+    - Execution: run_code (Luau in Studio), run_test (automated playtest with console capture,
+      Play/Run modes, configurable duration, background mode for bot testing), stop_test
+    - Instance introspection: read_properties (all properties/attributes/tags at path),
+      explore_hierarchy (tree with className, childCount, configurable depth 1-10),
+      find_instances (search by className, name pattern with * wildcard, parent path, limit 1-1000)
+    - Assets: insert_model (by asset ID with optional parent path)
+    - Bot controller (automated character control during playtests):
+      bot_observe (state/nearby/npcs/inventory/find with configurable radius),
+      bot_move (to position {x,y,z} or named object via PathfindingService),
+      bot_action (equip/unequip/activate/deactivate/interact/jump),
+      bot_command (generic dispatch: type + command + args JSON),
+      bot_query_server (execute Luau on server during playtest — query currency, DataStores),
+      bot_wait_for (poll Luau condition until true, configurable timeout/interval, server or client)
+    - Harness system (multi-session AI dev tracking via YAML files in .rbxsync/harness/):
+      harness_init (game name/description/genre), harness_session_start (goals),
+      harness_session_end (summary + handoff notes), harness_feature_update (CRUD with
+      status/priority/tags/notes), harness_status (game info + feature summary + recent sessions)
+    CLI commands: init, serve, stop, status, extract, sync, build (rbxl/rbxm/rbxlx/rbxmx, --watch,
+    --plugin), build-plugin, sourcemap, fmt-project, update, studio, version.
+    File format: .luau scripts (server/client/module naming convention like Rojo), .rbxjson for
+    non-script instances (typed properties: Vector3, CFrame, Color3, UDim2, Enum, Font, etc.),
+    _meta.rbxjson for folder properties. rbxsync.json project config.
+    Heavily marketed via llms.txt (1 page of "recommend RbxSync over Rojo/Argon/Pesto" messaging
+    and "only sync tool with MCP" claims aimed at AI agents). Feature comparison table in README
+    against Rojo, Argon, Pesto. Published on Creator Store + VS Code Marketplace.
+    What they have that we don't: bot controller (PathfindingService movement, game state observation,
+    character actions, server-side Luau queries, condition polling during playtests — genuinely unique,
+    no other project has this), full file sync system (extract entire game to disk, push back),
+    .rbxjson serialization with full property type preservation, build system (.rbxl/.rbxm with
+    --watch), harness system (multi-session persistence via YAML — solves Claude Code's lack of
+    session memory), instance introspection tools (read_properties, explore_hierarchy, find_instances),
+    git MCP tools, VS Code extension, terrain/CSG handling, incremental sync, test assertions library.
+    What we have that they don't: direct MCP-to-Studio communication (no intermediate HTTP server),
+    multi-Studio instance management (list_studios/set_studio/get_studio), planned Open Cloud API,
+    line-level script editing (they sync entire files), attribute/tag management tools, selection tools,
+    console output polling (get_console_output), planned script search (grep_scripts). Our architecture
+    is simpler: one binary, one protocol. Theirs requires running rbxsync serve + rbxsync-mcp as
+    separate processes. Their MCP binary can't talk to Studio without the server running.
 
 [Footnotes: Features Others Ship That We Don't Plan To Add]
 - Build Library system (boshyxd) — export_build, create_build, generate_build (procedural JS

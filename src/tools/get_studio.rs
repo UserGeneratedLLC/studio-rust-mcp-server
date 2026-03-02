@@ -19,8 +19,8 @@ impl RBXStudioServer {
         let session = match s.sessions.get(&mcp_session_id) {
             Some(session) => session,
             None => {
-                return Ok(CallToolResult::success(vec![Content::text(
-                    "No studio selected.",
+                return Ok(CallToolResult::error(vec![Content::text(
+                    "No studio selected. Call `list_studios` to see available studios, then `set_studio` to select one.",
                 )]));
             }
         };
@@ -29,30 +29,20 @@ impl RBXStudioServer {
             Some(id) => id,
             None if s.connections.len() == 1 => *s.connections.keys().next().unwrap(),
             None => {
-                return Ok(CallToolResult::success(vec![Content::text(
-                    "No studio selected.",
+                return Ok(CallToolResult::error(vec![Content::text(
+                    "No studio selected. Call `list_studios` to see available studios, then `set_studio` to select one.",
                 )]));
             }
         };
 
         match s.connections.get(&studio_id) {
             Some(conn) => {
-                let metadata = serde_json::to_string_pretty(&serde_json::json!({
-                    "studio_id": studio_id.to_string(),
-                    "place_id": conn.place_id,
-                    "place_name": conn.place_name,
-                    "game_id": conn.game_id,
-                    "job_id": conn.job_id,
-                    "place_version": conn.place_version,
-                    "creator_id": conn.creator_id,
-                    "creator_type": conn.creator_type,
-                    "connected_at": conn.connected_at.to_rfc3339(),
-                }))
-                .unwrap_or_default();
+                let info = conn.to_info(studio_id);
+                let metadata = serde_json::to_string_pretty(&info).unwrap_or_default();
                 Ok(CallToolResult::success(vec![Content::text(metadata)]))
             }
-            None => Ok(CallToolResult::success(vec![Content::text(
-                "Selected studio is no longer connected. Use list_studios and set_studio to pick a new one.",
+            None => Ok(CallToolResult::error(vec![Content::text(
+                "Selected studio is no longer connected. Call `list_studios` to see available studios, then `set_studio` to select one.",
             )])),
         }
     }
