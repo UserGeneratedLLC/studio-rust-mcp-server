@@ -1,7 +1,4 @@
 [NOW]
-* Cleanup routes so it's not as verbose/boilerplate. It should still be defined like the original was, where each file has a function - we just need to gather up all of those into one big route.
- - Investigate modern rust for situations like this
-* Rename all lua plugin routes to match the .rs versions, so snake_case.
 
 [App]
 * Rename the project to something better
@@ -51,6 +48,17 @@ Endpoints:
 * restart_servers universeId
 * get_universe universeId
  - Returns universe/game metadata
+* instance editing via opencloud
+ - Start with root -- the special string "root" represents the top of the DataModel (game). You pass it as the instanceId to list the top-level services:
+ - GET https://apis.roblox.com/cloud/v2/universes/{universeId}/places/{placeId}/instances/root:listChildren
+ - The response returns UUIDs for each child instance:
+ - {  "instances": [    {      "path": "universes/123/places/456/instances/b1b2b3b4-b1b2-b1b2-b1b2-b1b2b3b4b5b6",      "hasChildren": true,      "engineInstance": {        "Id": "b1b2b3b4-b1b2-b1b2-b1b2-b1b2b3b4b5b6",        "Parent": "a1a2a3a4-a1a2-a1a2-a1a2-a1a2a3a4a5a6",        "Name": "Workspace",        "Details": {}      }    }  ]}
+ - You walk the tree by calling listChildren on each UUID to drill deeper until you find the script you want.
+ - Get or update a specific instance using its UUID:
+ - GET  https://apis.roblox.com/cloud/v2/universes/{universeId}/places/{placeId}/instances/{uuid}
+ - PATCH https://apis.roblox.com/cloud/v2/universes/{universeId}/places/{placeId}/instances/{uuid}
+ - These UUIDs are internally the same as the UniqueId property on Instance in the API dump (which is at RobloxScriptSecurity read, RobloxEngine write). They're Roblox's internal instance identity system -- stable across sessions within the same place, but not something you'd normally see or construct yourself. You discover them by traversing from root.
+ - The key limitation: this API only supports reading/writing Script, LocalScript, and ModuleScript instances (it's in beta), and it operates on the current state only -- no version parameter, no history. It also requires a collaboration session to be enabled on the experience.
 
 [Studio Plugin MCP]
 * rename tools to match the rust side exactly, e.g. "InsertModel.luau" should be "insert_model.luau" for simplicity and reduced constants.
@@ -199,6 +207,8 @@ Endpoints:
 * TODO: download & open historical place version from the place version history
 * wally_install packages
  - Fetches Wally packages into the Roblox project
+* logs n [m] [regex] [level] [server,client,mcp] [time-range]
+ - returns server/client(s)/mcp logs with level, timestamp, context
 
 [Cookie APIs MCP]
 Use that one library to automatically fetch the roblox studio cookie
